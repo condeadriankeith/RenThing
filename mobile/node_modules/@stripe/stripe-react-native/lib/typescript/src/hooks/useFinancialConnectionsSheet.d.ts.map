@@ -1,0 +1,1 @@
+{"version":3,"file":"useFinancialConnectionsSheet.d.ts","sourceRoot":"","sources":["../../../../src/hooks/useFinancialConnectionsSheet.tsx"],"names":[],"mappings":"AAEA,OAAO,KAAK,EAAE,yCAAyC,EAAE,MAAM,+BAA+B,CAAC;AAC/F,OAAO,KAAK,EAAE,6BAA6B,EAAE,MAAM,wBAAwB,CAAC;AAE5E;;;;;GAKG;AACH,wBAAgB,4BAA4B;4CAMnB,MAAM,WAAW,6BAA6B;wDAWnD,MAAM,WACX,yCAAyC;;EAkBvD"}

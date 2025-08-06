@@ -1,0 +1,1 @@
+{"version":3,"file":"NativeStripeContainer.d.ts","sourceRoot":"","sources":["../../../../src/specs/NativeStripeContainer.ts"],"names":[],"mappings":"AAAA,OAAO,KAAK,EAAE,aAAa,EAAE,SAAS,EAAE,MAAM,cAAc,CAAC;AAG7D,MAAM,WAAW,WAAY,SAAQ,SAAS;IAC5C,yBAAyB,EAAE,OAAO,CAAC;CACpC;AAED,KAAK,aAAa,GAAG,aAAa,CAAC,WAAW,CAAC,CAAC;wBAI3C,aAAa;AAFlB,wBAEmB"}

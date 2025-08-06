@@ -1,0 +1,704 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RenThing - Rental Marketplace</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Poppins', sans-serif;
+        }
+        .teal-gradient {
+            background: linear-gradient(135deg, #008080 0%, #00A3A3 100%);
+        }
+        .card-hover:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 10px 20px rgba(0, 128, 128, 0.1);
+        }
+        .skeleton {
+            background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+            background-size: 200% 100%;
+            animation: shimmer 1.5s infinite;
+        }
+        @keyframes shimmer {
+            0% { background-position: 200% 0; }
+            100% { background-position: -200% 0; }
+        }
+        .ripple {
+            position: relative;
+            overflow: hidden;
+        }
+        .ripple-effect {
+            position: absolute;
+            border-radius: 50%;
+            background-color: rgba(255, 255, 255, 0.3);
+            transform: scale(0);
+            animation: ripple 600ms linear;
+            pointer-events: none;
+        }
+        @keyframes ripple {
+            to {
+                transform: scale(4);
+                opacity: 0;
+            }
+        }
+    </style>
+</head>
+<body class="bg-gray-50">
+    <!-- Mobile Navigation -->
+    <div class="md:hidden fixed bottom-0 left-0 right-0 bg-white shadow-lg z-50">
+        <div class="flex justify-around items-center py-3">
+            <a href="#" class="flex flex-col items-center text-teal-600">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
+                </svg>
+                <span class="text-xs mt-1">Home</span>
+            </a>
+            <a href="#" class="flex flex-col items-center text-gray-500">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                </svg>
+                <span class="text-xs mt-1">Explore</span>
+            </a>
+            <div class="relative -mt-10">
+                <button class="ripple teal-gradient rounded-full p-4 shadow-lg text-white">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+                    </svg>
+                </button>
+            </div>
+            <a href="#" class="flex flex-col items-center text-gray-500">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+                </svg>
+                <span class="text-xs mt-1">Bookings</span>
+            </a>
+            <a href="#" class="flex flex-col items-center text-gray-500">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                </svg>
+                <span class="text-xs mt-1">Profile</span>
+            </a>
+        </div>
+    </div>
+
+    <!-- Desktop Navigation -->
+    <nav class="hidden md:flex items-center justify-between px-6 py-4 bg-white shadow-sm">
+        <div class="flex items-center">
+            <div class="teal-gradient text-white font-bold rounded-lg px-3 py-2 mr-6">
+                RenThing
+            </div>
+            <div class="relative">
+                <input type="text" placeholder="Search for items or services..." class="pl-10 pr-4 py-2 border border-gray-300 rounded-full w-64 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-gray-400 absolute left-3 top-2.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                </svg>
+            </div>
+        </div>
+        <div class="flex items-center space-x-6">
+            <a href="#" class="text-gray-600 hover:text-teal-600">Categories</a>
+            <button class="teal-gradient text-white px-4 py-2 rounded-full font-medium hover:bg-teal-600 transition">Rent Out</button>
+            <div class="flex items-center space-x-2">
+                <div class="w-8 h-8 rounded-full bg-teal-100 flex items-center justify-center">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-teal-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                    </svg>
+                </div>
+                <span class="text-gray-700">John</span>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Mobile Home Content -->
+    <div class="md:hidden pb-20">
+        <!-- Search Bar -->
+        <div class="px-4 pt-4">
+            <div class="relative">
+                <input type="text" placeholder="Search for items or services..." class="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-full focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-gray-400 absolute left-3 top-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                </svg>
+                <div class="absolute right-3 top-3.5">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-teal-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                    </svg>
+                </div>
+            </div>
+        </div>
+
+        <!-- Categories -->
+        <div class="px-4 mt-6">
+            <h2 class="text-lg font-semibold text-gray-800">Categories</h2>
+            <div class="flex overflow-x-auto space-x-3 py-3 hide-scrollbar">
+                <div class="flex-shrink-0">
+                    <div class="w-16 h-16 rounded-full bg-teal-100 flex items-center justify-center">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 text-teal-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
+                        </svg>
+                    </div>
+                    <p class="text-xs text-center mt-1">Electronics</p>
+                </div>
+                <div class="flex-shrink-0">
+                    <div class="w-16 h-16 rounded-full bg-teal-100 flex items-center justify-center">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 text-teal-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 4a2 2 0 114 0v1a1 1 0 001 1h3a1 1 0 011 1v3a1 1 0 01-1 1h-1a2 2 0 100 4h1a1 1 0 011 1v3a1 1 0 01-1 1h-3a1 1 0 01-1-1v-1a2 2 0 10-4 0v1a1 1 0 01-1 1H7a1 1 0 01-1-1v-3a1 1 0 00-1-1H4a2 2 0 110-4h1a1 1 0 001-1V7a1 1 0 011-1h3a1 1 0 001-1V4z" />
+                        </svg>
+                    </div>
+                    <p class="text-xs text-center mt-1">Tools</p>
+                </div>
+                <div class="flex-shrink-0">
+                    <div class="w-16 h-16 rounded-full bg-teal-100 flex items-center justify-center">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 text-teal-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
+                        </svg>
+                    </div>
+                    <p class="text-xs text-center mt-1">Furniture</p>
+                </div>
+                <div class="flex-shrink-0">
+                    <div class="w-16 h-16 rounded-full bg-teal-100 flex items-center justify-center">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 text-teal-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                        </svg>
+                    </div>
+                    <p class="text-xs text-center mt-1">Clothing</p>
+                </div>
+                <div class="flex-shrink-0">
+                    <div class="w-16 h-16 rounded-full bg-teal-100 flex items-center justify-center">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 text-teal-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 14v3m4-3v3m4-3v3M3 21h18M3 10h18M3 7l9-4 9 4M4 10h16v11H4V10z" />
+                        </svg>
+                    </div>
+                    <p class="text-xs text-center mt-1">Events</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Promo Banner -->
+        <div class="px-4 mt-6">
+            <div class="teal-gradient rounded-xl p-4 text-white">
+                <h3 class="font-bold text-lg">Summer Special!</h3>
+                <p class="text-sm mt-1">Get 20% off on all outdoor equipment</p>
+                <button class="mt-3 bg-white text-teal-600 px-3 py-1 rounded-full text-xs font-medium">Rent Now</button>
+            </div>
+        </div>
+
+        <!-- Recommended -->
+        <div class="px-4 mt-6">
+            <div class="flex justify-between items-center">
+                <h2 class="text-lg font-semibold text-gray-800">Recommended For You</h2>
+                <a href="#" class="text-teal-600 text-sm">See all</a>
+            </div>
+            <div class="grid grid-cols-2 gap-3 mt-3">
+                <!-- Item 1 -->
+                <div class="bg-white rounded-lg overflow-hidden shadow-sm card-hover transition duration-300">
+                    <div class="h-32 bg-gray-200 relative">
+                        <div class="absolute top-2 right-2 bg-white rounded-full p-1 shadow">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
+                            </svg>
+                        </div>
+                    </div>
+                    <div class="p-3">
+                        <h3 class="font-medium text-sm">Canon EOS R5</h3>
+                        <p class="text-teal-600 font-bold text-sm mt-1">₱1,200/day</p>
+                        <div class="flex items-center mt-1">
+                            <div class="flex items-center">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3 text-yellow-400" viewBox="0 0 20 20" fill="currentColor">
+                                    <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+                                </svg>
+                                <span class="text-xs text-gray-600 ml-1">4.8</span>
+                            </div>
+                            <span class="text-xs text-gray-500 ml-2">1.2km</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Item 2 -->
+                <div class="bg-white rounded-lg overflow-hidden shadow-sm card-hover transition duration-300">
+                    <div class="h-32 bg-gray-200 relative">
+                        <div class="absolute top-2 right-2 bg-white rounded-full p-1 shadow">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
+                            </svg>
+                        </div>
+                    </div>
+                    <div class="p-3">
+                        <h3 class="font-medium text-sm">DJI Mavic Air 2</h3>
+                        <p class="text-teal-600 font-bold text-sm mt-1">₱1,800/day</p>
+                        <div class="flex items-center mt-1">
+                            <div class="flex items-center">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3 text-yellow-400" viewBox="0 0 20 20" fill="currentColor">
+                                    <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+                                </svg>
+                                <span class="text-xs text-gray-600 ml-1">4.9</span>
+                            </div>
+                            <span class="text-xs text-gray-500 ml-2">2.5km</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Item 3 -->
+                <div class="bg-white rounded-lg overflow-hidden shadow-sm card-hover transition duration-300">
+                    <div class="h-32 bg-gray-200 relative">
+                        <div class="absolute top-2 right-2 bg-white rounded-full p-1 shadow">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
+                            </svg>
+                        </div>
+                    </div>
+                    <div class="p-3">
+                        <h3 class="font-medium text-sm">Camping Tent</h3>
+                        <p class="text-teal-600 font-bold text-sm mt-1">₱500/day</p>
+                        <div class="flex items-center mt-1">
+                            <div class="flex items-center">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3 text-yellow-400" viewBox="0 0 20 20" fill="currentColor">
+                                    <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+                                </svg>
+                                <span class="text-xs text-gray-600 ml-1">4.5</span>
+                            </div>
+                            <span class="text-xs text-gray-500 ml-2">0.8km</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Item 4 -->
+                <div class="bg-white rounded-lg overflow-hidden shadow-sm card-hover transition duration-300">
+                    <div class="h-32 bg-gray-200 relative">
+                        <div class="absolute top-2 right-2 bg-white rounded-full p-1 shadow">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
+                            </svg>
+                        </div>
+                    </div>
+                    <div class="p-3">
+                        <h3 class="font-medium text-sm">Projector</h3>
+                        <p class="text-teal-600 font-bold text-sm mt-1">₱800/day</p>
+                        <div class="flex items-center mt-1">
+                            <div class="flex items-center">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3 text-yellow-400" viewBox="0 0 20 20" fill="currentColor">
+                                    <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+                                </svg>
+                                <span class="text-xs text-gray-600 ml-1">4.7</span>
+                            </div>
+                            <span class="text-xs text-gray-500 ml-2">1.5km</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Nearby Rentals -->
+        <div class="px-4 mt-6">
+            <div class="flex justify-between items-center">
+                <h2 class="text-lg font-semibold text-gray-800">Nearby Rentals</h2>
+                <a href="#" class="text-teal-600 text-sm">See all</a>
+            </div>
+            <div class="mt-3">
+                <div class="bg-white rounded-lg overflow-hidden shadow-sm">
+                    <div class="h-40 bg-gray-200 relative">
+                        <div class="absolute bottom-3 left-3 bg-black bg-opacity-50 text-white px-2 py-1 rounded text-xs">
+                            <span>2.1km away</span>
+                        </div>
+                    </div>
+                    <div class="p-3">
+                        <div class="flex justify-between items-start">
+                            <div>
+                                <h3 class="font-medium">Party Sound System</h3>
+                                <p class="text-teal-600 font-bold text-sm mt-1">₱2,500/day</p>
+                            </div>
+                            <div class="flex items-center">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-yellow-400" viewBox="0 0 20 20" fill="currentColor">
+                                    <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+                                </svg>
+                                <span class="text-xs text-gray-600 ml-1">4.8 (12)</span>
+                            </div>
+                        </div>
+                        <button class="ripple w-full mt-3 bg-teal-600 text-white py-2 rounded-full font-medium text-sm">Rent Now</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Desktop Home Content -->
+    <div class="hidden md:block container mx-auto px-4 py-6">
+        <!-- Hero Section -->
+        <div class="teal-gradient rounded-xl p-8 text-white">
+            <div class="flex">
+                <div class="w-1/2">
+                    <h1 class="text-3xl font-bold">Rent Anything, Anytime</h1>
+                    <p class="mt-2">From cameras to camping gear, find what you need for your next adventure</p>
+                    <button class="ripple mt-6 bg-white text-teal-600 px-6 py-2 rounded-full font-medium hover:bg-gray-100 transition">Browse Items</button>
+                </div>
+                <div class="w-1/2 flex justify-end">
+                    <div class="w-64 h-64 bg-white bg-opacity-20 rounded-lg"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Categories -->
+        <div class="mt-8">
+            <h2 class="text-xl font-semibold text-gray-800">Popular Categories</h2>
+            <div class="grid grid-cols-5 gap-4 mt-4">
+                <div class="bg-white rounded-lg p-4 text-center shadow-sm hover:shadow-md transition cursor-pointer">
+                    <div class="w-16 h-16 bg-teal-100 rounded-full flex items-center justify-center mx-auto">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 text-teal-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
+                        </svg>
+                    </div>
+                    <p class="mt-2 font-medium">Electronics</p>
+                </div>
+                <div class="bg-white rounded-lg p-4 text-center shadow-sm hover:shadow-md transition cursor-pointer">
+                    <div class="w-16 h-16 bg-teal-100 rounded-full flex items-center justify-center mx-auto">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 text-teal-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
+                        </svg>
+                    </div>
+                    <p class="mt-2 font-medium">Furniture</p>
+                </div>
+                <div class="bg-white rounded-lg p-4 text-center shadow-sm hover:shadow-md transition cursor-pointer">
+                    <div class="w-16 h-16 bg-teal-100 rounded-full flex items-center justify-center mx-auto">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 text-teal-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                        </svg>
+                    </div>
+                    <p class="mt-2 font-medium">Clothing</p>
+                </div>
+                <div class="bg-white rounded-lg p-4 text-center shadow-sm hover:shadow-md transition cursor-pointer">
+                    <div class="w-16 h-16 bg-teal-100 rounded-full flex items-center justify-center mx-auto">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 text-teal-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 14v3m4-3v3m4-3v3M3 21h18M3 10h18M3 7l9-4 9 4M4 10h16v11H4V10z" />
+                        </svg>
+                    </div>
+                    <p class="mt-2 font-medium">Events</p>
+                </div>
+                <div class="bg-white rounded-lg p-4 text-center shadow-sm hover:shadow-md transition cursor-pointer">
+                    <div class="w-16 h-16 bg-teal-100 rounded-full flex items-center justify-center mx-auto">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 text-teal-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z" />
+                        </svg>
+                    </div>
+                    <p class="mt-2 font-medium">Luxury</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Featured Items -->
+        <div class="mt-12">
+            <div class="flex justify-between items-center">
+                <h2 class="text-xl font-semibold text-gray-800">Featured Rentals</h2>
+                <a href="#" class="text-teal-600 font-medium">View all</a>
+            </div>
+            <div class="grid grid-cols-4 gap-6 mt-6">
+                <!-- Item 1 -->
+                <div class="bg-white rounded-lg overflow-hidden shadow-sm hover:shadow-md transition cursor-pointer card-hover">
+                    <div class="h-48 bg-gray-200 relative">
+                        <div class="absolute top-3 right-3 bg-white rounded-full p-2 shadow">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
+                            </svg>
+                        </div>
+                    </div>
+                    <div class="p-4">
+                        <h3 class="font-medium">Sony A7 III Camera</h3>
+                        <p class="text-teal-600 font-bold mt-1">₱1,500/day</p>
+                        <div class="flex items-center mt-2">
+                            <div class="flex items-center">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-yellow-400" viewBox="0 0 20 20" fill="currentColor">
+                                    <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+                                </svg>
+                                <span class="text-sm text-gray-600 ml-1">4.8</span>
+                            </div>
+                            <span class="text-sm text-gray-500 ml-3">Makati City</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Item 2 -->
+                <div class="bg-white rounded-lg overflow-hidden shadow-sm hover:shadow-md transition cursor-pointer card-hover">
+                    <div class="h-48 bg-gray-200 relative">
+                        <div class="absolute top-3 right-3 bg-white rounded-full p-2 shadow">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
+                            </svg>
+                        </div>
+                    </div>
+                    <div class="p-4">
+                        <h3 class="font-medium">Professional Drone</h3>
+                        <p class="text-teal-600 font-bold mt-1">₱2,000/day</p>
+                        <div class="flex items-center mt-2">
+                            <div class="flex items-center">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-yellow-400" viewBox="0 0 20 20" fill="currentColor">
+                                    <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+                                </svg>
+                                <span class="text-sm text-gray-600 ml-1">4.9</span>
+                            </div>
+                            <span class="text-sm text-gray-500 ml-3">Taguig City</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Item 3 -->
+                <div class="bg-white rounded-lg overflow-hidden shadow-sm hover:shadow-md transition cursor-pointer card-hover">
+                    <div class="h-48 bg-gray-200 relative">
+                        <div class="absolute top-3 right-3 bg-white rounded-full p-2 shadow">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
+                            </svg>
+                        </div>
+                    </div>
+                    <div class="p-4">
+                        <h3 class="font-medium">Camping Equipment Set</h3>
+                        <p class="text-teal-600 font-bold mt-1">₱800/day</p>
+                        <div class="flex items-center mt-2">
+                            <div class="flex items-center">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-yellow-400" viewBox="0 0 20 20" fill="currentColor">
+                                    <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+                                </svg>
+                                <span class="text-sm text-gray-600 ml-1">4.6</span>
+                            </div>
+                            <span class="text-sm text-gray-500 ml-3">Quezon City</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Item 4 -->
+                <div class="bg-white rounded-lg overflow-hidden shadow-sm hover:shadow-md transition cursor-pointer card-hover">
+                    <div class="h-48 bg-gray-200 relative">
+                        <div class="absolute top-3 right-3 bg-white rounded-full p-2 shadow">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
+                            </svg>
+                        </div>
+                    </div>
+                    <div class="p-4">
+                        <h3 class="font-medium">Wedding Gown</h3>
+                        <p class="text-teal-600 font-bold mt-1">₱3,500/day</p>
+                        <div class="flex items-center mt-2">
+                            <div class="flex items-center">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-yellow-400" viewBox="0 0 20 20" fill="currentColor">
+                                    <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+                                </svg>
+                                <span class="text-sm text-gray-600 ml-1">4.7</span>
+                            </div>
+                            <span class="text-sm text-gray-500 ml-3">Pasig City</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- How It Works -->
+        <div class="mt-16">
+            <h2 class="text-xl font-semibold text-gray-800 text-center">How RenThing Works</h2>
+            <div class="grid grid-cols-3 gap-8 mt-8">
+                <div class="text-center">
+                    <div class="w-20 h-20 bg-teal-100 rounded-full flex items-center justify-center mx-auto">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-10 w-10 text-teal-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                        </svg>
+                    </div>
+                    <h3 class="mt-4 font-medium">1. Find What You Need</h3>
+                    <p class="mt-2 text-gray-600">Browse thousands of items available for rent in your area</p>
+                </div>
+                <div class="text-center">
+                    <div class="w-20 h-20 bg-teal-100 rounded-full flex items-center justify-center mx-auto">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-10 w-10 text-teal-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                        </svg>
+                    </div>
+                    <h3 class="mt-4 font-medium">2. Book & Pay Securely</h3>
+                    <p class="mt-2 text-gray-600">Choose your dates and pay through our secure payment system</p>
+                </div>
+                <div class="text-center">
+                    <div class="w-20 h-20 bg-teal-100 rounded-full flex items-center justify-center mx-auto">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-10 w-10 text-teal-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+                        </svg>
+                    </div>
+                    <h3 class="mt-4 font-medium">3. Enjoy & Return</h3>
+                    <p class="mt-2 text-gray-600">Pick up or get it delivered, use it, then return when done</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Item Detail Modal -->
+    <div id="itemModal" class="hidden fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
+        <div class="bg-white rounded-xl w-full max-w-2xl max-h-[90vh] overflow-y-auto">
+            <!-- Close Button -->
+            <div class="flex justify-end p-4">
+                <button id="closeModal" class="text-gray-500 hover:text-gray-700">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                </button>
+            </div>
+            
+            <!-- Content -->
+            <div class="px-6 pb-6">
+                <!-- Image Gallery -->
+                <div class="h-64 bg-gray-200 rounded-lg"></div>
+                <div class="flex space-x-2 mt-3">
+                    <div class="w-16 h-16 bg-gray-300 rounded"></div>
+                    <div class="w-16 h-16 bg-gray-300 rounded"></div>
+                    <div class="w-16 h-16 bg-gray-300 rounded"></div>
+                    <div class="w-16 h-16 bg-gray-300 rounded"></div>
+                </div>
+                
+                <!-- Item Info -->
+                <div class="mt-6">
+                    <h2 class="text-2xl font-bold">Canon EOS R5 Camera</h2>
+                    <div class="flex items-center mt-2">
+                        <div class="flex items-center">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-yellow-400" viewBox="0 0 20 20" fill="currentColor">
+                                <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+                            </svg>
+                            <span class="ml-1">4.8</span>
+                            <span class="text-gray-500 ml-1">(24 reviews)</span>
+                        </div>
+                        <span class="text-gray-500 ml-4">Makati City</span>
+                    </div>
+                    
+                    <div class="mt-4">
+                        <h3 class="text-xl font-semibold text-teal-600">₱1,200/day</h3>
+                        <p class="text-gray-600 mt-1">Minimum rental: 2 days</p>
+                    </div>
+                    
+                    <!-- Calendar -->
+                    <div class="mt-6">
+                        <h3 class="font-medium">Select Rental Dates</h3>
+                        <div class="grid grid-cols-7 gap-2 mt-3 text-center">
+                            <div class="py-2 text-sm text-gray-500">Sun</div>
+                            <div class="py-2 text-sm text-gray-500">Mon</div>
+                            <div class="py-2 text-sm text-gray-500">Tue</div>
+                            <div class="py-2 text-sm text-gray-500">Wed</div>
+                            <div class="py-2 text-sm text-gray-500">Thu</div>
+                            <div class="py-2 text-sm text-gray-500">Fri</div>
+                            <div class="py-2 text-sm text-gray-500">Sat</div>
+                            
+                            <!-- Calendar days would go here -->
+                            <div class="py-2 text-sm text-gray-400">30</div>
+                            <div class="py-2 text-sm text-gray-400">31</div>
+                            <div class="py-2 text-sm">1</div>
+                            <div class="py-2 text-sm">2</div>
+                            <div class="py-2 text-sm">3</div>
+                            <div class="py-2 text-sm">4</div>
+                            <div class="py-2 text-sm">5</div>
+                            
+                            <div class="py-2 text-sm">6</div>
+                            <div class="py-2 text-sm">7</div>
+                            <div class="py-2 text-sm">8</div>
+                            <div class="py-2 text-sm bg-teal-100 text-teal-800 rounded-full">9</div>
+                            <div class="py-2 text-sm bg-teal-600 text-white rounded-full">10</div>
+                            <div class="py-2 text-sm bg-teal-600 text-white rounded-full">11</div>
+                            <div class="py-2 text-sm bg-teal-100 text-teal-800 rounded-full">12</div>
+                            
+                            <div class="py-2 text-sm">13</div>
+                            <div class="py-2 text-sm">14</div>
+                            <div class="py-2 text-sm">15</div>
+                            <div class="py-2 text-sm">16</div>
+                            <div class="py-2 text-sm">17</div>
+                            <div class="py-2 text-sm">18</div>
+                            <div class="py-2 text-sm">19</div>
+                            
+                            <div class="py-2 text-sm">20</div>
+                            <div class="py-2 text-sm">21</div>
+                            <div class="py-2 text-sm">22</div>
+                            <div class="py-2 text-sm">23</div>
+                            <div class="py-2 text-sm">24</div>
+                            <div class="py-2 text-sm">25</div>
+                            <div class="py-2 text-sm">26</div>
+                        </div>
+                    </div>
+                    
+                    <!-- Rental Summary -->
+                    <div class="mt-6 bg-gray-50 p-4 rounded-lg">
+                        <h3 class="font-medium">Rental Summary</h3>
+                        <div class="flex justify-between mt-3">
+                            <span class="text-gray-600">₱1,200 x 3 days</span>
+                            <span class="font-medium">₱3,600</span>
+                        </div>
+                        <div class="flex justify-between mt-2">
+                            <span class="text-gray-600">Service fee</span>
+                            <span class="font-medium">₱360</span>
+                        </div>
+                        <div class="flex justify-between mt-2">
+                            <span class="text-gray-600">Damage deposit</span>
+                            <span class="font-medium">₱2,000</span>
+                        </div>
+                        <div class="border-t border-gray-200 mt-3 pt-3 flex justify-between">
+                            <span class="font-medium">Total</span>
+                            <span class="font-bold text-teal-600">₱5,960</span>
+                        </div>
+                    </div>
+                    
+                    <!-- Owner Info -->
+                    <div class="mt-6 flex items-center">
+                        <div class="w-12 h-12 rounded-full bg-gray-300"></div>
+                        <div class="ml-3">
+                            <h4 class="font-medium">John D.</h4>
+                            <p class="text-sm text-gray-600">Member since 2021</p>
+                        </div>
+                        <button class="ml-auto bg-teal-600 text-white px-4 py-2 rounded-full text-sm font-medium">Contact</button>
+                    </div>
+                    
+                    <!-- CTA Buttons -->
+                    <div class="mt-8 flex space-x-4">
+                        <button class="ripple flex-1 border border-teal-600 text-teal-600 py-3 rounded-full font-medium">Save for later</button>
+                        <button class="ripple flex-1 bg-teal-600 text-white py-3 rounded-full font-medium">Rent Now</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Ripple effect for buttons
+        document.querySelectorAll('.ripple').forEach(button => {
+            button.addEventListener('click', function(e) {
+                const x = e.clientX - e.target.getBoundingClientRect().left;
+                const y = e.clientY - e.target.getBoundingClientRect().top;
+                
+                const ripple = document.createElement('span');
+                ripple.classList.add('ripple-effect');
+                ripple.style.left = `${x}px`;
+                ripple.style.top = `${y}px`;
+                
+                this.appendChild(ripple);
+                
+                setTimeout(() => {
+                    ripple.remove();
+                }, 600);
+            });
+        });
+
+        // Modal toggle
+        const modal = document.getElementById('itemModal');
+        const closeModal = document.getElementById('closeModal');
+        
+        // For demo purposes, clicking any "Rent Now" button opens the modal
+        document.querySelectorAll('button:contains("Rent Now")').forEach(btn => {
+            btn.addEventListener('click', () => {
+                modal.classList.remove('hidden');
+                document.body.style.overflow = 'hidden';
+            });
+        });
+        
+        closeModal.addEventListener('click', () => {
+            modal.classList.add('hidden');
+            document.body.style.overflow = 'auto';
+        });
+        
+        // Close modal when clicking outside
+        modal.addEventListener('click', (e) => {
+            if (e.target === modal) {
+                modal.classList.add('hidden');
+                document.body.style.overflow = 'auto';
+            }
+        });
+    </script>
+</body>
+</html>

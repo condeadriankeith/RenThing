@@ -1,0 +1,2 @@
+Object.defineProperty(exports,"__esModule",{value:true});exports.Status=void 0;var Status=exports.Status=function(Status){Status["Succeeded"]="Succeeded";Status["RequiresPaymentMethod"]="RequiresPaymentMethod";Status["RequiresConfirmation"]="RequiresConfirmation";Status["Canceled"]="Canceled";Status["Processing"]="Processing";Status["RequiresAction"]="RequiresAction";Status["Unknown"]="Unknown";return Status;}({});
+//# sourceMappingURL=SetupIntent.js.map

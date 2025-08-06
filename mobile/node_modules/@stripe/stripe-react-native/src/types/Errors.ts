@@ -1,0 +1,103 @@
+export enum ConfirmPaymentError {
+  Canceled = 'Canceled',
+  Failed = 'Failed',
+  Unknown = 'Unknown',
+}
+
+export enum CardActionError {
+  Canceled = 'Canceled',
+  Failed = 'Failed',
+  Unknown = 'Unknown',
+}
+
+export enum ConfirmSetupIntentError {
+  Canceled = 'Canceled',
+  Failed = 'Failed',
+  Unknown = 'Unknown',
+}
+
+export enum CreatePaymentMethodError {
+  Failed = 'Failed',
+}
+
+export enum CreateTokenError {
+  Failed = 'Failed',
+}
+
+export enum RetrievePaymentIntentError {
+  Unknown = 'Unknown',
+}
+
+export enum RetrieveSetupIntentError {
+  Unknown = 'Unknown',
+}
+
+export enum ApplePayError {
+  Canceled = 'Canceled',
+  Failed = 'Failed',
+  Unknown = 'Unknown',
+}
+
+export enum PaymentSheetError {
+  Failed = 'Failed',
+  Canceled = 'Canceled',
+  Timeout = 'Timeout',
+}
+
+export type ErrorType =
+  | 'api_connection_error'
+  | 'api_error'
+  | 'authentication_error'
+  | 'card_error'
+  | 'idempotency_error'
+  | 'invalid_request_error'
+  | 'rate_limit_error';
+
+export interface StripeError<T> {
+  code: T;
+  message: string;
+  localizedMessage?: string;
+  declineCode?: string;
+  stripeErrorCode?: string;
+  type?: ErrorType;
+}
+
+export enum GooglePayError {
+  Failed = 'Failed',
+  Canceled = 'Canceled',
+  Unknown = 'Unknown',
+}
+
+export const MissingRoutingNumber = {
+  code: CreateTokenError.Failed,
+  message:
+    'You must provide a routing number for US bank accounts. This should be the ACH routing number.',
+};
+
+export enum VerifyMicrodepositsError {
+  Canceled = 'Canceled',
+  Failed = 'Failed',
+  Unknown = 'Unknown',
+}
+
+export enum CollectBankAccountError {
+  Canceled = 'Canceled',
+  Failed = 'Failed',
+  Unknown = 'Unknown',
+}
+
+export enum AddressSheetError {
+  Failed = 'Failed',
+  Canceled = 'Canceled',
+}
+
+export enum CustomerSheetError {
+  Failed = 'Failed',
+  Canceled = 'Canceled',
+}
+
+export enum PlatformPayError {
+  Canceled = 'Canceled',
+  Failed = 'Failed',
+  Unknown = 'Unknown',
+}
