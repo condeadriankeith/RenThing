@@ -173,7 +173,7 @@ const Explore = () => {
         <div className="bg-gradient-to-r from-teal-600 to-teal-500 rounded-xl p-6 text-white">
           <div className="flex items-center mb-4">
             <LocationIcon className="h-6 w-6 mr-2" />
-            <h3 className="text-lg font-semibold">Rentals near you</h3>
+            <h3 className="text-lg font-semibold text-white">Rentals near you</h3>
           </div>
           <p className="text-sm opacity-90 mb-4">
             Discover amazing items available for rent in your area

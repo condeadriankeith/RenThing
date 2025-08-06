@@ -28,6 +28,31 @@ import { useListings } from '../context/ListingContext';
 import { motion } from 'framer-motion';
 
 const Add = () => {
+  const [images, setImages] = useState([]);
+  const [previewUrls, setPreviewUrls] = useState([]);
+
+  const handleImageUpload = (e) => {
+    const files = Array.from(e.target.files);
+    setImages(prev => [...prev, ...files]);
+    // Create preview URLs
+    const newPreviewUrls = files.map(file => URL.createObjectURL(file));
+    setPreviewUrls(prev => [...prev, ...newPreviewUrls]);
+  };
+  const [isLoadingImage, setIsLoadingImage] = useState(false);
+  const handleInputChange = (e) => {
+    const { name, value } = e.target;
+    setFormData(prev => ({
+      ...prev,
+      [name]: value
+    }));
+  };
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    // Add your form submission logic here
+    // Example: send data to backend, show success message, etc.
+    setSuccess(true);
+    setTimeout(() => setSuccess(false), 3000);
+  };
   const [success, setSuccess] = useState(false);
   const { addListing } = useListings();
   const [formData, setFormData] = useState({
@@ -47,12 +72,6 @@ const Add = () => {
       transition={{ duration: 0.5 }}
       style={{
         minHeight: '100vh',
-        background: 'linear-gradient(120deg, rgba(255,255,255,0.18) 60%, rgba(0,128,128,0.10) 100%)',
-        backdropFilter: 'blur(32px)',
-        WebkitBackdropFilter: 'blur(32px)',
-        boxShadow: '0 8px 32px 0 rgba(0,128,128,0.18), 0 1.5px 8px 0 rgba(0,0,0,0.08) inset',
-        border: '2px solid rgba(255,255,255,0.25)',
-        borderRadius: '32px',
         overflow: 'hidden',
       }}
     >

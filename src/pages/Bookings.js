@@ -86,18 +86,6 @@ const Bookings = () => {
               transform: 'translateY(-4px)',
             },
           }}>
-            <CardMedia
-              component="img"
-              height="200"
-              image={`https://images.unsplash.com/photo-${1500000000000 + booking.id}?w=400&h=200&fit=crop`}
-              alt={booking.title}
-              sx={{
-                transition: 'transform 0.3s ease',
-                '&:hover': {
-                  transform: 'scale(1.05)',
-                }
-              }}
-            />
             <CardContent sx={{ p: 3 }}>
               <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
                 <Chip
@@ -324,17 +312,11 @@ const Bookings = () => {
       <Container maxWidth="lg" sx={{
         minHeight: '100vh',
         display: 'flex',
-        alignItems: 'center',
+        alignItems: 'flex-start',
         justifyContent: 'center',
-        background: 'linear-gradient(120deg, rgba(255,255,255,0.18) 60%, rgba(0,128,128,0.10) 100%)',
-        backdropFilter: 'blur(32px)',
-        WebkitBackdropFilter: 'blur(32px)',
-        boxShadow: '0 8px 32px 0 rgba(0,128,128,0.18), 0 1.5px 8px 0 rgba(0,0,0,0.08) inset',
-        border: '2px solid rgba(255,255,255,0.25)',
-        borderRadius: '32px',
-        overflow: 'hidden',
+        pt: 4,
       }}>
-        <Box sx={{ width: '100%', maxWidth: '600px', mx: 'auto', py: 4 }}>
+        <Box sx={{ width: '100%', maxWidth: '800px', mx: 'auto', pt: 0, pb: 4 }}>
           <motion.div
             initial={{ opacity: 0, y: 50 }}
             animate={{ opacity: 1, y: 0 }}
@@ -382,7 +364,7 @@ const Bookings = () => {
             <Card sx={{ 
               borderRadius: '28px', 
               boxShadow: '0 12px 48px rgba(0,128,128,0.22)',
-              maxWidth: '100%',
+              maxWidth: '800px',
               margin: '0 auto',
               background: 'linear-gradient(135deg, rgba(255,255,255,0.32) 60%, rgba(0,128,128,0.14) 100%)',
               backdropFilter: 'blur(24px)',
@@ -399,24 +381,36 @@ const Bookings = () => {
                   sx={{
                     background: 'linear-gradient(135deg, #f8fffe 0%, #ffffff 100%)',
                     borderBottom: '1px solid rgba(0, 128, 128, 0.1)',
+                    borderRadius: '999px',
+                    minHeight: '56px',
                     '.MuiTabs-indicator': {
-                      backgroundColor: '#008080',
-                      height: 3,
-                      borderRadius: '2px 2px 0 0'
+                      display: 'none',
                     },
                     '.MuiTab-root': {
                       color: '#666',
                       fontWeight: 600,
                       fontSize: '1rem',
-                      py: 3,
+                      py: 2,
                       px: 4,
+                      borderRadius: '999px',
+                      margin: '0 8px',
                       transition: 'all 0.3s ease',
+                      backgroundColor: 'transparent',
                       '&.Mui-selected': {
-                        color: '#008080',
-                        backgroundColor: 'rgba(0, 128, 128, 0.05)'
+                        color: '#fff',
+                        background: 'linear-gradient(90deg, #008080 60%, #00b4b4 100%)',
+                        boxShadow: '0 2px 8px rgba(0,128,128,0.10)',
+                        opacity: 1,
                       },
                       '&:hover': {
-                        backgroundColor: 'rgba(0, 128, 128, 0.03)'
+                        backgroundColor: 'rgba(0, 128, 128, 0.08)',
+                        color: '#008080',
+                        opacity: 1,
+                      },
+                      '&.Mui-selected:hover': {
+                        background: 'linear-gradient(90deg, #008080 60%, #00b4b4 100%)',
+                        color: '#fff',
+                        opacity: 1,
                       }
                     },
                   }}

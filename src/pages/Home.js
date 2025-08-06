@@ -201,7 +201,7 @@ const Home = () => {
             <div className="bg-gradient-to-r from-teal-600 to-teal-500 rounded-xl p-6 text-white">
               <h3 className="font-bold text-xl text-white">Summer Special!</h3>
               <p className="text-base text-white opacity-90 mt-2">Get 20% off on all outdoor equipment</p>
-              <button className="mt-4 bg-glass text-teal-600 px-4 py-2 rounded-full font-semibold shadow-lg transition-all duration-300 hover:scale-105 hover:shadow-xl">Rent Now</button>
+              <button className="mt-4 bg-white text-teal-700 px-4 py-2 rounded-full font-semibold shadow-lg transition-all duration-300 hover:bg-teal-50 hover:scale-105 hover:shadow-xl">Rent Now</button>
             </div>
           </div>
 
@@ -246,7 +246,7 @@ const Home = () => {
                       <span className="text-sm text-gray-600 ml-1">4.8 (12)</span>
                     </div>
                   </div>
-                  <button className="w-full mt-4 bg-teal-600 text-white py-3 rounded-full font-semibold transition-all duration-300 hover:scale-105 hover:shadow-xl">Rent Now</button>
+                  <button className="w-full mt-4 bg-white text-teal-700 py-3 rounded-full font-semibold transition-all duration-300 hover:bg-teal-50 hover:scale-105 hover:shadow-xl">Rent Now</button>
                 </div>
               </div>
             </div>
@@ -278,11 +278,11 @@ const Home = () => {
               <h1 className="text-4xl font-bold text-white mb-4">Rent Anything, Anytime</h1>
               <p className="text-lg text-white opacity-90 mb-8">From cameras to camping gear, find what you need for your next adventure</p>
               <button 
-                className="bg-glass text-teal-600 px-8 py-3 rounded-full font-semibold hover:bg-teal-100 transition shadow-lg"
+                className="bg-white text-teal-700 px-8 py-3 rounded-full font-semibold transition shadow-lg hover:bg-teal-50"
                 onClick={() => navigate('/search')}
-                sx={{
-                  color: '#fff', // Make text white
-                  textShadow: '0 2px 8px rgba(0,0,0,0.18)',
+                style={{
+                  color: '#008080',
+                  textShadow: 'none',
                   fontWeight: 700,
                 }}
               >
