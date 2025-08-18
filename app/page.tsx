@@ -1,67 +1,95 @@
 import Link from "next/link"
+import { useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Search, ShoppingBag, Calendar, MessageCircle } from "lucide-react"
+import { Search, ShoppingBag, Calendar, MessageCircle, Menu } from "lucide-react"
 
 export default function HomePage() {
+  const [mobileNavOpen, setMobileNavOpen] = useState(false)
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 dark:from-gray-900 dark:to-gray-800">
       {/* Header */}
-      <header className="border-b bg-white/80 backdrop-blur-sm dark:bg-gray-900/80">
-        <div className="container mx-auto px-4 py-4 flex items-center justify-between">
+      <header className="border-b bg-white/80 backdrop-blur-sm dark:bg-gray-900/80 sticky top-0 z-30">
+        <div className="container mx-auto px-2 sm:px-4 py-3 flex items-center justify-between">
           <div className="flex items-center space-x-2">
             <ShoppingBag className="h-8 w-8 text-blue-600" />
-            <h1 className="text-2xl font-bold text-gray-900 dark:text-white">RenThing</h1>
+            <h1 className="text-xl sm:text-2xl font-bold text-gray-900 dark:text-white">RenThing</h1>
           </div>
+          {/* Desktop Nav */}
           <nav className="hidden md:flex items-center space-x-6">
-            <Link href="/browse" className="text-gray-600 hover:text-blue-600 dark:text-gray-300">
+            <Link href="/browse" className="text-gray-600 hover:text-blue-600 dark:text-gray-300 text-base">
               Browse
             </Link>
-            <Link href="/services" className="text-gray-600 hover:text-blue-600 dark:text-gray-300">
+            <Link href="/services" className="text-gray-600 hover:text-blue-600 dark:text-gray-300 text-base">
               Services
             </Link>
-            <Link href="/about" className="text-gray-600 hover:text-blue-600 dark:text-gray-300">
+            <Link href="/about" className="text-gray-600 hover:text-blue-600 dark:text-gray-300 text-base">
               About
             </Link>
           </nav>
-          <div className="flex items-center space-x-3">
-            <Button variant="outline" asChild>
+          {/* Mobile Nav Button */}
+          <button className="md:hidden p-2 rounded focus:outline-none focus:ring-2 focus:ring-blue-500" onClick={() => setMobileNavOpen(v => !v)} aria-label="Open navigation">
+            <Menu className="h-7 w-7 text-blue-600" />
+          </button>
+          <div className="hidden md:flex items-center space-x-3">
+            <Button variant="outline" asChild size="sm" className="min-w-[80px]">
               <Link href="/auth/login">Login</Link>
             </Button>
-            <Button asChild>
+            <Button asChild size="sm" className="min-w-[80px]">
               <Link href="/auth/register">Sign Up</Link>
             </Button>
           </div>
         </div>
+        {/* Mobile Nav Drawer */}
+        {mobileNavOpen && (
+          <div className="md:hidden bg-white dark:bg-gray-900 border-t px-4 py-3 space-y-2">
+            <Link href="/browse" className="block text-gray-700 dark:text-gray-200 py-2" onClick={() => setMobileNavOpen(false)}>
+              Browse
+            </Link>
+            <Link href="/services" className="block text-gray-700 dark:text-gray-200 py-2" onClick={() => setMobileNavOpen(false)}>
+              Services
+            </Link>
+            <Link href="/about" className="block text-gray-700 dark:text-gray-200 py-2" onClick={() => setMobileNavOpen(false)}>
+              About
+            </Link>
+            <div className="flex gap-2 pt-2">
+              <Button asChild variant="outline" size="sm" className="flex-1">
+                <Link href="/auth/login" onClick={() => setMobileNavOpen(false)}>Login</Link>
+              </Button>
+              <Button asChild size="sm" className="flex-1">
+                <Link href="/auth/register" onClick={() => setMobileNavOpen(false)}>Sign Up</Link>
+              </Button>
+            </div>
+          </div>
+        )}
       </header>
 
       {/* Hero Section */}
-      <main className="container mx-auto px-4 py-16">
-        <div className="text-center mb-16">
-          <h2 className="text-5xl font-bold text-gray-900 dark:text-white mb-6">Rent Anything, Book Everything</h2>
-          <p className="text-xl text-gray-600 dark:text-gray-300 mb-8 max-w-2xl mx-auto">
-            Your one-stop marketplace for rentals and services. From equipment to experiences, find what you need or
-            offer what you have.
+      <main className="container mx-auto px-2 sm:px-4 py-10 sm:py-16">
+        <div className="text-center mb-12 sm:mb-16">
+          <h2 className="text-3xl sm:text-5xl font-bold text-gray-900 dark:text-white mb-4 sm:mb-6 leading-tight">Rent Anything, Book Everything</h2>
+          <p className="text-base sm:text-xl text-gray-600 dark:text-gray-300 mb-6 sm:mb-8 max-w-2xl mx-auto">
+            Your one-stop marketplace for rentals and services. From equipment to experiences, find what you need or offer what you have.
           </p>
-          <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <Button size="lg" className="text-lg px-8" asChild>
+          <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center">
+            <Button size="lg" className="text-base sm:text-lg px-6 sm:px-8 py-3 sm:py-4" asChild>
               <Link href="/browse">Start Browsing</Link>
             </Button>
-            <Button size="lg" variant="outline" className="text-lg px-8 bg-transparent" asChild>
+            <Button size="lg" variant="outline" className="text-base sm:text-lg px-6 sm:px-8 py-3 sm:py-4 bg-transparent" asChild>
               <Link href="/list-item">List Your Item</Link>
             </Button>
           </div>
         </div>
 
         {/* Features Grid */}
-        <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6 mb-16">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 mb-12 sm:mb-16">
           <Card className="text-center">
             <CardHeader>
-              <Search className="h-12 w-12 text-blue-600 mx-auto mb-4" />
-              <CardTitle>Smart Search</CardTitle>
+              <Search className="h-10 w-10 sm:h-12 sm:w-12 text-blue-600 mx-auto mb-3 sm:mb-4" />
+              <CardTitle className="text-base sm:text-lg">Smart Search</CardTitle>
             </CardHeader>
             <CardContent>
-              <CardDescription>
+              <CardDescription className="text-xs sm:text-sm">
                 Find exactly what you need with our intelligent search and filtering system.
               </CardDescription>
             </CardContent>
@@ -69,11 +97,11 @@ export default function HomePage() {
 
           <Card className="text-center">
             <CardHeader>
-              <Calendar className="h-12 w-12 text-green-600 mx-auto mb-4" />
-              <CardTitle>Easy Booking</CardTitle>
+              <Calendar className="h-10 w-10 sm:h-12 sm:w-12 text-green-600 mx-auto mb-3 sm:mb-4" />
+              <CardTitle className="text-base sm:text-lg">Easy Booking</CardTitle>
             </CardHeader>
             <CardContent>
-              <CardDescription>Schedule rentals and services with our intuitive booking calendar.</CardDescription>
+              <CardDescription className="text-xs sm:text-sm">Schedule rentals and services with our intuitive booking calendar.</CardDescription>
             </CardContent>
           </Card>
 

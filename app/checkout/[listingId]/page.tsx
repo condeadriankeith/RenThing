@@ -17,6 +17,7 @@ import { XenditCheckout } from "@/components/xendit-checkout"
 import { useToast } from "@/hooks/use-toast"
 
 export default function CheckoutPage() {
+
   const params = useParams()
   const router = useRouter()
   const { toast } = useToast()
@@ -31,21 +32,6 @@ export default function CheckoutPage() {
 
   const listing = mockListings.find((l) => l.id === params.listingId)
 
-  useEffect(() => {
-    if (listing && bookingDetails.startDate && bookingDetails.endDate) {
-      const start = new Date(bookingDetails.startDate)
-      const end = new Date(bookingDetails.endDate)
-      const diffTime = Math.abs(end.getTime() - start.getTime())
-      const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24))
-
-      setBookingDetails((prev) => ({
-        ...prev,
-        duration: diffDays || 1,
-        totalPrice: (diffDays || 1) * listing.price,
-      }))
-    }
-  }, [bookingDetails.startDate, bookingDetails.endDate, listing])
-
   if (!listing) {
     return (
       <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex items-center justify-center">
@@ -59,22 +45,31 @@ export default function CheckoutPage() {
     )
   }
 
-  const handlePaymentSuccess = async (paymentData: any) => {
-    setIsProcessing(true)
-
-    // TODO: Send payment data to backend for processing
-    setTimeout(() => {
-      setIsProcessing(false)
-      toast({
-        title: "Payment successful!",
-        description: "Your booking has been confirmed. Check your email for details.",
-      })
-      router.push(`/booking-confirmation/${paymentData.transactionId}`)
-    }, 2000)
-  }
+  useEffect(() => {
+    if (listing && bookingDetails.startDate && bookingDetails.endDate) {
+      const start = new Date(bookingDetails.startDate)
+      const end = new Date(bookingDetails.endDate)
+      const diffTime = Math.abs(end.getTime() - start.getTime())
+      const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24))
+      setBookingDetails((prev) => ({
+        ...prev,
+        duration: diffDays,
+        totalPrice: diffDays * (listing.price || 0),
+      }))
+    }
+  }, [bookingDetails.startDate, bookingDetails.endDate, listing])
 
   const serviceFee = Math.round(bookingDetails.totalPrice * 0.05) // 5% service fee
   const totalAmount = bookingDetails.totalPrice + serviceFee
+
+  function handlePaymentSuccess(paymentData: { transactionId: string }) {
+    setIsProcessing(false)
+    toast({
+      title: "Payment successful!",
+      description: "Your booking has been confirmed. Check your email for details.",
+    })
+    router.push(`/booking-confirmation/${paymentData.transactionId}`)
+  }
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900">

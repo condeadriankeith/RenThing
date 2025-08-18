@@ -61,20 +61,21 @@ export const Chat: React.FC<ChatProps> = ({ ownerId }) => {
 	};
 
 	return (
-		<div className="flex flex-col h-[500px] border rounded-lg shadow bg-white">
-			<div className="flex-1 overflow-y-auto p-4 space-y-2">
+		<div className="flex flex-col h-[70vh] max-h-[600px] min-h-[350px] w-full max-w-2xl mx-auto border rounded-lg shadow bg-white sm:h-[500px] sm:max-h-[600px]">
+			<div className="flex-1 overflow-y-auto p-2 sm:p-4 space-y-2">
 				{messages.map((msg) => (
 					<div
 						key={msg.id}
 						className={`flex ${msg.sender === "user" ? "justify-end" : "justify-start"}`}
 					>
 						<div
-							className={`px-4 py-2 rounded-lg max-w-xs break-words text-sm shadow-sm ${
+							className={`px-3 py-2 rounded-2xl max-w-[80vw] sm:max-w-xs break-words text-sm shadow-sm ${
 								msg.sender === "user"
 									? "bg-blue-500 text-white"
 									: "bg-gray-200 text-gray-900"
 							}`}
 							title={new Date(msg.timestamp).toLocaleString()}
+							style={{ wordBreak: "break-word" }}
 						>
 							{msg.text}
 						</div>
@@ -82,17 +83,18 @@ export const Chat: React.FC<ChatProps> = ({ ownerId }) => {
 				))}
 				<div ref={messagesEndRef} />
 			</div>
-			<div className="p-3 border-t flex gap-2 bg-gray-50">
+			<div className="p-2 sm:p-3 border-t flex gap-2 bg-gray-50">
 				<input
 					type="text"
-					className="flex-1 border rounded px-3 py-2 focus:outline-none focus:ring"
+					className="flex-1 border rounded-full px-3 py-2 focus:outline-none focus:ring text-sm sm:text-base"
 					placeholder="Type your message..."
 					value={input}
 					onChange={(e) => setInput(e.target.value)}
 					onKeyDown={handleInputKeyDown}
+					autoComplete="off"
 				/>
 				<button
-					className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 disabled:opacity-50"
+					className="bg-blue-500 text-white px-4 py-2 rounded-full hover:bg-blue-600 disabled:opacity-50 text-sm sm:text-base"
 					onClick={handleSend}
 					disabled={!input.trim()}
 				>

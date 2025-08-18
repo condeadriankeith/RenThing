@@ -43,55 +43,47 @@ export default function MyBookingsPage() {
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
       {/* Header */}
-      <header className="border-b bg-white dark:bg-gray-800">
-        <div className="container mx-auto px-4 py-4">
-          <div className="flex items-center justify-between">
-            <Link href="/" className="flex items-center space-x-2">
-              <ShoppingBag className="h-8 w-8 text-blue-600" />
-              <h1 className="text-2xl font-bold text-gray-900 dark:text-white">RenThing</h1>
-            </Link>
-            <nav className="hidden md:flex items-center space-x-6">
-              <Link href="/browse" className="text-gray-600 hover:text-blue-600 dark:text-gray-300">
-                Browse
-              </Link>
-              <Link href="/my-bookings" className="text-blue-600 font-medium">
-                My Bookings
-              </Link>
-              <Link href="/list-item" className="text-gray-600 hover:text-blue-600 dark:text-gray-300">
-                List Item
-              </Link>
-            </nav>
-            <div className="flex items-center space-x-3">
-              <Button variant="outline" asChild>
-                <Link href="/auth/login">Login</Link>
-              </Button>
-              <Button asChild>
-                <Link href="/browse">Browse Items</Link>
-              </Button>
-            </div>
+      <header className="border-b bg-white dark:bg-gray-800 sticky top-0 z-10">
+        <div className="container mx-auto px-2 sm:px-4 py-3 flex items-center justify-between">
+          <Link href="/" className="flex items-center space-x-2">
+            <ShoppingBag className="h-7 w-7 sm:h-8 sm:w-8 text-blue-600" />
+            <h1 className="text-xl sm:text-2xl font-bold text-gray-900 dark:text-white">RenThing</h1>
+          </Link>
+          <nav className="hidden md:flex items-center space-x-6">
+            <Link href="/browse" className="text-gray-600 hover:text-blue-600 dark:text-gray-300 text-base">Browse</Link>
+            <Link href="/my-bookings" className="text-blue-600 font-medium text-base">My Bookings</Link>
+            <Link href="/list-item" className="text-gray-600 hover:text-blue-600 dark:text-gray-300 text-base">List Item</Link>
+          </nav>
+          <div className="flex items-center space-x-2 sm:space-x-3">
+            <Button variant="outline" asChild size="sm" className="min-w-[80px]">
+              <Link href="/auth/login">Login</Link>
+            </Button>
+            <Button asChild size="sm" className="min-w-[80px]">
+              <Link href="/browse">Browse Items</Link>
+            </Button>
           </div>
         </div>
       </header>
 
-      <div className="container mx-auto px-4 py-8">
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">My Bookings</h1>
-          <p className="text-gray-600 dark:text-gray-400">Manage your rentals and bookings</p>
+      <div className="container mx-auto px-2 sm:px-4 py-6 sm:py-8">
+        <div className="mb-6 sm:mb-8">
+          <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white mb-2">My Bookings</h1>
+          <p className="text-sm sm:text-base text-gray-600 dark:text-gray-400">Manage your rentals and bookings</p>
         </div>
 
         {/* Search and Filters */}
-        <div className="flex flex-col md:flex-row gap-4 mb-6">
+        <div className="flex flex-col md:flex-row gap-3 sm:gap-4 mb-5 sm:mb-6">
           <div className="flex-1 relative">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
             <Input
               placeholder="Search bookings..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="pl-10"
+              className="pl-10 text-sm sm:text-base"
             />
           </div>
           <Select value={statusFilter} onValueChange={setStatusFilter}>
-            <SelectTrigger className="w-full md:w-48">
+            <SelectTrigger className="w-full md:w-48 text-sm sm:text-base">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
@@ -105,19 +97,19 @@ export default function MyBookingsPage() {
         </div>
 
         {/* Booking Tabs */}
-        <Tabs defaultValue="upcoming" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-3">
+        <Tabs defaultValue="upcoming" className="space-y-4 sm:space-y-6">
+          <TabsList className="grid w-full grid-cols-3 text-xs sm:text-base">
             <TabsTrigger value="upcoming">Upcoming ({upcomingBookings.length})</TabsTrigger>
             <TabsTrigger value="past">Past ({pastBookings.length})</TabsTrigger>
             <TabsTrigger value="cancelled">Cancelled ({cancelledBookings.length})</TabsTrigger>
           </TabsList>
 
-          <TabsContent value="upcoming" className="space-y-4">
+          <TabsContent value="upcoming" className="space-y-3 sm:space-y-4">
             {upcomingBookings.length === 0 ? (
               <Card>
-                <CardContent className="text-center py-12">
-                  <Calendar className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-                  <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-2">No upcoming bookings</h3>
+                <CardContent className="text-center py-8 sm:py-12">
+                  <Calendar className="h-8 w-8 sm:h-12 sm:w-12 text-gray-400 mx-auto mb-3 sm:mb-4" />
+                  <h3 className="text-base sm:text-lg font-medium text-gray-900 dark:text-white mb-2">No upcoming bookings</h3>
                   <p className="text-gray-600 dark:text-gray-400 mb-4">Start exploring and book your next rental!</p>
                   <Button asChild>
                     <Link href="/browse">Browse Items</Link>

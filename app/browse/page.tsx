@@ -87,37 +87,29 @@ export default function BrowsePage() {
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
       {/* Header */}
       <header className="border-b bg-white dark:bg-gray-800 sticky top-0 z-10">
-        <div className="container mx-auto px-4 py-4">
-          <div className="flex items-center justify-between">
-            <Link href="/" className="flex items-center space-x-2">
-              <ShoppingBag className="h-8 w-8 text-blue-600" />
-              <h1 className="text-2xl font-bold text-gray-900 dark:text-white">RenThing</h1>
-            </Link>
-            <nav className="hidden md:flex items-center space-x-6">
-              <Link href="/browse" className="text-blue-600 font-medium">
-                Browse
-              </Link>
-              <Link href="/list-item" className="text-gray-600 hover:text-blue-600 dark:text-gray-300">
-                List Item
-              </Link>
-              <Link href="/my-bookings" className="text-gray-600 hover:text-blue-600 dark:text-gray-300">
-                My Bookings
-              </Link>
-            </nav>
-            <div className="flex items-center space-x-3">
-              <Button variant="outline" asChild>
-                <Link href="/auth/login">Login</Link>
-              </Button>
-              <Button asChild>
-                <Link href="/list-item">List Item</Link>
-              </Button>
-            </div>
+        <div className="container mx-auto px-2 sm:px-4 py-3 flex items-center justify-between">
+          <Link href="/" className="flex items-center space-x-2">
+            <ShoppingBag className="h-7 w-7 sm:h-8 sm:w-8 text-blue-600" />
+            <h1 className="text-xl sm:text-2xl font-bold text-gray-900 dark:text-white">RenThing</h1>
+          </Link>
+          <nav className="hidden md:flex items-center space-x-6">
+            <Link href="/browse" className="text-blue-600 font-medium text-base">Browse</Link>
+            <Link href="/list-item" className="text-gray-600 hover:text-blue-600 dark:text-gray-300 text-base">List Item</Link>
+            <Link href="/my-bookings" className="text-gray-600 hover:text-blue-600 dark:text-gray-300 text-base">My Bookings</Link>
+          </nav>
+          <div className="flex items-center space-x-2 sm:space-x-3">
+            <Button variant="outline" asChild size="sm" className="min-w-[80px]">
+              <Link href="/auth/login">Login</Link>
+            </Button>
+            <Button asChild size="sm" className="min-w-[80px]">
+              <Link href="/list-item">List Item</Link>
+            </Button>
           </div>
         </div>
       </header>
 
-      <div className="container mx-auto px-4 py-8">
-        <div className="mb-8">
+      <div className="container mx-auto px-2 sm:px-4 py-6 sm:py-8">
+        <div className="mb-6 sm:mb-8">
           <div className="flex flex-col lg:flex-row gap-6">
             {/* Main Search */}
             <div className="flex-1">
