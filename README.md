@@ -1,30 +1,107 @@
-# Empty conversation
 
-*Automatically synced with your [v0.app](https://v0.app) deployments*
+<p align="center">
+  <img src="public/placeholder-logo.png" alt="RenThing Logo" width="120" />
+</p>
 
-[![Deployed on Vercel](https://img.shields.io/badge/Deployed%20on-Vercel-black?style=for-the-badge&logo=vercel)](https://vercel.com/adriankeithconde-6118s-projects/v0-empty-conversation)
-[![Built with v0](https://img.shields.io/badge/Built%20with-v0.app-black?style=for-the-badge)](https://v0.app/chat/projects/tW0Ktrbgynv)
+# RenThing
 
-## Overview
+> The all-in-one rental marketplace for the Philippines
 
-This repository will stay in sync with your deployed chats on [v0.app](https://v0.app).
-Any changes you make to your deployed app will be automatically pushed to this repository from [v0.app](https://v0.app).
+[![MIT License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
+[![Next.js](https://img.shields.io/badge/built%20with-Next.js-blue)](https://nextjs.org/)
+[![TypeScript](https://img.shields.io/badge/language-TypeScript-blue)](https://www.typescriptlang.org/)
 
-## Deployment
+---
 
-Your project is live at:
+## Table of Contents
 
-**[https://vercel.com/adriankeithconde-6118s-projects/v0-empty-conversation](https://vercel.com/adriankeithconde-6118s-projects/v0-empty-conversation)**
+- [About](#about)
+- [Features](#features)
+- [Tech Stack](#tech-stack)
+- [Screenshots](#screenshots)
+- [Getting Started](#getting-started)
+- [Environment Variables](#environment-variables)
+- [Usage](#usage)
+- [Contributing](#contributing)
+- [License](#license)
 
-## Build your app
+---
 
-Continue building your app on:
+## About
 
-**[https://v0.app/chat/projects/tW0Ktrbgynv](https://v0.app/chat/projects/tW0Ktrbgynv)**
+RenThing is a modern web application for the Philippines, enabling users to list, browse, and book items for rent. Whether you need tools, vehicles, electronics, or event equipment, RenThing makes renting easy, secure, and accessible.
 
-## How It Works
+## Features
 
-1. Create and modify your project using [v0.app](https://v0.app)
-2. Deploy your chats from the v0 interface
-3. Changes are automatically pushed to this repository
-4. Vercel deploys the latest version from this repository
+- **Browse Listings:** Discover a wide range of items for rent.
+- **User Authentication:** Secure registration and login for renters and owners.
+- **Booking System:** Book items for specific dates and manage your bookings.
+- **Chat:** Communicate directly with owners or renters.
+- **Payment Integration:** Pay securely in Philippine Peso (₱) via Stripe and Xendit.
+- **Responsive Design:** Works on desktop and mobile.
+- **Search & Filters:** Quickly find what you need.
+- **Booking History:** View and manage your past and upcoming rentals.
+
+## Tech Stack
+
+- [Next.js](https://nextjs.org/) (React framework)
+- [TypeScript](https://www.typescriptlang.org/)
+- [Tailwind CSS](https://tailwindcss.com/)
+- [Stripe](https://stripe.com/) & [Xendit](https://www.xendit.co/) for payments
+
+## Screenshots
+
+> _Add screenshots of your app here (e.g. homepage, booking flow, chat, etc.)_
+
+## Getting Started
+
+### Prerequisites
+
+- [Node.js](https://nodejs.org/) (v18+ recommended)
+- [pnpm](https://pnpm.io/) (or npm/yarn)
+
+### Installation
+
+1. Clone the repository:
+	```sh
+	git clone https://github.com/yourusername/renthing.git
+	cd renthing
+	```
+2. Install dependencies:
+	```sh
+	pnpm install
+	```
+3. Copy `.env.example` to `.env.local` and update values as needed.
+
+### Running Locally
+
+```sh
+pnpm dev
+```
+Visit [http://localhost:3000](http://localhost:3000)
+
+## Environment Variables
+
+Create a `.env.local` file in the root and configure the following:
+
+```env
+# Example
+STRIPE_SECRET_KEY=your_stripe_secret
+XENDIT_API_KEY=your_xendit_key
+NEXT_PUBLIC_BASE_URL=http://localhost:3000
+```
+
+## Usage
+
+- List your items for rent
+- Browse and book available items
+- Chat with owners/renters
+- Manage your bookings and payments
+
+## Contributing
+
+Contributions are welcome! Please open an issue or submit a pull request for improvements or bug fixes.
+
+## License
+
+This project is licensed under the MIT License. See [LICENSE](LICENSE) for details.

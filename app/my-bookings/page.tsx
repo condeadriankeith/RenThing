@@ -166,7 +166,7 @@ export default function MyBookingsPage() {
                           </div>
                           <div>
                             <p className="text-sm text-gray-600 dark:text-gray-400">Total</p>
-                            <p className="font-medium text-blue-600">${booking.totalAmount}</p>
+                            <p className="font-medium text-blue-600">₱{booking.totalAmount.toLocaleString()}</p>
                           </div>
                         </div>
 
@@ -240,7 +240,7 @@ export default function MyBookingsPage() {
                         </div>
                         <div>
                           <p className="text-sm text-gray-600 dark:text-gray-400">Total</p>
-                          <p className="font-medium text-blue-600">${booking.totalAmount}</p>
+                          <p className="font-medium text-blue-600">₱{booking.totalAmount.toLocaleString()}</p>
                         </div>
                       </div>
 
@@ -305,7 +305,7 @@ export default function MyBookingsPage() {
                         </div>
                         <div>
                           <p className="text-sm text-gray-600 dark:text-gray-400">Refund Amount</p>
-                          <p className="font-medium">${booking.totalAmount}</p>
+                          <p className="font-medium">₱{booking.totalAmount.toLocaleString()}</p>
                         </div>
                       </div>
 

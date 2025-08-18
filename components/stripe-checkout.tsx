@@ -18,7 +18,7 @@ interface StripeCheckoutProps {
   disabled?: boolean
 }
 
-export function StripeCheckout({ amount, currency, onSuccess, disabled }: StripeCheckoutProps) {
+export function StripeCheckout({ amount, currency = "PHP", onSuccess, disabled }: StripeCheckoutProps) {
   const [isProcessing, setIsProcessing] = useState(false)
   const [paymentMethod, setPaymentMethod] = useState("card")
   const { toast } = useToast()
@@ -36,7 +36,7 @@ export function StripeCheckout({ amount, currency, onSuccess, disabled }: Stripe
       const paymentData = {
         transactionId: `stripe_${Date.now()}`,
         amount,
-        currency,
+        currency: "php",
         method: paymentMethod,
         status: "succeeded",
         created: new Date().toISOString(),
@@ -58,6 +58,7 @@ export function StripeCheckout({ amount, currency, onSuccess, disabled }: Stripe
     <form onSubmit={handleSubmit} className="space-y-6">
       {/* Payment Method Selection */}
       <div className="space-y-3">
+        <div className="text-lg font-semibold">Amount: <span className="text-blue-600">₱{amount.toLocaleString()}</span></div>
         <Label>Payment Method</Label>
         <div className="grid grid-cols-1 gap-2">
           <button

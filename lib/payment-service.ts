@@ -31,14 +31,14 @@ export interface Transaction {
 
 class PaymentService {
   // Stripe Integration
-  async createStripePaymentIntent(amount: number, currency = "USD"): Promise<PaymentIntent> {
+  async createStripePaymentIntent(amount: number, currency = "PHP"): Promise<PaymentIntent> {
     // Mock Stripe API call
     return new Promise((resolve) => {
       setTimeout(() => {
         resolve({
           id: `pi_stripe_${Date.now()}`,
           amount: amount * 100, // Stripe uses cents
-          currency: currency.toLowerCase(),
+          currency: "php",
           status: "requires_payment_method",
           client_secret: `pi_stripe_${Date.now()}_secret_${Math.random().toString(36).substr(2, 9)}`,
           created: new Date().toISOString(),
@@ -55,8 +55,8 @@ class PaymentService {
         if (Math.random() > 0.05) {
           resolve({
             id: paymentIntentId,
-            amount: 31500, // $315.00 in cents
-            currency: "usd",
+            amount: 31500, // ₱315.00 in cents
+            currency: "php",
             status: "succeeded",
             payment_method: "card_1234",
             created: new Date().toISOString(),

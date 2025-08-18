@@ -203,7 +203,7 @@ export default function BrowsePage() {
                         <div className="flex-1 min-w-0">
                           <p className="font-medium text-sm truncate">{item.title}</p>
                           <p className="text-blue-600 font-semibold">
-                            ${item.price}/{item.priceUnit}
+                            ₱{item.price.toLocaleString()}/{item.priceUnit}
                           </p>
                         </div>
                       </Link>
@@ -260,8 +260,8 @@ export default function BrowsePage() {
                         className="w-full"
                       />
                       <div className="flex justify-between text-sm text-gray-500 mt-1">
-                        <span>${priceRange[0]}</span>
-                        <span>${priceRange[1]}+</span>
+                        <span>₱{priceRange[0].toLocaleString()}</span>
+                        <span>₱{priceRange[1].toLocaleString()}+</span>
                       </div>
                     </div>
                   </div>
@@ -270,7 +270,7 @@ export default function BrowsePage() {
                   <div className="space-y-3">
                     <label className="text-sm font-medium">Availability</label>
                     <div className="flex items-center space-x-2">
-                      <Checkbox id="available" checked={availableOnly} onCheckedChange={setAvailableOnly} />
+                      <Checkbox id="available" checked={availableOnly} onCheckedChange={checked => setAvailableOnly(checked === true)} />
                       <label htmlFor="available" className="text-sm">
                         Available now
                       </label>
@@ -337,7 +337,7 @@ export default function BrowsePage() {
               )}
               {(priceRange[0] > 0 || priceRange[1] < 1000) && (
                 <Badge variant="secondary" className="flex items-center gap-1">
-                  ${priceRange[0]} - ${priceRange[1]}
+                  ₱{priceRange[0].toLocaleString()} - ₱{priceRange[1].toLocaleString()}
                   <X className="h-3 w-3 cursor-pointer" onClick={() => setPriceRange([0, 1000])} />
                 </Badge>
               )}
@@ -394,7 +394,7 @@ export default function BrowsePage() {
                   </div>
                   <div className="flex items-center justify-between">
                     <div>
-                      <span className="text-2xl font-bold text-blue-600">${listing.price}</span>
+                      <span className="text-2xl font-bold text-blue-600">₱{listing.price.toLocaleString()}</span>
                       <span className="text-sm text-gray-500">/{listing.priceUnit}</span>
                     </div>
                     {listing.available && (

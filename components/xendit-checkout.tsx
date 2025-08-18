@@ -18,7 +18,7 @@ interface XenditCheckoutProps {
   disabled?: boolean
 }
 
-export function XenditCheckout({ amount, currency, onSuccess, disabled }: XenditCheckoutProps) {
+export function XenditCheckout({ amount, currency = "PHP", onSuccess, disabled }: XenditCheckoutProps) {
   const [isProcessing, setIsProcessing] = useState(false)
   const [paymentMethod, setPaymentMethod] = useState("gcash")
   const { toast } = useToast()
@@ -36,7 +36,7 @@ export function XenditCheckout({ amount, currency, onSuccess, disabled }: Xendit
       const paymentData = {
         transactionId: `xendit_${Date.now()}`,
         amount,
-        currency,
+        currency: "php",
         method: paymentMethod,
         status: "succeeded",
         created: new Date().toISOString(),
@@ -58,6 +58,7 @@ export function XenditCheckout({ amount, currency, onSuccess, disabled }: Xendit
     <form onSubmit={handleSubmit} className="space-y-6">
       {/* Payment Method Selection */}
       <div className="space-y-3">
+        <div className="text-lg font-semibold">Amount: <span className="text-blue-600">₱{amount.toLocaleString()}</span></div>
         <Label>Payment Method</Label>
         <div className="grid grid-cols-1 gap-2">
           <button

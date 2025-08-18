@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Calendar, MessageCircle, Clock } from "lucide-react"
 import { DayPicker } from "react-day-picker"
+import type { DateRange } from "react-day-picker"
 import type { Listing } from "@/lib/mock-data"
 import { useToast } from "@/hooks/use-toast"
 import "react-day-picker/dist/style.css"
@@ -17,7 +18,7 @@ interface BookingCalendarProps {
 export function BookingCalendar({ listing }: BookingCalendarProps) {
   const router = useRouter()
   const { toast } = useToast()
-  const [selectedDates, setSelectedDates] = useState<{ from?: Date; to?: Date }>({})
+  const [selectedDates, setSelectedDates] = useState<DateRange | undefined>(undefined)
   const [isBooking, setIsBooking] = useState(false)
 
   // Mock unavailable dates (in production, fetch from API)
@@ -35,7 +36,7 @@ export function BookingCalendar({ listing }: BookingCalendarProps) {
   ]
 
   const totalDays = useMemo(() => {
-    if (!selectedDates.from || !selectedDates.to) return 0
+    if (!selectedDates || !selectedDates.from || !selectedDates.to) return 0
     const diffTime = Math.abs(selectedDates.to.getTime() - selectedDates.from.getTime())
     return Math.ceil(diffTime / (1000 * 60 * 60 * 24)) + 1
   }, [selectedDates])
@@ -45,7 +46,7 @@ export function BookingCalendar({ listing }: BookingCalendarProps) {
   const finalTotal = totalPrice + serviceFee
 
   const handleBookNow = () => {
-    if (!selectedDates.from || !selectedDates.to) {
+  if (!selectedDates || !selectedDates.from || !selectedDates.to) {
       toast({
         title: "Please select dates",
         description: "Choose your rental start and end dates to continue.",
@@ -58,8 +59,8 @@ export function BookingCalendar({ listing }: BookingCalendarProps) {
 
     // Store booking details in URL params for checkout
     const searchParams = new URLSearchParams({
-      startDate: selectedDates.from.toISOString().split("T")[0],
-      endDate: selectedDates.to.toISOString().split("T")[0],
+  startDate: selectedDates?.from?.toISOString().split("T")[0],
+  endDate: selectedDates?.to?.toISOString().split("T")[0],
       days: totalDays.toString(),
       total: finalTotal.toString(),
     })
@@ -120,7 +121,8 @@ export function BookingCalendar({ listing }: BookingCalendarProps) {
         </div>
 
         {/* Booking Summary */}
-        {selectedDates.from && selectedDates.to && (
+  {selectedDates && selectedDates.from && selectedDates.to && (
+
           <div className="bg-blue-50 dark:bg-blue-900/20 p-4 rounded-lg space-y-3">
             <div className="flex items-center justify-between">
               <span className="font-medium">Rental Period:</span>
@@ -137,17 +139,17 @@ export function BookingCalendar({ listing }: BookingCalendarProps) {
             <div className="border-t pt-3 space-y-2">
               <div className="flex justify-between text-sm">
                 <span>
-                  ${listing.price} × {totalDays} {totalDays === 1 ? "day" : "days"}
+                  ₱{listing.price.toLocaleString()} × {totalDays} {totalDays === 1 ? "day" : "days"}
                 </span>
-                <span>${totalPrice}</span>
+                <span>₱{totalPrice.toLocaleString()}</span>
               </div>
               <div className="flex justify-between text-sm text-gray-600 dark:text-gray-400">
                 <span>Service fee</span>
-                <span>${serviceFee}</span>
+                <span>₱{serviceFee.toLocaleString()}</span>
               </div>
               <div className="flex justify-between font-semibold text-lg border-t pt-2">
                 <span>Total</span>
-                <span className="text-blue-600">${finalTotal}</span>
+                <span className="text-blue-600">₱{finalTotal.toLocaleString()}</span>
               </div>
             </div>
           </div>
@@ -172,7 +174,7 @@ export function BookingCalendar({ listing }: BookingCalendarProps) {
             size="lg"
             className="flex-1"
             onClick={handleBookNow}
-            disabled={!selectedDates.from || !selectedDates.to || isBooking}
+            disabled={!selectedDates || !selectedDates.from || !selectedDates.to || isBooking}
           >
             {isBooking ? "Processing..." : "Book Now"}
           </Button>
