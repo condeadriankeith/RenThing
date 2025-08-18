@@ -100,3 +100,4 @@ export const Chat: React.FC<ChatProps> = ({ ownerId }) => {
 		</div>
 	);
 };
+"use client";
