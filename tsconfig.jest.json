@@ -1,0 +1,14 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "jsx": "react-jsx",
+    "module": "commonjs",
+    "target": "es2019",
+    "types": ["jest", "node"],
+    "esModuleInterop": true,
+    "allowJs": true,
+    "isolatedModules": false
+  },
+  "include": ["**/*.ts", "**/*.tsx", "**/*.d.ts", "jest.config.js"],
+  "exclude": ["node_modules"]
+}

@@ -1,55 +1,93 @@
-// Authentication utilities and types
-// TODO: Implement with JWT tokens and secure session management
+import { NextAuthOptions, DefaultSession } from "next-auth"
+import { PrismaAdapter } from "@next-auth/prisma-adapter"
+import CredentialsProvider from "next-auth/providers/credentials"
+import bcrypt from "bcryptjs"
+import { prisma } from "./prisma"
+import { logger } from './logger';
+import { analytics } from './analytics';
 
-export interface User {
-  id: string
-  email: string
-  username: string
-  firstName: string
-  lastName: string
-  userType: "user" | "vendor" | "admin"
-  avatar?: string
-  createdAt: Date
-  updatedAt: Date
+declare module "next-auth" {
+  interface Session extends DefaultSession {
+    user: {
+      id: string;
+      role?: string;
+    } & DefaultSession["user"];
+  }
 }
 
-export interface AuthState {
-  user: User | null
-  isAuthenticated: boolean
-  isLoading: boolean
+declare module "next-auth/jwt" {
+  interface JWT {
+    id: string;
+    role?: string;
+  }
 }
 
-// Mock authentication functions - to be replaced with real implementation
-export const authService = {
-  async login(email: string, password: string): Promise<User> {
-    // TODO: Implement JWT authentication with backend
-    throw new Error("Authentication not implemented yet")
-  },
+// NextAuth configuration
+export const authOptions: NextAuthOptions = {
+  adapter: PrismaAdapter(prisma),
+  providers: [
+    CredentialsProvider({
+      name: "credentials",
+      credentials: {
+        email: { label: "Email", type: "email" },
+        password: { label: "Password", type: "password" }
+      },
+      async authorize(credentials) {
+        if (!credentials?.email || !credentials?.password) {
+          return null
+        }
 
-  async register(userData: {
-    email: string
-    username: string
-    firstName: string
-    lastName: string
-    password: string
-    userType: "user" | "vendor"
-  }): Promise<User> {
-    // TODO: Implement user registration with email verification
-    throw new Error("Registration not implemented yet")
-  },
+        const user = await prisma.user.findUnique({
+          where: {
+            email: credentials.email,
+          },
+        })
 
-  async logout(): Promise<void> {
-    // TODO: Implement logout with token cleanup
-    throw new Error("Logout not implemented yet")
-  },
+        if (!user || !user.password) {
+          return null
+        }
 
-  async getCurrentUser(): Promise<User | null> {
-    // TODO: Implement token validation and user fetching
-    return null
-  },
+        const isPasswordValid = await bcrypt.compare(
+          credentials.password,
+          user.password
+        )
 
-  async refreshToken(): Promise<string> {
-    // TODO: Implement token refresh logic
-    throw new Error("Token refresh not implemented yet")
+        if (!isPasswordValid) {
+          return null
+        }
+
+        // analytics.track("user_login", { userId: user.id, email: user.email });
+
+        return {
+          id: user.id,
+          email: user.email,
+          name: user.name,
+          role: user.role,
+        }
+      }
+    })
+  ],
+  session: {
+    strategy: "jwt"
+  },
+  secret: process.env.NEXTAUTH_SECRET,
+  pages: {
+    signIn: "/auth/login",
+  },
+  callbacks: {
+    async jwt({ token, user }) {
+      if (user) {
+        token.id = user.id
+        token.role = user.role
+      }
+      return token
+    },
+    async session({ session, token }) {
+      if (token) {
+        session.user.id = token.id
+        session.user.role = token.role
+      }
+      return session
+    },
   },
 }

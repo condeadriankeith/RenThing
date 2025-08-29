@@ -2,8 +2,10 @@
 
 import type React from "react"
 
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import Link from "next/link"
+import { useSearchParams, useRouter } from "next/navigation"
+import { signIn } from "next-auth/react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
@@ -13,22 +15,60 @@ import { ShoppingBag, Eye, EyeOff } from "lucide-react"
 import { useToast } from "@/hooks/use-toast"
 
 export default function LoginPage() {
+  const [email, setEmail] = useState("")
+  const [password, setPassword] = useState("")
   const [showPassword, setShowPassword] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
   const { toast } = useToast()
+  const searchParams = useSearchParams()
+  const router = useRouter()
+
+  useEffect(() => {
+    const error = searchParams.get("error")
+    if (error) {
+      toast({
+        title: "Login Failed",
+        description: "Invalid email or password. Please try again.",
+        variant: "destructive",
+      })
+    }
+  }, [searchParams, toast])
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
     setIsLoading(true)
 
-    // TODO: Implement actual authentication
-    setTimeout(() => {
-      setIsLoading(false)
-      toast({
-        title: "Login functionality coming soon!",
-        description: "Authentication will be implemented in the next phase.",
+    try {
+      const result = await signIn("credentials", {
+        redirect: false,
+        email,
+        password,
       })
-    }, 1000)
+
+      console.log("SignIn result:", result) // Debug log
+
+      if (result?.error) {
+        throw new Error(result.error)
+      }
+
+      if (result?.ok) {
+        // Successful login - redirect to browse page
+        router.push("/browse")
+        router.refresh() // Refresh to ensure session state is updated
+      } else {
+        throw new Error("Login failed - no error but not successful")
+      }
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : "Login failed"
+      console.error("Login error:", error) // Debug log
+      toast({
+        title: "Login Failed",
+        description: errorMessage,
+        variant: "destructive",
+      })
+    } finally {
+      setIsLoading(false)
+    }
   }
 
   return (
@@ -46,7 +86,15 @@ export default function LoginPage() {
           <form onSubmit={handleSubmit} className="space-y-3 sm:space-y-4">
             <div className="space-y-1.5 sm:space-y-2">
               <Label htmlFor="email" className="text-sm">Email</Label>
-              <Input id="email" type="email" placeholder="Enter your email" required className="text-sm sm:text-base" />
+              <Input
+                id="email"
+                type="email"
+                placeholder="Enter your email"
+                required
+                className="text-sm sm:text-base"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+              />
             </div>
             <div className="space-y-1.5 sm:space-y-2">
               <Label htmlFor="password" className="text-sm">Password</Label>
@@ -57,6 +105,8 @@ export default function LoginPage() {
                   placeholder="Enter your password"
                   required
                   className="text-sm sm:text-base pr-10"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
                 />
                 <Button
                   type="button"
@@ -82,7 +132,7 @@ export default function LoginPage() {
               </Link>
             </div>
             <Button type="submit" className="w-full py-2 sm:py-3 text-sm sm:text-base" disabled={isLoading}>
-              {isLoading ? "Signing in..." : "Sign in"}
+              {isLoading ? "Logging in..." : "Log in"}
             </Button>
           </form>
 

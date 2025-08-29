@@ -1,194 +1,414 @@
-// Mock Meilisearch integration for fast, typo-tolerant search
-// In production, this would connect to actual Meilisearch instance
+import { MeiliSearch } from 'meilisearch'
+import { PrismaClient } from '@prisma/client'
 
-import type { Listing } from "./mock-data"
+const prisma = new PrismaClient()
 
-export interface SearchResult {
-  hits: Listing[]
-  query: string
-  processingTimeMs: number
-  hitsCount: number
-  facetDistribution?: Record<string, Record<string, number>>
+export interface SearchListing {
+  id: string
+  title: string
+  description: string
+  price: number
+  category: string
+  location: string
+  latitude: number
+  longitude: number
+  images: string[]
+  features: string[]
+  ownerId: string
+  ownerName: string
+  ownerImage?: string
+  averageRating: number
+  reviewCount: number
+  available: boolean
+  createdAt: string
+  updatedAt: string
 }
 
 export interface SearchOptions {
   query?: string
-  filters?: string[]
-  facets?: string[]
-  sort?: string[]
-  limit?: number
-  offset?: number
-  attributesToHighlight?: string[]
+  filters?: {
+    category?: string[]
+    priceRange?: [number, number]
+    location?: string[]
+    available?: boolean
+    rating?: number
+    features?: string[]
+  }
+  sort?: {
+    field: 'price' | 'createdAt' | 'rating' | 'relevance'
+    order: 'asc' | 'desc'
+  }
+  pagination?: {
+    page: number
+    limit: number
+  }
+  geo?: {
+    lat: number
+    lng: number
+    radius: number // in kilometers
+  }
 }
 
-class MockMeilisearchService {
-  private listings: Listing[]
+export interface SearchResult {
+  hits: SearchListing[]
+  query: string
+  processingTimeMs: number
+  totalHits: number
+  totalPages: number
+  currentPage: number
+  facets?: {
+    category: Record<string, number>
+    priceRange: Record<string, number>
+    location: Record<string, number>
+    features: Record<string, number>
+    rating: Record<string, number>
+  }
+}
 
-  constructor(listings: Listing[]) {
-    this.listings = listings
+class MeilisearchService {
+  private client: MeiliSearch
+  private indexName = 'listings'
+
+  constructor() {
+    this.client = new MeiliSearch({
+      host: process.env.MEILISEARCH_HOST || 'http://localhost:7700',
+      apiKey: process.env.MEILISEARCH_API_KEY || '',
+    })
+  }
+
+  async initializeIndex() {
+    try {
+      const index = await this.client.getIndex(this.indexName)
+      return index
+    } catch (error) {
+      // Index doesn't exist, create it
+      const index = await this.client.createIndex(this.indexName, {
+        primaryKey: 'id',
+      })
+
+      // Configure searchable attributes
+      await index.updateSearchableAttributes([
+        'title',
+        'description',
+        'category',
+        'location',
+        'features',
+      ])
+
+      // Configure filterable attributes
+      await index.updateFilterableAttributes([
+        'category',
+        'price',
+        'location',
+        'available',
+        'averageRating',
+        'features',
+        'ownerId',
+      ])
+
+      // Configure sortable attributes
+      await index.updateSortableAttributes([
+        'price',
+        'createdAt',
+        'averageRating',
+      ])
+
+      // Configure ranking rules
+      await index.updateRankingRules([
+        'words',
+        'typo',
+        'proximity',
+        'attribute',
+        'sort',
+        'exactness',
+        'averageRating:desc',
+      ])
+
+      return index
+    }
+  }
+
+  async indexListing(listingId: string) {
+    try {
+      const listing = await prisma.listing.findUnique({
+        where: { id: listingId },
+        include: {
+          images: true,
+          owner: {
+            select: {
+              id: true,
+              name: true,
+              image: true,
+            },
+          },
+          reviews: {
+            select: {
+              rating: true,
+            },
+          },
+        },
+      })
+
+      if (!listing) return
+
+      const averageRating = listing.reviews.length > 0
+        ? listing.reviews.reduce((sum, review) => sum + review.rating, 0) / listing.reviews.length
+        : 0
+
+      const searchListing: SearchListing = {
+        id: listing.id,
+        title: listing.title,
+        description: listing.description,
+        price: listing.price,
+        category: listing.category,
+        location: listing.location,
+        latitude: listing.latitude,
+        longitude: listing.longitude,
+        images: listing.images.map(img => img.url),
+        features: listing.features || [],
+        ownerId: listing.owner.id,
+        ownerName: listing.owner.name,
+        ownerImage: listing.owner.image || undefined,
+        averageRating,
+        reviewCount: listing.reviews.length,
+        available: listing.available,
+        createdAt: listing.createdAt.toISOString(),
+        updatedAt: listing.updatedAt.toISOString(),
+      }
+
+      const index = await this.initializeIndex()
+      await index.addDocuments([searchListing])
+    } catch (error) {
+      console.error('Error indexing listing:', error)
+    }
+  }
+
+  async updateListing(listingId: string) {
+    await this.indexListing(listingId)
+  }
+
+  async deleteListing(listingId: string) {
+    try {
+      const index = await this.initializeIndex()
+      await index.deleteDocument(listingId)
+    } catch (error) {
+      console.error('Error deleting listing from index:', error)
+    }
   }
 
   async search(options: SearchOptions): Promise<SearchResult> {
-    const startTime = Date.now()
-    const { query = "", filters = [], limit = 20, offset = 0 } = options
+    try {
+      const index = await this.initializeIndex()
 
-    let results = [...this.listings]
+      const searchParams: any = {
+        q: options.query || '',
+        limit: options.pagination?.limit || 20,
+        offset: ((options.pagination?.page || 1) - 1) * (options.pagination?.limit || 20),
+      }
 
-    // Apply text search with typo tolerance (simplified)
-    if (query) {
-      const queryLower = query.toLowerCase()
-      results = results.filter((listing) => {
-        const searchableText = [
-          listing.title,
-          listing.description,
-          listing.category,
-          listing.location,
-          ...listing.features,
-        ]
-          .join(" ")
-          .toLowerCase()
+      // Build filter array
+      const filters: string[] = []
 
-        // Simple typo tolerance - allow 1 character difference for words > 3 chars
-        return this.fuzzyMatch(searchableText, queryLower)
-      })
-    }
+      if (options.filters?.category?.length) {
+        filters.push(`category IN [${options.filters.category.map(c => `"${c}"`).join(', ')}]`)
+      }
 
-    // Apply filters
-    filters.forEach((filter) => {
-      const [field, operator, value] = filter.split(" ")
-      results = results.filter((listing) => {
-        switch (field) {
-          case "category":
-            return listing.category === value
-          case "price":
-            const price = listing.price
-            if (operator === ">=") return price >= Number.parseFloat(value)
-            if (operator === "<=") return price <= Number.parseFloat(value)
-            return true
-          case "available":
-            return listing.available === (value === "true")
-          default:
-            return true
+      if (options.filters?.priceRange) {
+        filters.push(`price >= ${options.filters.priceRange[0]} AND price <= ${options.filters.priceRange[1]}`)
+      }
+
+      if (options.filters?.location?.length) {
+        filters.push(`location IN [${options.filters.location.map(l => `"${l}"`).join(', ')}]`)
+      }
+
+      if (options.filters?.available !== undefined) {
+        filters.push(`available = ${options.filters.available}`)
+      }
+
+      if (options.filters?.rating) {
+        filters.push(`averageRating >= ${options.filters.rating}`)
+      }
+
+      if (options.filters?.features?.length) {
+        options.filters.features.forEach(feature => {
+          filters.push(`features CONTAINS "${feature}"`)
+        })
+      }
+
+      if (options.geo) {
+        filters.push(`_geoRadius(${options.geo.lat}, ${options.geo.lng}, ${options.geo.radius * 1000})`)
+      }
+
+      if (filters.length > 0) {
+        searchParams.filter = filters.join(' AND ')
+      }
+
+      // Configure sorting
+      if (options.sort) {
+        const sortField = options.sort.field === 'relevance' ? '_score' : options.sort.field
+        searchParams.sort = [`${sortField}:${options.sort.order}`]
+      }
+
+      // Add facets
+      searchParams.facets = ['category', 'location', 'features', 'averageRating']
+
+      const searchResult = await index.search(searchParams.q, searchParams)
+
+      // Transform facets into structured format
+      const facets = {
+        category: {},
+        priceRange: {},
+        location: {},
+        features: {},
+        rating: {},
+      }
+
+      if (searchResult.facetDistribution) {
+        facets.category = searchResult.facetDistribution.category || {}
+        facets.location = searchResult.facetDistribution.location || {}
+        facets.features = searchResult.facetDistribution.features || {}
+        
+        // Transform rating facets
+        if (searchResult.facetDistribution.averageRating) {
+          Object.entries(searchResult.facetDistribution.averageRating).forEach(([rating, count]) => {
+            const ratingRange = Math.floor(parseFloat(rating))
+            facets.rating[`${ratingRange}+`] = (facets.rating[`${ratingRange}+`] || 0) + count
+          })
         }
-      })
-    })
 
-    // Apply pagination
-    const paginatedResults = results.slice(offset, offset + limit)
+        // Generate price ranges
+        const priceRanges = {
+          'Under $50': 0,
+          '$50-$200': 0,
+          '$200-$500': 0,
+          '$500-$1000': 0,
+          'Over $1000': 0,
+        }
 
-    const processingTime = Date.now() - startTime
+        searchResult.hits.forEach((hit: any) => {
+          const price = hit.price
+          if (price < 50) priceRanges['Under $50']++
+          else if (price < 200) priceRanges['$50-$200']++
+          else if (price < 500) priceRanges['$200-$500']++
+          else if (price < 1000) priceRanges['$500-$1000']++
+          else priceRanges['Over $1000']++
+        })
 
-    return {
-      hits: paginatedResults,
-      query,
-      processingTimeMs: processingTime,
-      hitsCount: results.length,
-      facetDistribution: this.generateFacets(results),
+        facets.priceRange = priceRanges
+      }
+
+      return {
+        hits: searchResult.hits as SearchListing[],
+        query: options.query || '',
+        processingTimeMs: searchResult.processingTimeMs,
+        totalHits: searchResult.estimatedTotalHits || searchResult.hits.length,
+        totalPages: Math.ceil((searchResult.estimatedTotalHits || searchResult.hits.length) / (options.pagination?.limit || 20)),
+        currentPage: options.pagination?.page || 1,
+        facets,
+      }
+    } catch (error) {
+      console.error('Error searching listings:', error)
+      throw error
     }
   }
 
   async getSuggestions(query: string): Promise<string[]> {
-    if (!query || query.length < 2) return []
+    try {
+      if (!query || query.length < 2) return []
 
-    const suggestions = new Set<string>()
-    const queryLower = query.toLowerCase()
+      const index = await this.initializeIndex()
+      const searchResult = await index.search(query, {
+        limit: 8,
+        attributesToRetrieve: ['title', 'category', 'features'],
+      })
 
-    this.listings.forEach((listing) => {
-      // Add matching titles
-      if (listing.title.toLowerCase().includes(queryLower)) {
-        suggestions.add(listing.title)
-      }
+      const suggestions = new Set<string>()
 
-      // Add matching categories
-      if (listing.category.toLowerCase().includes(queryLower)) {
-        suggestions.add(listing.category)
-      }
-
-      // Add matching features
-      listing.features.forEach((feature) => {
-        if (feature.toLowerCase().includes(queryLower)) {
-          suggestions.add(feature)
+      searchResult.hits.forEach((hit: any) => {
+        suggestions.add(hit.title)
+        if (hit.category) suggestions.add(hit.category)
+        if (hit.features) {
+          hit.features.forEach((feature: string) => {
+            if (feature.toLowerCase().includes(query.toLowerCase())) {
+              suggestions.add(feature)
+            }
+          })
         }
       })
-    })
 
-    return Array.from(suggestions).slice(0, 8)
+      return Array.from(suggestions)
+    } catch (error) {
+      console.error('Error getting suggestions:', error)
+      return []
+    }
   }
 
-  private fuzzyMatch(text: string, query: string): boolean {
-    // Simple fuzzy matching - in production, use proper fuzzy search algorithm
-    const words = query.split(" ")
-    return words.every((word) => {
-      if (word.length <= 3) {
-        return text.includes(word)
-      }
+  async syncDatabase() {
+    try {
+      console.log('Starting database sync with Meilisearch...')
+      
+      const listings = await prisma.listing.findMany({
+        include: {
+          images: true,
+          owner: {
+            select: {
+              id: true,
+              name: true,
+              image: true,
+            },
+          },
+          reviews: {
+            select: {
+              rating: true,
+            },
+          },
+        },
+      })
 
-      // Allow 1 character difference for longer words
-      for (let i = 0; i <= text.length - word.length; i++) {
-        const substring = text.substring(i, i + word.length)
-        if (this.levenshteinDistance(substring, word) <= 1) {
-          return true
+      const searchListings: SearchListing[] = listings.map(listing => {
+        const averageRating = listing.reviews.length > 0
+          ? listing.reviews.reduce((sum, review) => sum + review.rating, 0) / listing.reviews.length
+          : 0
+
+        return {
+          id: listing.id,
+          title: listing.title,
+          description: listing.description,
+          price: listing.price,
+          category: listing.category,
+          location: listing.location,
+          latitude: listing.latitude,
+          longitude: listing.longitude,
+          images: listing.images.map(img => img.url),
+          features: listing.features || [],
+          ownerId: listing.owner.id,
+          ownerName: listing.owner.name,
+          ownerImage: listing.owner.image || undefined,
+          averageRating,
+          reviewCount: listing.reviews.length,
+          available: listing.available,
+          createdAt: listing.createdAt.toISOString(),
+          updatedAt: listing.updatedAt.toISOString(),
         }
+      })
+
+      const index = await this.initializeIndex()
+      await index.deleteAllDocuments()
+      
+      if (searchListings.length > 0) {
+        await index.addDocuments(searchListings)
       }
-      return false
-    })
-  }
 
-  private levenshteinDistance(str1: string, str2: string): number {
-    const matrix = []
-    for (let i = 0; i <= str2.length; i++) {
-      matrix[i] = [i]
+      console.log(`Synced ${searchListings.length} listings to Meilisearch`)
+    } catch (error) {
+      console.error('Error syncing database:', error)
     }
-    for (let j = 0; j <= str1.length; j++) {
-      matrix[0][j] = j
-    }
-    for (let i = 1; i <= str2.length; i++) {
-      for (let j = 1; j <= str1.length; j++) {
-        if (str2.charAt(i - 1) === str1.charAt(j - 1)) {
-          matrix[i][j] = matrix[i - 1][j - 1]
-        } else {
-          matrix[i][j] = Math.min(matrix[i - 1][j - 1] + 1, matrix[i][j - 1] + 1, matrix[i - 1][j] + 1)
-        }
-      }
-    }
-    return matrix[str2.length][str1.length]
-  }
-
-  private generateFacets(results: Listing[]): Record<string, Record<string, number>> {
-    const facets: Record<string, Record<string, number>> = {
-      category: {},
-      location: {},
-      priceRange: {},
-    }
-
-    results.forEach((listing) => {
-      // Category facets
-      facets.category[listing.category] = (facets.category[listing.category] || 0) + 1
-
-      // Location facets
-      const city = listing.location.split(",")[0]
-      facets.location[city] = (facets.location[city] || 0) + 1
-
-      // Price range facets
-      const priceRange =
-        listing.price < 50
-          ? "Under $50"
-          : listing.price < 200
-            ? "$50-$200"
-            : listing.price < 500
-              ? "$200-$500"
-              : "Over $500"
-      facets.priceRange[priceRange] = (facets.priceRange[priceRange] || 0) + 1
-    })
-
-    return facets
   }
 }
 
-// Export singleton instance
-export const searchService = new MockMeilisearchService([])
+export const searchService = new MeilisearchService()
 
-// Initialize with listings (in production, this would be handled by Meilisearch indexing)
-export function initializeSearchService(listings: Listing[]) {
-  return new MockMeilisearchService(listings)
+// Auto-sync on startup in development
+if (process.env.NODE_ENV !== 'production') {
+  searchService.syncDatabase().catch(console.error)
 }

@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useMemo } from "react"
+import { useState, useMemo, useEffect } from "react"
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
@@ -10,11 +10,31 @@ import { Badge } from "@/components/ui/badge"
 import { Slider } from "@/components/ui/slider"
 import { Checkbox } from "@/components/ui/checkbox"
 import { ShoppingBag, Search, Filter, MapPin, Star, Heart, X, TrendingUp } from "lucide-react"
-import { mockListings } from "@/lib/mock-data"
 import { SearchSuggestions } from "@/components/search-suggestions"
+
 import { useDebounce } from "@/hooks/use-debounce"
 
+interface Listing {
+  id: string
+  title: string
+  description: string
+  category: string
+  price: number
+  priceUnit: string
+  location: string
+  images: string[]
+  rating: number
+  reviewCount: number
+  available: boolean
+  features: string[]
+  createdAt: string
+}
+
 export default function BrowsePage() {
+  const [allListings, setAllListings] = useState<Listing[]>([])
+
+  const [isLoading, setIsLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
   const [searchQuery, setSearchQuery] = useState("")
   const [selectedCategory, setSelectedCategory] = useState("all")
   const [sortBy, setSortBy] = useState("newest")
@@ -25,6 +45,43 @@ export default function BrowsePage() {
   const [showSuggestions, setShowSuggestions] = useState(false)
 
   const debouncedSearchQuery = useDebounce(searchQuery, 300)
+
+  useEffect(() => {
+    const fetchListings = async () => {
+      setIsLoading(true)
+      try {
+        const response = await fetch("/api/listings")
+        if (!response.ok) {
+          throw new Error("Failed to fetch listings")
+        }
+        const data = await response.json()
+        const enrichedListings: Listing[] = data.listings.map((listing: any) => ({
+          id: listing.id,
+          title: listing.title,
+          description: listing.description,
+          price: listing.price,
+          location: listing.location,
+          images: listing.images,
+          features: listing.features,
+          createdAt: listing.createdAt,
+          // Add missing fields from mock data structure
+          category: "tools",
+          available: true,
+          rating: listing.averageRating || 0,
+          reviewCount: listing.reviewCount || 0,
+          priceUnit: "day",
+        }))
+        setAllListings(enrichedListings)
+
+      } catch (err: any) {
+        setError(err.message)
+      } finally {
+        setIsLoading(false)
+      }
+    }
+    fetchListings()
+  }, [])
+
 
   const categories = [
     { value: "all", label: "All Categories" },
@@ -37,21 +94,24 @@ export default function BrowsePage() {
   ]
 
   const filteredListings = useMemo(() => {
-    return mockListings
+    return allListings
       .filter((listing) => {
+
         const matchesSearch =
           listing.title.toLowerCase().includes(debouncedSearchQuery.toLowerCase()) ||
           listing.description.toLowerCase().includes(debouncedSearchQuery.toLowerCase()) ||
-          listing.features.some((feature) => feature.toLowerCase().includes(debouncedSearchQuery.toLowerCase()))
+          listing.features.some((feature: string) => feature.toLowerCase().includes(debouncedSearchQuery.toLowerCase()))
+
 
         const matchesCategory = selectedCategory === "all" || listing.category === selectedCategory
         const matchesPrice = listing.price >= priceRange[0] && listing.price <= priceRange[1]
         const matchesAvailability = !availableOnly || listing.available
         const matchesFeatures =
           selectedFeatures.length === 0 ||
-          selectedFeatures.some((feature) =>
-            listing.features.some((listingFeature) => listingFeature.toLowerCase().includes(feature.toLowerCase())),
+          selectedFeatures.some((feature: string) =>
+            listing.features.some((listingFeature: string) => listingFeature.toLowerCase().includes(feature.toLowerCase())),
           )
+
 
         return matchesSearch && matchesCategory && matchesPrice && matchesAvailability && matchesFeatures
       })
@@ -65,15 +125,21 @@ export default function BrowsePage() {
             return b.rating - a.rating
           case "newest":
           default:
-            return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+            const dateA = new Date(a.createdAt)
+            const dateB = new Date(b.createdAt)
+            if (isNaN(dateA.getTime())) return 1
+            if (isNaN(dateB.getTime())) return -1
+            return dateB.getTime() - dateA.getTime()
+
         }
       })
-  }, [debouncedSearchQuery, selectedCategory, sortBy, priceRange, availableOnly, selectedFeatures])
+  }, [allListings, debouncedSearchQuery, selectedCategory, sortBy, priceRange, availableOnly, selectedFeatures])
 
   const popularSearches = ["Camera", "Tesla", "Tools", "Wedding", "Mountain Bike"]
-  const trendingItems = mockListings.slice(0, 3)
+  const trendingItems = allListings.slice(0, 3)
 
-  const allFeatures = Array.from(new Set(mockListings.flatMap((listing) => listing.features))).slice(0, 8) // Show top 8 features
+  const allFeatures = Array.from(new Set(allListings.flatMap((listing) => listing.features))).slice(0, 8) // Show top 8 features
+
 
   const clearFilters = () => {
     setSelectedCategory("all")
@@ -83,30 +149,27 @@ export default function BrowsePage() {
     setSortBy("newest")
   }
 
+  if (isLoading) {
+    return (
+      <div className="flex justify-center items-center h-screen">
+        <div className="animate-spin rounded-full h-32 w-32 border-t-2 border-b-2 border-blue-600"></div>
+      </div>
+    )
+  }
+
+  if (error) {
+    return (
+      <div className="flex justify-center items-center h-screen">
+        <div className="text-red-500 text-lg">Error: {error}</div>
+      </div>
+    )
+  }
+
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
+
       {/* Header */}
-      <header className="border-b bg-white dark:bg-gray-800 sticky top-0 z-10">
-        <div className="container mx-auto px-2 sm:px-4 py-3 flex items-center justify-between">
-          <Link href="/" className="flex items-center space-x-2">
-            <ShoppingBag className="h-7 w-7 sm:h-8 sm:w-8 text-blue-600" />
-            <h1 className="text-xl sm:text-2xl font-bold text-gray-900 dark:text-white">RenThing</h1>
-          </Link>
-          <nav className="hidden md:flex items-center space-x-6">
-            <Link href="/browse" className="text-blue-600 font-medium text-base">Browse</Link>
-            <Link href="/list-item" className="text-gray-600 hover:text-blue-600 dark:text-gray-300 text-base">List Item</Link>
-            <Link href="/my-bookings" className="text-gray-600 hover:text-blue-600 dark:text-gray-300 text-base">My Bookings</Link>
-          </nav>
-          <div className="flex items-center space-x-2 sm:space-x-3">
-            <Button variant="outline" asChild size="sm" className="min-w-[80px]">
-              <Link href="/auth/login">Login</Link>
-            </Button>
-            <Button asChild size="sm" className="min-w-[80px]">
-              <Link href="/list-item">List Item</Link>
-            </Button>
-          </div>
-        </div>
-      </header>
+
 
       <div className="container mx-auto px-2 sm:px-4 py-6 sm:py-8">
         <div className="mb-6 sm:mb-8">
@@ -129,13 +192,14 @@ export default function BrowsePage() {
                 {showSuggestions && (
                   <SearchSuggestions
                     query={searchQuery}
-                    listings={mockListings}
+                    listings={allListings}
                     onSelect={(suggestion) => {
                       setSearchQuery(suggestion)
                       setShowSuggestions(false)
                     }}
                   />
                 )}
+
               </div>
 
               {/* Quick Filters */}
@@ -262,7 +326,8 @@ export default function BrowsePage() {
                   <div className="space-y-3">
                     <label className="text-sm font-medium">Availability</label>
                     <div className="flex items-center space-x-2">
-                      <Checkbox id="available" checked={availableOnly} onCheckedChange={checked => setAvailableOnly(checked === true)} />
+                      <Checkbox id="available" checked={availableOnly} onCheckedChange={(checked: boolean | 'indeterminate') => setAvailableOnly(checked === true)} />
+
                       <label htmlFor="available" className="text-sm">
                         Available now
                       </label>
@@ -278,13 +343,14 @@ export default function BrowsePage() {
                           <Checkbox
                             id={feature}
                             checked={selectedFeatures.includes(feature)}
-                            onCheckedChange={(checked) => {
+                            onCheckedChange={(checked: boolean | 'indeterminate') => {
                               if (checked) {
                                 setSelectedFeatures([...selectedFeatures, feature])
                               } else {
                                 setSelectedFeatures(selectedFeatures.filter((f) => f !== feature))
                               }
                             }}
+
                           />
                           <label htmlFor={feature} className="text-xs truncate">
                             {feature}

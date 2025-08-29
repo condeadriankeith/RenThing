@@ -1,3 +1,4 @@
+import PageTransitionLoader from "@/components/PageTransitionLoader";
 export default function Loading() {
-  return null
+  return <PageTransitionLoader show />;
 }

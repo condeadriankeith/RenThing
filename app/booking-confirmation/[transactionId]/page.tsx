@@ -114,7 +114,7 @@ export default function BookingConfirmationPage() {
                 <img
                   src={bookingData.owner.avatar || "/placeholder.svg"}
                   alt={bookingData.owner.name}
-                  className="w-12 h-12 rounded-full object-cover"
+                  className="w-12 w-12 rounded-full object-cover"
                 />
                 <div>
                   <h3 className="font-semibold">{bookingData.owner.name}</h3>
@@ -140,18 +140,18 @@ export default function BookingConfirmationPage() {
             <CardContent className="space-y-4">
               <div className="flex justify-between">
                 <span>
-                  ${bookingData.pricing.basePrice} × {bookingData.pricing.days} days
+                  ₱{bookingData.pricing.basePrice} × {bookingData.pricing.days} days
                 </span>
-                <span>${bookingData.pricing.subtotal}</span>
+                <span>₱{bookingData.pricing.subtotal}</span>
               </div>
               <div className="flex justify-between text-sm text-gray-600 dark:text-gray-400">
                 <span>Service fee</span>
-                <span>${bookingData.pricing.serviceFee}</span>
+                <span>₱{bookingData.pricing.serviceFee}</span>
               </div>
               <Separator />
               <div className="flex justify-between font-semibold text-lg">
                 <span>Total Paid</span>
-                <span>${bookingData.pricing.total}</span>
+                <span>₱{bookingData.pricing.total}</span>
               </div>
               <Separator />
               <div className="flex items-center justify-between text-sm">
@@ -203,4 +203,3 @@ export default function BookingConfirmationPage() {
     </div>
   )
 }
-          

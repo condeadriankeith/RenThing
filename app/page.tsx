@@ -9,61 +9,7 @@ export default function HomePage() {
   const [mobileNavOpen, setMobileNavOpen] = useState(false)
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 dark:from-gray-900 dark:to-gray-800">
-      {/* Header */}
-      <header className="border-b bg-white/80 backdrop-blur-sm dark:bg-gray-900/80 sticky top-0 z-30">
-        <div className="container mx-auto px-2 sm:px-4 py-3 flex items-center justify-between">
-          <div className="flex items-center space-x-2">
-            <ShoppingBag className="h-8 w-8 text-blue-600" />
-            <h1 className="text-xl sm:text-2xl font-bold text-gray-900 dark:text-white">RenThing</h1>
-          </div>
-          {/* Desktop Nav */}
-          <nav className="hidden md:flex items-center space-x-6">
-            <Link href="/browse" className="text-gray-600 hover:text-blue-600 dark:text-gray-300 text-base">
-              Browse
-            </Link>
-            <Link href="/services" className="text-gray-600 hover:text-blue-600 dark:text-gray-300 text-base">
-              Services
-            </Link>
-            <Link href="/about" className="text-gray-600 hover:text-blue-600 dark:text-gray-300 text-base">
-              About
-            </Link>
-          </nav>
-          {/* Mobile Nav Button */}
-          <button className="md:hidden p-2 rounded focus:outline-none focus:ring-2 focus:ring-blue-500" onClick={() => setMobileNavOpen(v => !v)} aria-label="Open navigation">
-            <Menu className="h-7 w-7 text-blue-600" />
-          </button>
-          <div className="hidden md:flex items-center space-x-3">
-            <Button variant="outline" asChild size="sm" className="min-w-[80px]">
-              <Link href="/auth/login">Login</Link>
-            </Button>
-            <Button asChild size="sm" className="min-w-[80px]">
-              <Link href="/auth/register">Sign Up</Link>
-            </Button>
-          </div>
-        </div>
-        {/* Mobile Nav Drawer */}
-        {mobileNavOpen && (
-          <div className="md:hidden bg-white dark:bg-gray-900 border-t px-4 py-3 space-y-2">
-            <Link href="/browse" className="block text-gray-700 dark:text-gray-200 py-2" onClick={() => setMobileNavOpen(false)}>
-              Browse
-            </Link>
-            <Link href="/services" className="block text-gray-700 dark:text-gray-200 py-2" onClick={() => setMobileNavOpen(false)}>
-              Services
-            </Link>
-            <Link href="/about" className="block text-gray-700 dark:text-gray-200 py-2" onClick={() => setMobileNavOpen(false)}>
-              About
-            </Link>
-            <div className="flex gap-2 pt-2">
-              <Button asChild variant="outline" size="sm" className="flex-1">
-                <Link href="/auth/login" onClick={() => setMobileNavOpen(false)}>Login</Link>
-              </Button>
-              <Button asChild size="sm" className="flex-1">
-                <Link href="/auth/register" onClick={() => setMobileNavOpen(false)}>Sign Up</Link>
-              </Button>
-            </div>
-          </div>
-        )}
-      </header>
+
 
       {/* Hero Section */}
       <main className="container mx-auto px-2 sm:px-4 py-10 sm:py-16">

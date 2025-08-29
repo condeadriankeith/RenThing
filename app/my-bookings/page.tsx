@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
@@ -8,62 +8,105 @@ import { Badge } from "@/components/ui/badge"
 import { Input } from "@/components/ui/input"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { ShoppingBag, Calendar, MapPin, MessageCircle, Download, Star, Search } from "lucide-react"
-import { mockBookings } from "@/lib/mock-bookings"
+import { Calendar, Search } from "lucide-react"
+import { useSession } from "next-auth/react"
+
+interface Booking {
+  id: string
+  listing: {
+    title: string
+    image?: string
+    location: string
+  }
+  startDate: string
+  endDate: string
+  status: "pending" | "confirmed" | "completed" | "cancelled"
+  totalAmount: number
+}
 
 export default function MyBookingsPage() {
   const [searchQuery, setSearchQuery] = useState("")
   const [statusFilter, setStatusFilter] = useState("all")
+  const [bookings, setBookings] = useState<Booking[]>([])
+  const [isLoading, setIsLoading] = useState(true)
+  const { data: session } = useSession()
 
-  const filteredBookings = mockBookings.filter((booking) => {
-    const matchesSearch = booking.listing.title.toLowerCase().includes(searchQuery.toLowerCase())
+  useEffect(() => {
+    // Fetch actual bookings from API
+    const fetchBookings = async () => {
+      if (!session?.user?.id) {
+        setIsLoading(false)
+        return
+      }
+
+      try {
+        const response = await fetch('/api/bookings/user')
+        if (response.ok) {
+          const data = await response.json()
+          setBookings(data)
+        }
+      } catch (error) {
+        console.error('Failed to fetch bookings:', error)
+      } finally {
+        setIsLoading(false)
+      }
+    }
+
+    fetchBookings()
+  }, [session])
+
+  // Filter bookings based on search and status
+  const filteredBookings = bookings.filter((booking) => {
+    const matchesSearch = booking.listing.title
+      .toLowerCase()
+      .includes(searchQuery.toLowerCase())
     const matchesStatus = statusFilter === "all" || booking.status === statusFilter
     return matchesSearch && matchesStatus
   })
 
-  const upcomingBookings = filteredBookings.filter((b) => b.status === "confirmed" || b.status === "pending")
-  const pastBookings = filteredBookings.filter((b) => b.status === "completed")
-  const cancelledBookings = filteredBookings.filter((b) => b.status === "cancelled")
+  const upcomingBookings = filteredBookings.filter(
+    (booking) => booking.status === "confirmed" || booking.status === "pending"
+  )
+  const pastBookings = filteredBookings.filter(
+    (booking) => booking.status === "completed"
+  )
+  const cancelledBookings = filteredBookings.filter(
+    (booking) => booking.status === "cancelled"
+  )
 
   const getStatusColor = (status: string) => {
     switch (status) {
       case "confirmed":
-        return "bg-green-100 text-green-800"
+        return "bg-green-100 text-green-800 dark:bg-green-800 dark:text-green-100"
       case "pending":
-        return "bg-yellow-100 text-yellow-800"
+        return "bg-yellow-100 text-yellow-800 dark:bg-yellow-800 dark:text-yellow-100"
       case "completed":
-        return "bg-blue-100 text-blue-800"
+        return "bg-blue-100 text-blue-800 dark:bg-blue-800 dark:text-blue-100"
       case "cancelled":
-        return "bg-red-100 text-red-800"
+        return "bg-red-100 text-red-800 dark:bg-red-800 dark:text-red-100"
       default:
-        return "bg-gray-100 text-gray-800"
+        return "bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-100"
     }
+  }
+
+  if (!session) {
+    return (
+      <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex items-center justify-center">
+        <Card className="max-w-md mx-auto">
+          <CardContent className="text-center py-12">
+            <h2 className="text-2xl font-bold mb-4">Please Sign In</h2>
+            <p className="text-gray-600 mb-6">Sign in to view your bookings</p>
+            <Button asChild>
+              <Link href="/auth/login">Sign In</Link>
+            </Button>
+          </CardContent>
+        </Card>
+      </div>
+    )
   }
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
-      {/* Header */}
-      <header className="border-b bg-white dark:bg-gray-800 sticky top-0 z-10">
-        <div className="container mx-auto px-2 sm:px-4 py-3 flex items-center justify-between">
-          <Link href="/" className="flex items-center space-x-2">
-            <ShoppingBag className="h-7 w-7 sm:h-8 sm:w-8 text-blue-600" />
-            <h1 className="text-xl sm:text-2xl font-bold text-gray-900 dark:text-white">RenThing</h1>
-          </Link>
-          <nav className="hidden md:flex items-center space-x-6">
-            <Link href="/browse" className="text-gray-600 hover:text-blue-600 dark:text-gray-300 text-base">Browse</Link>
-            <Link href="/my-bookings" className="text-blue-600 font-medium text-base">My Bookings</Link>
-            <Link href="/list-item" className="text-gray-600 hover:text-blue-600 dark:text-gray-300 text-base">List Item</Link>
-          </nav>
-          <div className="flex items-center space-x-2 sm:space-x-3">
-            <Button variant="outline" asChild size="sm" className="min-w-[80px]">
-              <Link href="/auth/login">Login</Link>
-            </Button>
-            <Button asChild size="sm" className="min-w-[80px]">
-              <Link href="/browse">Browse Items</Link>
-            </Button>
-          </div>
-        </div>
-      </header>
 
       <div className="container mx-auto px-2 sm:px-4 py-6 sm:py-8">
         <div className="mb-6 sm:mb-8">
@@ -151,39 +194,14 @@ export default function MyBookingsPage() {
                             </p>
                           </div>
                           <div>
-                            <p className="text-sm text-gray-600 dark:text-gray-400">Duration</p>
-                            <p className="font-medium">
-                              {booking.duration} {booking.duration === 1 ? "day" : "days"}
-                            </p>
-                          </div>
-                          <div>
                             <p className="text-sm text-gray-600 dark:text-gray-400">Total</p>
                             <p className="font-medium text-blue-600">₱{booking.totalAmount.toLocaleString()}</p>
                           </div>
                         </div>
 
-                        <div className="flex flex-wrap gap-2">
-                          <Button size="sm" asChild>
-                            <Link href={`/booking/${booking.id}`}>View Details</Link>
-                          </Button>
-                          <Button variant="outline" size="sm" className="bg-transparent">
-                            <MessageCircle className="h-3 w-3 mr-1" />
-                            Contact Owner
-                          </Button>
-                          <Button variant="outline" size="sm" className="bg-transparent">
-                            <Download className="h-3 w-3 mr-1" />
-                            Receipt
-                          </Button>
-                          {booking.status === "confirmed" && (
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              className="text-red-600 hover:text-red-700 bg-transparent"
-                            >
-                              Cancel
-                            </Button>
-                          )}
-                        </div>
+                        <Button size="sm" asChild>
+                          <Link href={`/booking/${booking.id}`}>View Details</Link>
+                        </Button>
                       </div>
                     </div>
                   </CardContent>
@@ -225,33 +243,14 @@ export default function MyBookingsPage() {
                           </p>
                         </div>
                         <div>
-                          <p className="text-sm text-gray-600 dark:text-gray-400">Duration</p>
-                          <p className="font-medium">
-                            {booking.duration} {booking.duration === 1 ? "day" : "days"}
-                          </p>
-                        </div>
-                        <div>
                           <p className="text-sm text-gray-600 dark:text-gray-400">Total</p>
                           <p className="font-medium text-blue-600">₱{booking.totalAmount.toLocaleString()}</p>
                         </div>
                       </div>
 
-                      <div className="flex flex-wrap gap-2">
-                        <Button size="sm" asChild>
-                          <Link href={`/booking/${booking.id}`}>View Details</Link>
-                        </Button>
-                        <Button variant="outline" size="sm" className="bg-transparent">
-                          <Star className="h-3 w-3 mr-1" />
-                          Write Review
-                        </Button>
-                        <Button variant="outline" size="sm" className="bg-transparent">
-                          <Download className="h-3 w-3 mr-1" />
-                          Receipt
-                        </Button>
-                        <Button variant="outline" size="sm" className="bg-transparent">
-                          Book Again
-                        </Button>
-                      </div>
+                      <Button size="sm" asChild>
+                        <Link href={`/booking/${booking.id}`}>View Details</Link>
+                      </Button>
                     </div>
                   </div>
                 </CardContent>
@@ -285,31 +284,21 @@ export default function MyBookingsPage() {
 
                       <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
                         <div>
-                          <p className="text-sm text-gray-600 dark:text-gray-400">Original Dates</p>
+                          <p className="text-sm text-gray-600 dark:text-gray-400">Dates</p>
                           <p className="font-medium line-through">
                             {new Date(booking.startDate).toLocaleDateString()} -{" "}
                             {new Date(booking.endDate).toLocaleDateString()}
                           </p>
                         </div>
                         <div>
-                          <p className="text-sm text-gray-600 dark:text-gray-400">Refund Status</p>
-                          <p className="font-medium text-green-600">Refunded</p>
-                        </div>
-                        <div>
-                          <p className="text-sm text-gray-600 dark:text-gray-400">Refund Amount</p>
+                          <p className="text-sm text-gray-600 dark:text-gray-400">Total</p>
                           <p className="font-medium">₱{booking.totalAmount.toLocaleString()}</p>
                         </div>
                       </div>
 
-                      <div className="flex flex-wrap gap-2">
-                        <Button size="sm" asChild>
-                          <Link href={`/listing/${booking.listing.id}`}>Book Again</Link>
-                        </Button>
-                        <Button variant="outline" size="sm" className="bg-transparent">
-                          <Download className="h-3 w-3 mr-1" />
-                          Refund Receipt
-                        </Button>
-                      </div>
+                      <Button size="sm" asChild>
+                        <Link href={`/listing/${booking.listing.id}`}>Book Again</Link>
+                      </Button>
                     </div>
                   </div>
                 </CardContent>

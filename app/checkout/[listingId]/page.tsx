@@ -73,21 +73,7 @@ export default function CheckoutPage() {
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
-      {/* Header */}
-      <header className="border-b bg-white dark:bg-gray-800">
-        <div className="container mx-auto px-4 py-4">
-          <div className="flex items-center justify-between">
-            <Link href="/" className="flex items-center space-x-2">
-              <ShoppingBag className="h-8 w-8 text-blue-600" />
-              <h1 className="text-2xl font-bold text-gray-900 dark:text-white">RenThing</h1>
-            </Link>
-            <div className="flex items-center space-x-2">
-              <Shield className="h-5 w-5 text-green-600" />
-              <span className="text-sm text-gray-600 dark:text-gray-400">Secure Checkout</span>
-            </div>
-          </div>
-        </div>
-      </header>
+
 
       <div className="container mx-auto px-4 py-8 max-w-6xl">
         {/* Back Button */}
@@ -194,17 +180,19 @@ export default function CheckoutPage() {
                 {selectedPaymentMethod === "stripe" ? (
                   <StripeCheckout
                     amount={totalAmount}
-                    currency="USD"
+                    currency="PHP"
                     onSuccess={handlePaymentSuccess}
                     disabled={!bookingDetails.startDate || !bookingDetails.endDate || isProcessing}
                   />
+
                 ) : (
                   <XenditCheckout
                     amount={totalAmount}
-                    currency="USD"
+                    currency="PHP"
                     onSuccess={handlePaymentSuccess}
                     disabled={!bookingDetails.startDate || !bookingDetails.endDate || isProcessing}
                   />
+
                 )}
               </CardContent>
             </Card>
@@ -219,18 +207,21 @@ export default function CheckoutPage() {
               <CardContent className="space-y-4">
                 <div className="flex justify-between">
                   <span>
-                    ${listing.price} × {bookingDetails.duration} {bookingDetails.duration === 1 ? "day" : "days"}
+                    ₱{listing.price} × {bookingDetails.duration} {bookingDetails.duration === 1 ? "day" : "days"}
                   </span>
-                  <span>${bookingDetails.totalPrice}</span>
+                  <span>₱{bookingDetails.totalPrice}</span>
+
                 </div>
                 <div className="flex justify-between text-sm text-gray-600 dark:text-gray-400">
                   <span>Service fee</span>
-                  <span>${serviceFee}</span>
+                  <span>₱{serviceFee}</span>
+
                 </div>
                 <Separator />
                 <div className="flex justify-between font-semibold text-lg">
                   <span>Total</span>
-                  <span>${totalAmount}</span>
+                  <span>₱{totalAmount}</span>
+
                 </div>
 
                 <div className="bg-gray-50 dark:bg-gray-800 p-4 rounded-lg space-y-2">

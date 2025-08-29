@@ -23,14 +23,60 @@ export default function RegisterPage() {
     e.preventDefault()
     setIsLoading(true)
 
-    // TODO: Implement actual registration
-    setTimeout(() => {
+    const formData = new FormData(e.currentTarget)
+    const firstName = formData.get('firstName') as string
+    const lastName = formData.get('lastName') as string
+    const email = formData.get('email') as string
+    const password = formData.get('password') as string
+    const confirmPassword = formData.get('confirmPassword') as string
+
+    if (password !== confirmPassword) {
       setIsLoading(false)
       toast({
-        title: "Registration functionality coming soon!",
-        description: "User registration will be implemented in the next phase.",
+        title: "Passwords don't match",
+        description: "Please make sure your passwords match.",
+        variant: "destructive",
       })
-    }, 1000)
+      return
+    }
+
+    try {
+      const response = await fetch('/api/auth/signup', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          email,
+          name: `${firstName} ${lastName}`,
+          password,
+        }),
+      })
+
+      if (response.ok) {
+        toast({
+          title: "Account created successfully!",
+          description: "You can now log in with your credentials.",
+        })
+        // Redirect to login page
+        window.location.href = '/auth/login'
+      } else {
+        const errorData = await response.json()
+        toast({
+          title: "Registration failed",
+          description: errorData.error || "Something went wrong. Please try again.",
+          variant: "destructive",
+        })
+      }
+    } catch (error) {
+      toast({
+        title: "Registration failed",
+        description: "Network error. Please try again.",
+        variant: "destructive",
+      })
+    } finally {
+      setIsLoading(false)
+    }
   }
 
   return (
@@ -143,7 +189,7 @@ export default function RegisterPage() {
             <div className="text-center text-xs sm:text-sm text-gray-600 dark:text-gray-400">
               Already have an account?{" "}
               <Link href="/auth/login" className="text-blue-600 hover:underline">
-                Sign in
+                Log in
               </Link>
             </div>
           </div>

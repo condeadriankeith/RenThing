@@ -60,23 +60,7 @@ export default function ListItemPage() {
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
-      {/* Header */}
-      <header className="border-b bg-white dark:bg-gray-800 sticky top-0 z-10">
-        <div className="container mx-auto px-2 sm:px-4 py-3 flex items-center justify-between">
-          <Link href="/" className="flex items-center space-x-2">
-            <ShoppingBag className="h-7 w-7 sm:h-8 sm:w-8 text-blue-600" />
-            <h1 className="text-xl sm:text-2xl font-bold text-gray-900 dark:text-white">RenThing</h1>
-          </Link>
-          <div className="flex items-center space-x-2 sm:space-x-3">
-            <Button variant="outline" asChild size="sm" className="min-w-[80px]">
-              <Link href="/browse">Browse</Link>
-            </Button>
-            <Button variant="outline" asChild size="sm" className="min-w-[80px]">
-              <Link href="/auth/login">Login</Link>
-            </Button>
-          </div>
-        </div>
-      </header>
+
 
       <div className="container mx-auto px-2 sm:px-4 py-6 sm:py-8 max-w-2xl sm:max-w-4xl">
         <div className="mb-6 sm:mb-8">

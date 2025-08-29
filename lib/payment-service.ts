@@ -1,5 +1,11 @@
-// Payment processing utilities for Stripe and Xendit integration
-// In production, these would connect to actual payment APIs
+import Stripe from 'stripe'
+import { prisma } from '@/lib/prisma'
+import { emailTriggers } from './email-triggers'
+import { logger } from '@/lib/logger'
+
+const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
+  apiVersion: '2022-11-15',
+})
 
 export interface PaymentIntent {
   id: string
@@ -16,7 +22,7 @@ export interface Transaction {
   paymentIntentId: string
   amount: number
   currency: string
-  status: "pending" | "succeeded" | "failed" | "refunded"
+  status: "pending" | "completed" | "failed" | "refunded"
   paymentMethod: "stripe" | "xendit"
   paymentDetails: {
     method: string
@@ -31,155 +37,257 @@ export interface Transaction {
 
 class PaymentService {
   // Stripe Integration
-  async createStripePaymentIntent(amount: number, currency = "PHP"): Promise<PaymentIntent> {
-    // Mock Stripe API call
-    return new Promise((resolve) => {
-      setTimeout(() => {
-        resolve({
-          id: `pi_stripe_${Date.now()}`,
-          amount: amount * 100, // Stripe uses cents
-          currency: "php",
-          status: "requires_payment_method",
-          client_secret: `pi_stripe_${Date.now()}_secret_${Math.random().toString(36).substr(2, 9)}`,
-          created: new Date().toISOString(),
-        })
-      }, 500)
-    })
+  async createStripePaymentIntent(amount: number, currency = "PHP", bookingId: string) {
+    try {
+      const paymentIntent = await stripe.paymentIntents.create({
+        amount: Math.round(amount * 100), // Convert to cents
+        currency: currency.toLowerCase(),
+        metadata: {
+          bookingId,
+        },
+        automatic_payment_methods: {
+          enabled: true,
+        },
+      })
+
+      return {
+        id: paymentIntent.id,
+        clientSecret: paymentIntent.client_secret,
+        amount: paymentIntent.amount,
+        currency: paymentIntent.currency,
+        status: paymentIntent.status,
+      }
+    } catch (error) {
+      console.error('Stripe payment intent creation error:', error)
+      throw new Error('Failed to create payment intent')
+    }
   }
 
-  async confirmStripePayment(paymentIntentId: string, paymentMethodData: any): Promise<PaymentIntent> {
-    // Mock Stripe confirmation
-    return new Promise((resolve, reject) => {
-      setTimeout(() => {
-        // Simulate 95% success rate
-        if (Math.random() > 0.05) {
-          resolve({
-            id: paymentIntentId,
-            amount: 31500, // ₱315.00 in cents
-            currency: "php",
-            status: "succeeded",
-            payment_method: "card_1234",
-            created: new Date().toISOString(),
-          })
-        } else {
-          reject(new Error("Your card was declined."))
-        }
-      }, 2000)
-    })
+  async confirmStripePayment(paymentIntentId: string) {
+    try {
+      const paymentIntent = await stripe.paymentIntents.retrieve(paymentIntentId)
+      
+      if (paymentIntent.status === 'succeeded') {
+        const transaction = await prisma.transaction.update({
+          where: { stripePaymentIntentId: paymentIntentId },
+          data: {
+            status: 'completed',
+          },
+        })
+
+        // Update booking status
+        await prisma.booking.update({
+          where: { id: paymentIntent.metadata?.bookingId },
+          data: { status: 'confirmed' }
+        })
+
+        return { success: true, transaction }
+      }
+
+      return { success: false, error: 'Payment not completed' }
+    } catch (error) {
+      console.error('Stripe payment confirmation error:', error)
+      throw new Error('Failed to confirm payment')
+    }
   }
 
   // Xendit Integration
-  async createXenditPayment(amount: number, currency = "USD", method: string): Promise<PaymentIntent> {
-    // Mock Xendit API call
-    return new Promise((resolve) => {
-      setTimeout(() => {
-        resolve({
-          id: `xendit_${Date.now()}`,
+  async createXenditPayment(amount: number, currency = "PHP", bookingId: string, customerEmail: string) {
+    try {
+      const response = await fetch('https://api.xendit.co/v2/invoices', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Basic ${Buffer.from(process.env.XENDIT_SECRET_KEY!).toString('base64')}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          external_id: bookingId,
           amount,
           currency: currency.toUpperCase(),
-          status: "requires_confirmation",
-          created: new Date().toISOString(),
-        })
-      }, 500)
-    })
-  }
+          invoice_duration: 86400, // 24 hours
+          customer: {
+            email: customerEmail,
+          },
+          success_redirect_url: `${process.env.NEXT_PUBLIC_APP_URL}/bookings/success`,
+          failure_redirect_url: `${process.env.NEXT_PUBLIC_APP_URL}/bookings/failed`,
+        }),
+      })
 
-  async confirmXenditPayment(paymentId: string, paymentData: any): Promise<PaymentIntent> {
-    // Mock Xendit confirmation
-    return new Promise((resolve, reject) => {
-      setTimeout(() => {
-        // Simulate 90% success rate for regional methods
-        if (Math.random() > 0.1) {
-          resolve({
-            id: paymentId,
-            amount: 315,
-            currency: "USD",
-            status: "succeeded",
-            payment_method: paymentData.method,
-            created: new Date().toISOString(),
-          })
-        } else {
-          reject(new Error("Payment failed. Please try again."))
-        }
-      }, 3000) // Longer processing time for regional methods
-    })
+      if (!response.ok) {
+        throw new Error('Failed to create Xendit invoice')
+      }
+
+      const invoice = await response.json()
+      
+      return {
+        id: invoice.id,
+        invoiceUrl: invoice.invoice_url,
+        amount: invoice.amount,
+        currency: invoice.currency,
+        status: 'pending',
+      }
+    } catch (error) {
+      console.error('Xendit payment creation error:', error)
+      throw new Error('Failed to create Xendit payment')
+    }
   }
 
   // Transaction Management
-  async createTransaction(paymentIntent: PaymentIntent, bookingData: any): Promise<Transaction> {
-    const transaction: Transaction = {
-      id: `txn_${Date.now()}`,
-      paymentIntentId: paymentIntent.id,
-      amount: paymentIntent.amount,
-      currency: paymentIntent.currency,
-      status: paymentIntent.status === "succeeded" ? "succeeded" : "pending",
-      paymentMethod: paymentIntent.id.startsWith("pi_stripe") ? "stripe" : "xendit",
-      paymentDetails: {
-        method: paymentIntent.payment_method || "unknown",
-        last4: "4242", // Mock last 4 digits
-        brand: "visa", // Mock brand
-      },
-      bookingId: bookingData.bookingId,
-      userId: bookingData.userId,
-      created: new Date().toISOString(),
-      updated: new Date().toISOString(),
-    }
-
-    // In production, save to database
-    console.log("Transaction created:", transaction)
-    return transaction
-  }
-
-  async getTransaction(transactionId: string): Promise<Transaction | null> {
-    // Mock database lookup
-    return new Promise((resolve) => {
-      setTimeout(() => {
-        resolve({
-          id: transactionId,
-          paymentIntentId: `pi_${transactionId}`,
-          amount: 315,
-          currency: "USD",
-          status: "succeeded",
-          paymentMethod: "stripe",
-          paymentDetails: {
-            method: "card",
-            last4: "4242",
-            brand: "visa",
-          },
-          bookingId: "booking_123",
-          userId: "user_123",
-          created: new Date().toISOString(),
-          updated: new Date().toISOString(),
-        })
-      }, 300)
-    })
-  }
-
-  async refundTransaction(transactionId: string, amount?: number): Promise<Transaction> {
-    // Mock refund processing
-    return new Promise((resolve, reject) => {
-      setTimeout(() => {
-        if (Math.random() > 0.05) {
-          resolve({
-            id: `refund_${Date.now()}`,
-            paymentIntentId: `pi_${transactionId}`,
-            amount: amount || 315,
-            currency: "USD",
-            status: "refunded",
-            paymentMethod: "stripe",
-            paymentDetails: {
-              method: "refund",
-            },
-            bookingId: "booking_123",
-            userId: "user_123",
-            created: new Date().toISOString(),
-            updated: new Date().toISOString(),
-          })
-        } else {
-          reject(new Error("Refund failed. Please contact support."))
+  async createTransaction(data: {
+    bookingId: string
+    amount: number
+    currency: string
+    paymentMethod: string
+    stripePaymentIntentId?: string
+    xenditInvoiceId?: string
+  }) {
+    try {
+      const transaction = await prisma.transaction.create({
+        data: {
+          bookingId: data.bookingId,
+          amount: data.amount,
+          currency: data.currency,
+          paymentMethod: data.paymentMethod,
+          status: 'pending',
+        },
+        include: {
+          booking: {
+            include: {
+              listing: {
+                select: {
+                  title: true,
+                  price: true,
+                }
+              }
+            }
+          }
         }
-      }, 2000)
-    })
+      })
+
+      return transaction
+    } catch (error) {
+      console.error('Create transaction error:', error)
+      throw new Error('Failed to create transaction')
+    }
+  }
+
+  async getTransaction(bookingId: string) {
+    try {
+      const transaction = await prisma.transaction.findUnique({
+        where: { bookingId },
+        include: {
+          booking: {
+            include: {
+              listing: {
+                select: {
+                  title: true,
+                  price: true,
+                }
+              }
+            }
+          }
+        }
+      })
+
+      return transaction
+    } catch (error) {
+      console.error('Get transaction error:', error)
+      throw new Error('Failed to get transaction')
+    }
+  }
+
+  async refundTransaction(bookingId: string, amount?: number) {
+    try {
+      const transaction = await prisma.transaction.findUnique({
+        where: { bookingId }
+      })
+
+      if (!transaction) {
+        throw new Error('Transaction not found')
+      }
+
+      let refundSuccess = false
+
+      if (transaction.stripePaymentIntentId) {
+        const refund = await stripe.refunds.create({
+          payment_intent: transaction.stripePaymentIntentId,
+          amount: amount ? Math.round(amount * 100) : undefined,
+        })
+        refundSuccess = refund.status === 'succeeded'
+      } else if (transaction.xenditInvoiceId) {
+        // Xendit refund implementation
+        const response = await fetch('https://api.xendit.co/refunds', {
+          method: 'POST',
+          headers: {
+            'Authorization': `Basic ${Buffer.from(process.env.XENDIT_SECRET_KEY!).toString('base64')}`,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            invoice_id: transaction.xenditInvoiceId,
+            amount: amount || transaction.amount,
+          }),
+        })
+        refundSuccess = response.ok
+      }
+
+      if (refundSuccess) {
+        const updatedTransaction = await prisma.transaction.update({
+          where: { bookingId },
+          data: {
+            status: 'refunded',
+          },
+        })
+
+        return updatedTransaction
+      }
+
+      throw new Error('Refund failed')
+    } catch (error) {
+      console.error('Refund error:', error)
+      throw new Error('Failed to process refund')
+    }
+  }
+
+  async handleWebhook(event: any) {
+    try {
+      switch (event.type) {
+        case 'payment_intent.succeeded':
+          const paymentIntent = event.data.object
+          const transaction = await prisma.transaction.update({
+            where: { stripePaymentIntentId: paymentIntent.id },
+            data: {
+              status: 'completed',
+            },
+          })
+
+          // Update booking status
+          await prisma.booking.update({
+            where: { id: paymentIntent.metadata?.bookingId },
+            data: { status: 'confirmed' }
+          })
+          await emailTriggers.onPaymentConfirmed(transaction.id)
+          break
+        case 'payment_intent.payment_failed':
+          const failedPaymentIntent = event.data.object
+          console.log(`Payment failed: ${failedPaymentIntent.id}`)
+          // Handle failed payment
+          const failedTransaction = await prisma.transaction.update({
+            where: { stripePaymentIntentId: failedPaymentIntent.id },
+            data: {
+              status: 'failed',
+            },
+          })
+          await emailTriggers.onPaymentFailed(failedTransaction.id, failedPaymentIntent.last_payment_error?.message || 'Unknown error')
+          break
+        default:
+          console.log(`Unhandled event type ${event.type}`)
+      }
+
+      return { received: true }
+    } catch (error) {
+      logger.error('Webhook error', error as Error, { context: 'payment-service' });
+      throw new Error('Webhook processing failed')
+    }
   }
 }
 
@@ -187,8 +295,8 @@ class PaymentService {
 export const paymentService = new PaymentService()
 
 // Utility functions
-export function formatCurrency(amount: number, currency = "USD"): string {
-  return new Intl.NumberFormat("en-US", {
+export function formatCurrency(amount: number, currency = "PHP"): string {
+  return new Intl.NumberFormat("en-PH", {
     style: "currency",
     currency: currency.toUpperCase(),
   }).format(amount)

@@ -11,6 +11,9 @@ import { Separator } from "@/components/ui/separator"
 import { ShoppingBag, Star, MapPin, Share, Heart, ArrowLeft } from "lucide-react"
 import { mockListings } from "@/lib/mock-data"
 import { BookingCalendar } from "@/components/booking-calendar"
+import { ContactOwnerChat } from "@/components/contact-owner-chat-fixed"
+
+
 
 export default function ListingDetailPage() {
   const params = useParams()
@@ -34,15 +37,7 @@ export default function ListingDetailPage() {
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
-      {/* Header */}
-      <header className="border-b bg-white dark:bg-gray-800 sticky top-0 z-10">
-        <div className="container mx-auto px-2 sm:px-4 py-3 flex items-center justify-between">
-          <Link href="/" className="flex items-center space-x-2">
-            <ShoppingBag className="h-7 w-7 sm:h-8 sm:w-8 text-blue-600" />
-            <h1 className="text-xl sm:text-2xl font-bold text-gray-900 dark:text-white">RenThing</h1>
-          </Link>
-        </div>
-  </header>
+
 
   <div className="container mx-auto px-4 py-8">
         {/* Back Button */}
@@ -112,7 +107,8 @@ export default function ListingDetailPage() {
               </div>
 
               <div className="flex items-baseline space-x-2 mb-6">
-                <span className="text-4xl font-bold text-blue-600">${listing.price}</span>
+                <span className="text-4xl font-bold text-blue-600">₱{listing.price}</span>
+
                 <span className="text-lg text-gray-600 dark:text-gray-400">per {listing.priceUnit}</span>
               </div>
 
@@ -152,7 +148,15 @@ export default function ListingDetailPage() {
                       <span>Joined {listing.owner.joinedDate}</span>
                     </div>
                   </div>
-                  <Button variant="outline">View Profile</Button>
+                  <div className="flex flex-col space-y-2">
+                    <Button variant="outline" size="sm">View Profile</Button>
+                    <ContactOwnerChat 
+                      ownerId={listing.owner.id} 
+                      ownerName={listing.owner.name}
+                      listingId={listing.id}
+                    />
+                  </div>
+
                 </div>
               </CardContent>
             </Card>
