@@ -1,0 +1,162 @@
+<!-- Search Bar -->
+      <div class="max-w-3xl mx-auto mt-12 bg-white dark:bg-gray-800 rounded-xl shadow-xl p-4">
+        <div class="flex flex-col md:flex-row gap-2">
+          <div class="flex-1 relative">
+            <input type="text" placeholder="What are you looking for?" class="w-full px-4 py-3 rounded-lg border border-gray-200 dark:border-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700">
+            <i class="fas fa-search absolute right-4 top-4 text-gray-400"></i>
+          </div>
+          <div class="relative">
+            <input type="text" placeholder="Location" class="w-full px-4 py-3 rounded-lg border border-gray-200 dark:border-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700">
+            <i class="fas fa-map-marker-alt absolute right-4 top-4 text-gray-400"></i>
+          </div>
+          <button class="px-6 py-3 bg-blue-600 text-white font-bold rounded-lg hover:bg-blue-700 transition-colors">
+            Search
+          </button>
+        </div>
+      </div>
+
+<!-- How It Works -->
+  <section class="py-16 bg-gray-50 dark:bg-gray-800">
+    <div class="container mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="text-center mb-12">
+        <h2 class="text-3xl md:text-4xl font-bold text-gray-900 dark:text-white mb-4">How It Works</h2>
+        <p class="text-lg text-gray-600 dark:text-gray-300 max-w-2xl mx-auto">
+          Simple steps to rent or list items on our platform
+        </p>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+        <!-- Step 1 -->
+        <div class="feature-card bg-white dark:bg-gray-700 rounded-xl p-8 text-center transition-all">
+          <div class="w-20 h-20 bg-blue-100 dark:bg-blue-900/30 rounded-full flex items-center justify-center mx-auto mb-6">
+            <span class="text-blue-600 dark:text-blue-400 font-bold text-2xl">1</span>
+          </div>
+          <h3 class="text-xl font-bold text-gray-900 dark:text-white mb-3">Find or List</h3>
+          <p class="text-gray-600 dark:text-gray-300">
+            Browse our marketplace or easily list your own items for rent with our simple form.
+          </p>
+        </div>
+
+        <!-- Step 2 -->
+        <div class="feature-card bg-white dark:bg-gray-700 rounded-xl p-8 text-center transition-all">
+          <div class="w-20 h-20 bg-green-100 dark:bg-green-900/30 rounded-full flex items-center justify-center mx-auto mb-6">
+            <span class="text-green-600 dark:text-green-400 font-bold text-2xl">2</span>
+          </div>
+          <h3 class="text-xl font-bold text-gray-900 dark:text-white mb-3">Connect & Book</h3>
+          <p class="text-gray-600 dark:text-gray-300">
+            Message the owner, agree on terms, and book your rental with our secure system.
+          </p>
+        </div>
+
+        <!-- Step 3 -->
+        <div class="feature-card bg-white dark:bg-gray-700 rounded-xl p-8 text-center transition-all">
+          <div class="w-20 h-20 bg-purple-100 dark:bg-purple-900/30 rounded-full flex items-center justify-center mx-auto mb-6">
+            <span class="text-purple-600 dark:text-purple-400 font-bold text-2xl">3</span>
+          </div>
+          <h3 class="text-xl font-bold text-gray-900 dark:text-white mb-3">Enjoy & Return</h3>
+          <p class="text-gray-600 dark:text-gray-300">
+            Use the item as agreed, then return it and leave a review for future users.
+          </p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+
+<!-- Testimonials -->
+  <section class="py-16 bg-gray-50 dark:bg-gray-800">
+    <div class="container mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="text-center mb-12">
+        <h2 class="text-3xl md:text-4xl font-bold text-gray-900 dark:text-white mb-4">What Our Users Say</h2>
+        <p class="text-lg text-gray-600 dark:text-gray-300 max-w-2xl mx-auto">
+          Trusted by thousands of renters and owners worldwide
+        </p>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+        <!-- Testimonial 1 -->
+        <div class="testimonial-card rounded-xl p-8 shadow-sm">
+          <div class="flex items-center mb-6">
+            <div class="w-12 h-12 rounded-full bg-gray-200 dark:bg-gray-700 overflow-hidden mr-4">
+              <img src="https://randomuser.me/api/portraits/women/43.jpg" alt="Sarah J." class="w-full h-full object-cover">
+            </div>
+            <div>
+              <h4 class="font-bold text-gray-900 dark:text-white">Sarah J.</h4>
+              <div class="flex items-center text-yellow-400">
+                <i class="fas fa-star"></i>
+                <i class="fas fa-star"></i>
+                <i class="fas fa-star"></i>
+                <i class="fas fa-star"></i>
+                <i class="fas fa-star"></i>
+              </div>
+            </div>
+          </div>
+          <p class="text-gray-600 dark:text-gray-300 italic">
+            "I've rented camera equipment multiple times for my photography projects. The process is so easy and the owners are always professional. Saved me thousands in equipment costs!"
+          </p>
+        </div>
+
+        <!-- Testimonial 2 -->
+        <div class="testimonial-card rounded-xl p-8 shadow-sm">
+          <div class="flex items-center mb-6">
+            <div class="w-12 h-12 rounded-full bg-gray-200 dark:bg-gray-700 overflow-hidden mr-4">
+              <img src="https://randomuser.me/api/portraits/men/32.jpg" alt="Michael T." class="w-full h-full object-cover">
+            </div>
+            <div>
+              <h4 class="font-bold text-gray-900 dark:text-white">Michael T.</h4>
+              <div class="flex items-center text-yellow-400">
+                <i class="fas fa-star"></i>
+                <i class="fas fa-star"></i>
+                <i class="fas fa-star"></i>
+                <i class="fas fa-star"></i>
+                <i class="fas fa-star"></i>
+              </div>
+            </div>
+          </div>
+          <p class="text-gray-600 dark:text-gray-300 italic">
+            "As a small business owner, renting tools and equipment through RenThing has been a game-changer. I can get what I need when I need it without the upfront investment."
+          </p>
+        </div>
+
+        <!-- Testimonial 3 -->
+        <div class="testimonial-card rounded-xl p-8 shadow-sm">
+          <div class="flex items-center mb-6">
+            <div class="w-12 h-12 rounded-full bg-gray-200 dark:bg-gray-700 overflow-hidden mr-4">
+              <img src="https://randomuser.me/api/portraits/women/65.jpg" alt="Lisa M." class="w-full h-full object-cover">
+            </div>
+            <div>
+              <h4 class="font-bold text-gray-900 dark:text-white">Lisa M.</h4>
+              <div class="flex items-center text-yellow-400">
+                <i class="fas fa-star"></i>
+                <i class="fas fa-star"></i>
+                <i class="fas fa-star"></i>
+                <i class="fas fa-star"></i>
+                <i class="fas fa-star-half-alt"></i>
+              </div>
+            </div>
+          </div>
+          <p class="text-gray-600 dark:text-gray-300 italic">
+            "I list my designer dresses on RenThing and it's been amazing! I've made back the cost of several dresses and met wonderful people in the process. The platform is so user-friendly."
+          </p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- CTA Section -->
+  <section class="py-16 bg-blue-600 text-white">
+    <div class="container mx-auto px-4 sm:px-6 lg:px-8 text-center">
+      <h2 class="text-3xl md:text-4xl font-bold mb-6">Ready to Join the Rental Revolution?</h2>
+      <p class="text-xl mb-8 max-w-2xl mx-auto">
+        Whether you're looking to rent or list items, we've got you covered.
+      </p>
+      <div class="flex flex-col sm:flex-row gap-4 justify-center">
+        <a href="#" class="px-8 py-4 bg-white text-blue-600 font-bold rounded-lg hover:bg-gray-100 transition-colors shadow-lg">
+          Sign Up to Rent
+        </a>
+        <a href="#" class="px-8 py-4 bg-transparent border-2 border-white text-white font-bold rounded-lg hover:bg-blue-700 transition-colors shadow-lg">
+          List Your Items
+        </a>
+      </div>
+    </div>
+  </section>
