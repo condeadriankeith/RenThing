@@ -3,12 +3,13 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "build": "npm ci --platform=linux && prisma generate && next build",
+    "build": "npm ci --platform=linux --force && npm rebuild lightningcss && prisma generate && next build",
     "dev": "next dev",
     "lint": "next lint",
     "start": "next start",
     "test": "jest"
   },
+
   "dependencies": {
     "@hookform/resolvers": "^3.10.0",
     "@meilisearch/instant-meilisearch": "^0.27.0",
