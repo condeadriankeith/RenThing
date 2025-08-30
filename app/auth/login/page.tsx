@@ -11,7 +11,8 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Separator } from "@/components/ui/separator"
-import { ShoppingBag, Eye, EyeOff } from "lucide-react"
+import { Eye, EyeOff } from "lucide-react"
+import Image from "next/image"
 import { useToast } from "@/hooks/use-toast"
 
 export default function LoginPage() {
@@ -72,39 +73,47 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 dark:from-gray-900 dark:to-gray-800 flex items-center justify-center p-2 sm:p-4">
-      <Card className="w-full max-w-sm sm:max-w-md shadow-md rounded-xl">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 dark:from-gray-900 dark:to-gray-800 flex items-center justify-center p-2 sm:p-4">
+      <Card className="w-full max-w-sm sm:max-w-md shadow-lg rounded-xl border-0">
         <CardHeader className="text-center">
           <div className="flex items-center justify-center space-x-2 mb-3 sm:mb-4">
-            <ShoppingBag className="h-7 w-7 sm:h-8 sm:w-8 text-blue-600" />
-            <span className="text-xl sm:text-2xl font-bold">RenThing</span>
+            <Image 
+              src="/RenThing_LOGO.svg" 
+              alt="RenThing" 
+              width={40}
+              height={40}
+              className="h-10 w-10"
+              style={{ filter: 'brightness(0) saturate(100%) invert(21%) sepia(99%) saturate(5000%) hue-rotate(215deg) brightness(1.1)' }}
+              priority
+            />
+            <span className="text-2xl sm:text-3xl font-bold text-black dark:text-black">RenThing</span>
           </div>
           <CardTitle className="text-xl sm:text-2xl">Welcome back</CardTitle>
           <CardDescription className="text-sm sm:text-base">Sign in to your account to continue</CardDescription>
         </CardHeader>
         <CardContent>
-          <form onSubmit={handleSubmit} className="space-y-3 sm:space-y-4">
-            <div className="space-y-1.5 sm:space-y-2">
-              <Label htmlFor="email" className="text-sm">Email</Label>
+          <form onSubmit={handleSubmit} className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="email" className="text-sm font-medium">Email Address</Label>
               <Input
                 id="email"
                 type="email"
-                placeholder="Enter your email"
+                placeholder="Enter your email address"
                 required
-                className="text-sm sm:text-base"
+                className="text-sm sm:text-base h-11"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
               />
             </div>
-            <div className="space-y-1.5 sm:space-y-2">
-              <Label htmlFor="password" className="text-sm">Password</Label>
+            <div className="space-y-2">
+              <Label htmlFor="password" className="text-sm font-medium">Password</Label>
               <div className="relative">
                 <Input
                   id="password"
                   type={showPassword ? "text" : "password"}
                   placeholder="Enter your password"
                   required
-                  className="text-sm sm:text-base pr-10"
+                  className="text-sm sm:text-base pr-12 h-11"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                 />
@@ -112,7 +121,7 @@ export default function LoginPage() {
                   type="button"
                   variant="ghost"
                   size="sm"
-                  className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
+                  className="absolute right-1 top-1 h-9 w-9 hover:bg-transparent"
                   onClick={() => setShowPassword(!showPassword)}
                   tabIndex={-1}
                 >
@@ -120,19 +129,27 @@ export default function LoginPage() {
                 </Button>
               </div>
             </div>
-            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 sm:gap-0">
+            <div className="flex items-center justify-between">
               <div className="flex items-center space-x-2">
-                <input id="remember" type="checkbox" className="rounded border-gray-300" />
-                <Label htmlFor="remember" className="text-xs sm:text-sm">
+                <input 
+                  id="remember" 
+                  type="checkbox" 
+                  className="h-4 w-4 rounded border-gray-300 focus:ring-2 focus:ring-blue-500 focus:ring-offset-0" 
+                />
+                <Label htmlFor="remember" className="text-sm">
                   Remember me
                 </Label>
               </div>
-              <Link href="/auth/forgot-password" className="text-xs sm:text-sm text-blue-600 hover:underline">
+              <Link href="/auth/forgot-password" className="text-sm text-blue-600 hover:underline hover:text-blue-700">
                 Forgot password?
               </Link>
             </div>
-            <Button type="submit" className="w-full py-2 sm:py-3 text-sm sm:text-base" disabled={isLoading}>
-              {isLoading ? "Logging in..." : "Log in"}
+            <Button 
+              type="submit" 
+              className="w-full h-11 text-sm font-medium" 
+              disabled={isLoading}
+            >
+              {isLoading ? "Signing in..." : "Sign in"}
             </Button>
           </form>
 

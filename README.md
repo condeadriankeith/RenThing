@@ -1,6 +1,6 @@
 
 <p align="center">
-  <img src="public/placeholder-logo.png" alt="RenThing Logo" width="120" />
+  <img src="public/RenThing_LOGO.svg" alt="RenThing Logo" width="120" />
 </p>
 
 # RenThing

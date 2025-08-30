@@ -1,5 +1,6 @@
 "use client"
 import Link from "next/link"
+import Image from "next/image"
 import { useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
@@ -91,8 +92,15 @@ export default function HomePage() {
           <div className="grid md:grid-cols-4 gap-8">
             <div>
               <div className="flex items-center space-x-2 mb-4">
-                <ShoppingBag className="h-6 w-6" />
-                <span className="text-xl font-bold">RenThing</span>
+                <Image 
+                  src="/RenThing_LOGO.svg" 
+                  alt="RenThing" 
+                  width={32} 
+                  height={32} 
+                  className="h-8 w-auto"
+                  style={{ filter: 'brightness(0) invert(1)' }}
+                />
+                <span className="text-xl font-bold text-white">RenThing</span>
               </div>
               <p className="text-gray-400">The marketplace for everything you need, when you need it.</p>
             </div>
@@ -158,7 +166,7 @@ export default function HomePage() {
             </div>
           </div>
           <div className="border-t border-gray-800 mt-8 pt-8 text-center text-gray-400">
-            <p>&copy; 2024 RenThing. All rights reserved.</p>
+            <p>&copy; 2025 RenThing. All rights reserved.</p>
           </div>
         </div>
       </footer>

@@ -2,9 +2,10 @@
 
 import { useState } from "react"
 import Link from "next/link"
+import Image from "next/image"
 import { useSession, signOut } from "next-auth/react"
 import { Button } from "@/components/ui/button"
-import { ShoppingBag, Menu, User, LogOut } from "lucide-react"
+import { Menu, User, LogOut } from "lucide-react"
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -25,8 +26,16 @@ export default function Header() {
       <div className="container mx-auto px-2 sm:px-4 py-3 flex items-center">
         <div className="flex-shrink-0 w-48">
           <Link href="/" className="flex items-center space-x-2">
-            <ShoppingBag className="h-8 w-8 text-blue-600" />
-            <h1 className="text-xl sm:text-2xl font-bold text-gray-900 dark:text-white">RenThing</h1>
+            <Image 
+              src="/RenThing_LOGO.svg" 
+              alt="RenThing" 
+              width={32} 
+              height={32} 
+              className="h-8 w-auto"
+              style={{ filter: 'brightness(0) saturate(100%) invert(21%) sepia(99%) saturate(5000%) hue-rotate(215deg) brightness(1.1)' }}
+              priority
+            />
+            <h1 className="text-xl sm:text-2xl font-bold text-black dark:text-black">RenThing</h1>
           </Link>
         </div>
 

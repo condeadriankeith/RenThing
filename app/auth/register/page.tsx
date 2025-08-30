@@ -10,7 +10,8 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Separator } from "@/components/ui/separator"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { ShoppingBag, Eye, EyeOff } from "lucide-react"
+import { Eye, EyeOff } from "lucide-react"
+import Image from "next/image"
 import { useToast } from "@/hooks/use-toast"
 
 export default function RegisterPage() {
@@ -27,6 +28,7 @@ export default function RegisterPage() {
     const firstName = formData.get('firstName') as string
     const lastName = formData.get('lastName') as string
     const email = formData.get('email') as string
+    const username = formData.get('username') as string
     const password = formData.get('password') as string
     const confirmPassword = formData.get('confirmPassword') as string
 
@@ -49,6 +51,7 @@ export default function RegisterPage() {
         body: JSON.stringify({
           email,
           name: `${firstName} ${lastName}`,
+          username,
           password,
         }),
       })
@@ -80,40 +83,73 @@ export default function RegisterPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 dark:from-gray-900 dark:to-gray-800 flex items-center justify-center p-2 sm:p-4">
-      <Card className="w-full max-w-sm sm:max-w-md shadow-md rounded-xl">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 dark:from-gray-900 dark:to-gray-800 flex items-center justify-center p-2 sm:p-4">
+      <Card className="w-full max-w-sm sm:max-w-md shadow-lg rounded-xl border-0">
         <CardHeader className="text-center">
           <div className="flex items-center justify-center space-x-2 mb-3 sm:mb-4">
-            <ShoppingBag className="h-7 w-7 sm:h-8 sm:w-8 text-blue-600" />
-            <span className="text-xl sm:text-2xl font-bold">RenThing</span>
+            <Image 
+              src="/RenThing_LOGO.svg" 
+              alt="RenThing" 
+              width={36} 
+              height={36} 
+              className="h-9 w-auto"
+              style={{ filter: 'brightness(0) saturate(100%) invert(21%) sepia(99%) saturate(5000%) hue-rotate(215deg) brightness(1.1)' }}
+              priority
+            />
+            <span className="text-2xl sm:text-3xl font-bold text-black dark:text-black">RenThing</span>
           </div>
           <CardTitle className="text-xl sm:text-2xl">Create your account</CardTitle>
           <CardDescription className="text-sm sm:text-base">Join RenThing to start renting and booking</CardDescription>
         </CardHeader>
         <CardContent>
-          <form onSubmit={handleSubmit} className="space-y-3 sm:space-y-4">
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
-              <div className="space-y-1.5 sm:space-y-2">
-                <Label htmlFor="firstName" className="text-sm">First Name</Label>
-                <Input id="firstName" placeholder="Enter your first name" required className="text-sm sm:text-base" />
+          <form onSubmit={handleSubmit} className="space-y-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="firstName" className="text-sm font-medium">First Name</Label>
+                <Input 
+                  id="firstName" 
+                  name="firstName"
+                  placeholder="Enter your first name" 
+                  required 
+                  className="text-sm sm:text-base h-11" 
+                />
               </div>
-              <div className="space-y-1.5 sm:space-y-2">
-                <Label htmlFor="lastName" className="text-sm">Last Name</Label>
-                <Input id="lastName" placeholder="Enter your last name" required className="text-sm sm:text-base" />
+              <div className="space-y-2">
+                <Label htmlFor="lastName" className="text-sm font-medium">Last Name</Label>
+                <Input 
+                  id="lastName" 
+                  name="lastName"
+                  placeholder="Enter your last name" 
+                  required 
+                  className="text-sm sm:text-base h-11" 
+                />
               </div>
             </div>
-            <div className="space-y-1.5 sm:space-y-2">
-              <Label htmlFor="email" className="text-sm">Email</Label>
-              <Input id="email" type="email" placeholder="Enter your email address" required className="text-sm sm:text-base" />
+            <div className="space-y-2">
+              <Label htmlFor="email" className="text-sm font-medium">Email Address</Label>
+              <Input 
+                id="email" 
+                name="email"
+                type="email" 
+                placeholder="Enter your email address" 
+                required 
+                className="text-sm sm:text-base h-11" 
+              />
             </div>
-            <div className="space-y-1.5 sm:space-y-2">
-              <Label htmlFor="username" className="text-sm">Username</Label>
-              <Input id="username" placeholder="Choose a username" required className="text-sm sm:text-base" />
+            <div className="space-y-2">
+              <Label htmlFor="username" className="text-sm font-medium">Username</Label>
+              <Input 
+                id="username" 
+                name="username"
+                placeholder="Choose a username" 
+                required 
+                className="text-sm sm:text-base h-11" 
+              />
             </div>
-            <div className="space-y-1.5 sm:space-y-2">
-              <Label htmlFor="userType" className="text-sm">Account Type</Label>
-              <Select required>
-                <SelectTrigger>
+            <div className="space-y-2">
+              <Label htmlFor="userType" className="text-sm font-medium">Account Type</Label>
+              <Select required name="userType">
+                <SelectTrigger className="h-11">
                   <SelectValue placeholder="Select account type" />
                 </SelectTrigger>
                 <SelectContent>
@@ -122,21 +158,22 @@ export default function RegisterPage() {
                 </SelectContent>
               </Select>
             </div>
-            <div className="space-y-1.5 sm:space-y-2">
-              <Label htmlFor="password" className="text-sm">Password</Label>
+            <div className="space-y-2">
+              <Label htmlFor="password" className="text-sm font-medium">Password</Label>
               <div className="relative">
                 <Input
                   id="password"
+                  name="password"
                   type={showPassword ? "text" : "password"}
                   placeholder="Create a strong password"
                   required
-                  className="text-sm sm:text-base pr-10"
+                  className="text-sm sm:text-base pr-12 h-11"
                 />
                 <Button
                   type="button"
                   variant="ghost"
                   size="sm"
-                  className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
+                  className="absolute right-1 top-1 h-9 w-9 hover:bg-transparent"
                   onClick={() => setShowPassword(!showPassword)}
                   tabIndex={-1}
                 >
@@ -144,21 +181,22 @@ export default function RegisterPage() {
                 </Button>
               </div>
             </div>
-            <div className="space-y-1.5 sm:space-y-2">
-              <Label htmlFor="confirmPassword" className="text-sm">Confirm Password</Label>
+            <div className="space-y-2">
+              <Label htmlFor="confirmPassword" className="text-sm font-medium">Confirm Password</Label>
               <div className="relative">
                 <Input
                   id="confirmPassword"
+                  name="confirmPassword"
                   type={showConfirmPassword ? "text" : "password"}
                   placeholder="Confirm your password"
                   required
-                  className="text-sm sm:text-base pr-10"
+                  className="text-sm sm:text-base pr-12 h-11"
                 />
                 <Button
                   type="button"
                   variant="ghost"
                   size="sm"
-                  className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
+                  className="absolute right-1 top-1 h-9 w-9 hover:bg-transparent"
                   onClick={() => setShowConfirmPassword(!showConfirmPassword)}
                   tabIndex={-1}
                 >
@@ -167,19 +205,29 @@ export default function RegisterPage() {
               </div>
             </div>
             <div className="flex items-center space-x-2">
-              <input id="terms" type="checkbox" className="rounded border-gray-300" required />
-              <Label htmlFor="terms" className="text-xs sm:text-sm">
+              <input 
+                id="terms" 
+                name="terms"
+                type="checkbox" 
+                className="h-4 w-4 rounded border-gray-300 focus:ring-2 focus:ring-blue-500 focus:ring-offset-0" 
+                required 
+              />
+              <Label htmlFor="terms" className="text-sm">
                 I agree to the{" "}
-                <Link href="/terms" className="text-blue-600 hover:underline">
+                <Link href="/terms" className="text-blue-600 hover:underline hover:text-blue-700">
                   Terms of Service
                 </Link>{" "}
                 and{" "}
-                <Link href="/privacy" className="text-blue-600 hover:underline">
+                <Link href="/privacy" className="text-blue-600 hover:underline hover:text-blue-700">
                   Privacy Policy
                 </Link>
               </Label>
             </div>
-            <Button type="submit" className="w-full py-2 sm:py-3 text-sm sm:text-base" disabled={isLoading}>
+            <Button 
+              type="submit" 
+              className="w-full h-11 text-sm font-medium" 
+              disabled={isLoading}
+            >
               {isLoading ? "Creating account..." : "Create account"}
             </Button>
           </form>

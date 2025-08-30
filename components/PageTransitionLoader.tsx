@@ -2,7 +2,7 @@
 
 import { useEffect, useRef } from "react";
 import gsap from "gsap";
-import { ShoppingBag } from "lucide-react";
+import Image from "next/image";
 
 export default function PageTransitionLoader({ show = false }: { show?: boolean }) {
   const iconRef = useRef<HTMLDivElement>(null);
@@ -30,7 +30,14 @@ export default function PageTransitionLoader({ show = false }: { show?: boolean 
   return (
     <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-gradient-to-br from-blue-100/80 to-indigo-200/80 dark:from-gray-900/90 dark:to-gray-800/90 backdrop-blur-sm">
       <div ref={iconRef} className="flex flex-col items-center">
-        <ShoppingBag className="h-20 w-20 text-blue-600 drop-shadow-lg" />
+        <Image
+          src="/RenThing_LOGO.svg"
+          alt="RenThing"
+          width={80}
+          height={80}
+          className="drop-shadow-lg"
+          style={{ filter: "brightness(0) saturate(100%) invert(21%) sepia(99%) saturate(5000%) hue-rotate(215deg) brightness(1.1)" }}
+        />
         <span className="mt-4 text-lg font-bold text-blue-700 dark:text-white tracking-wide animate-pulse">Loading...</span>
       </div>
     </div>
