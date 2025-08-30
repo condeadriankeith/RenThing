@@ -261,72 +261,33 @@ export default function HomePage() {
                 />
                 <span className="text-xl font-bold text-white">RenThing</span>
               </div>
-              <p className="text-gray-400">The marketplace for everything you need, when you need it.</p>
+              <p className="text-gray-400">The best place to rent items from your community.</p>
             </div>
             <div>
-              <h4 className="font-semibold mb-4">Platform</h4>
+              <h4 className="font-semibold mb-4">Browse</h4>
               <ul className="space-y-2 text-gray-400">
-                <li>
-                  <Link href="/browse" className="hover:text-white">
-                    Browse Items
-                  </Link>
-                </li>
-                <li>
-                  <Link href="/services" className="hover:text-white">
-                    Services
-                  </Link>
-                </li>
-                <li>
-                  <Link href="/list-item" className="hover:text-white">
-                    List Item
-                  </Link>
-                </li>
+                <li><Link href="/browse" className="hover:text-white">Browse Items</Link></li>
+                <li><Link href="/list-item" className="hover:text-white">List Item</Link></li>
               </ul>
             </div>
             <div>
               <h4 className="font-semibold mb-4">Support</h4>
               <ul className="space-y-2 text-gray-400">
-                <li>
-                  <Link href="/help" className="hover:text-white">
-                    Help Center
-                  </Link>
-                </li>
-                <li>
-                  <Link href="/contact" className="hover:text-white">
-                    Contact Us
-                  </Link>
-                </li>
-                <li>
-                  <Link href="/safety" className="hover:text-white">
-                    Safety
-                  </Link>
-                </li>
+                <li><Link href="/help" className="hover:text-white">Help Center</Link></li>
+                <li><Link href="/contact" className="hover:text-white">Contact Us</Link></li>
               </ul>
             </div>
             <div>
               <h4 className="font-semibold mb-4">Company</h4>
               <ul className="space-y-2 text-gray-400">
-                <li>
-                  <Link href="/about" className="hover:text-white">
-                    About
-                  </Link>
-                </li>
-                <li>
-                  <Link href="/careers" className="hover:text-white">
-                    Careers
-                  </Link>
-                </li>
-                <li>
-                  <Link href="/privacy" className="hover:text-white">
-                    Privacy
-                  </Link>
-                </li>
+                <li><Link href="/about" className="hover:text-white">About</Link></li>
+                <li><Link href="/privacy" className="hover:text-white">Privacy Policy</Link></li>
               </ul>
             </div>
           </div>
           <div className="border-t border-gray-800 mt-8 pt-8 text-center text-gray-400">
-            <p>&copy; 2025 RenThing. All rights reserved.</p>
-          </div>
+                <p>&copy; 2025 RenThing. All rights reserved.</p>
+              </div>
         </div>
       </footer>
     </div>
