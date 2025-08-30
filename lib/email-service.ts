@@ -41,7 +41,7 @@ interface PaymentDetails {
   status: string
 }
 
-class EmailService {
+export class EmailService {
   private transporter: nodemailer.Transporter | null = null
 
   constructor() {
@@ -446,25 +446,25 @@ export async function getBookingEmailDetails(bookingId: string) {
           }
         }
       },
-      renter: {
+      user: {
         select: { name: true, email: true }
       }
     }
   })
 
-  if (!booking) return null
+  if (!booking || !booking.listing || !booking.user) return null
 
   return {
     bookingId: booking.id,
     listingTitle: booking.listing.title,
-    renterName: booking.renter.name,
-    renterEmail: booking.renter.email,
-    ownerName: booking.listing.owner.name,
-    ownerEmail: booking.listing.owner.email,
+    renterName: booking.user.name || 'User',
+    renterEmail: booking.user.email || '',
+    ownerName: booking.listing.owner.name || 'Owner',
+    ownerEmail: booking.listing.owner.email || '',
     startDate: booking.startDate,
     endDate: booking.endDate,
     totalPrice: booking.totalPrice,
-    listingLocation: booking.listing.location,
-    listingImages: booking.listing.images.map(img => img.url),
+    listingLocation: (booking.listing as any).location || '',
+    listingImages: booking.listing.images?.map((img: { url: string }) => img.url) || [],
   }
 }

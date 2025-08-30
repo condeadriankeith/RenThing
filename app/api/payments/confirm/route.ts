@@ -38,6 +38,7 @@ export async function POST(request: NextRequest) {
         paymentMethodId
       )
       await emailTriggers.onPaymentConfirmed(result.id)
+      return NextResponse.json(result)
     } catch (error) {
       console.error('Payment confirmation error:', error)
       return NextResponse.json(
@@ -48,22 +49,6 @@ export async function POST(request: NextRequest) {
         { status: 500 }
       )
     }
-
-    const { transactionId, paymentMethodId } = await request.json()
-
-    if (!transactionId) {
-      return NextResponse.json(
-        { error: "Transaction ID is required" },
-        { status: 400 }
-      )
-    }
-
-    const result = await paymentService.confirmPayment(
-      transactionId,
-      paymentMethodId
-    )
-
-    return NextResponse.json(result)
   } catch (error) {
     console.error('Error confirming payment:', error)
     return NextResponse.json(

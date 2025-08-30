@@ -196,6 +196,52 @@ class PaymentService {
     }
   }
 
+  async confirmPayment(transactionId: string, paymentMethodId: string) {
+    try {
+      const transaction = await prisma.transaction.findUnique({
+        where: { id: transactionId },
+        include: {
+          booking: {
+            include: {
+              listing: true,
+              user: true,
+            }
+          }
+        }
+      })
+
+      if (!transaction) {
+        throw new Error('Transaction not found')
+      }
+
+      // For Stripe payments
+      if (transaction.stripePaymentIntentId) {
+        const paymentIntent = await stripe.paymentIntents.retrieve(
+          transaction.stripePaymentIntentId
+        )
+        
+        if (paymentIntent.status === 'succeeded') {
+          await prisma.transaction.update({
+            where: { id: transactionId },
+            data: { status: 'completed' }
+          })
+          
+          await prisma.booking.update({
+            where: { id: transaction.bookingId },
+            data: { status: 'confirmed' }
+          })
+
+          return { success: true, transaction }
+        }
+      }
+
+      return { success: false, error: 'Payment not completed' }
+    } catch (error) {
+      console.error('Payment confirmation error:', error)
+      throw new Error('Failed to confirm payment')
+    }
+  }
+
   async refundTransaction(bookingId: string, amount?: number) {
     try {
       const transaction = await prisma.transaction.findUnique({

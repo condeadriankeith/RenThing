@@ -17,6 +17,52 @@ export async function GET(request: NextRequest) {
         { status: 401 }
       )
     }
+
+    const { searchParams } = new URL(request.url)
+    const status = searchParams.get('status')
+
+    const where = {
+      ...(status ? { status } : {}),
+      OR: [
+        { userId: session.user.id },
+        { listing: { ownerId: session.user.id } }
+      ]
+    }
+
+    const bookings = await prisma.booking.findMany({
+      where,
+      include: {
+        listing: {
+          include: {
+            owner: {
+              select: {
+                id: true,
+                name: true,
+                email: true,
+              }
+            }
+          }
+        },
+        user: {
+          select: {
+            id: true,
+            name: true,
+            email: true,
+          }
+        },
+        transaction: true,
+      },
+      orderBy: { createdAt: 'desc' }
+    })
+
+    return NextResponse.json(bookings)
+  } catch (error) {
+    logger.error("Bookings GET error", error as Error, { context: "bookings" });
+    return NextResponse.json(
+      { error: "Internal server error" },
+      { status: 500 }
+    )
+  }
 }
 
 // PUT /api/bookings/[id] - Update booking status (e.g., cancel)
@@ -85,52 +131,6 @@ export async function PUT(request: NextRequest) {
     return NextResponse.json(updatedBooking)
   } catch (error) {
     logger.error("Bookings PUT error", error as Error, { context: "bookings" });
-    return NextResponse.json(
-      { error: "Internal server error" },
-      { status: 500 }
-    )
-  }
-
-    const { searchParams } = new URL(request.url)
-    const status = searchParams.get('status')
-
-    const where = {
-      ...(status ? { status } : {}),
-      OR: [
-        { userId: session.user.id },
-        { listing: { ownerId: session.user.id } }
-      ]
-    }
-
-    const bookings = await prisma.booking.findMany({
-      where,
-      include: {
-        listing: {
-          include: {
-            owner: {
-              select: {
-                id: true,
-                name: true,
-                email: true,
-              }
-            }
-          }
-        },
-        user: {
-          select: {
-            id: true,
-            name: true,
-            email: true,
-          }
-        },
-        transaction: true,
-      },
-      orderBy: { createdAt: 'desc' }
-    })
-
-    return NextResponse.json(bookings)
-  } catch (error) {
-    logger.error("Bookings GET error", error as Error, { context: "bookings" });
     return NextResponse.json(
       { error: "Internal server error" },
       { status: 500 }
