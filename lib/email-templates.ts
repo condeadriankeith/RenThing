@@ -164,9 +164,9 @@ export function generateEmailHTML(template: string, variables: Record<string, st
 }
 
 export const baseEmailTemplate = `
-  <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-    <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 40px; text-align: center; color: white;">
-      <h1 style="margin: 0; font-size: 28px;">{{title}}</h1>
+  <div style="font-family: 'SF Pro Display', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+    <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 40px 20px; text-align: center;">
+      <h1 style="margin: 0; font-size: 28px; font-weight: 600; letter-spacing: -0.02em;">{{title}}</h1>
       <p style="margin: 10px 0 0 0; opacity: 0.9;">{{subtitle}}</p>
     </div>
     

@@ -112,9 +112,9 @@ class EmailService {
     const renterTemplate: EmailTemplate = {
       subject: `Booking Confirmed: ${booking.listingTitle}`,
       html: `
-        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+        <div style="font-family: 'SF Pro Display', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; max-width: 600px; margin: 0 auto;">
           <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 40px; text-align: center; color: white;">
-            <h1 style="margin: 0; font-size: 28px;">Booking Confirmed!</h1>
+            <h1 style="margin: 0; font-size: 28px; font-weight: 600; letter-spacing: -0.02em;">Booking Confirmed!</h1>
             <p style="margin: 10px 0 0 0; opacity: 0.9;">Your reservation is all set</p>
           </div>
           
@@ -149,7 +149,7 @@ class EmailService {
                 </tr>
                 <tr>
                   <td style="padding: 8px 0; color: #666;"><strong>Total Price:</strong></td>
-                  <td style="padding: 8px 0; color: #333; font-size: 18px; font-weight: bold; color: #667eea;">
+                  <td style="padding: 8px 0; color: #333; font-size: 18px; font-weight: 600; color: #667eea; letter-spacing: -0.01em;">
                     ${this.formatCurrency(booking.totalPrice)}
                   </td>
                 </tr>
@@ -196,9 +196,9 @@ class EmailService {
     const ownerTemplate: EmailTemplate = {
       subject: `New Booking: ${booking.listingTitle}`,
       html: `
-        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+        <div style="font-family: 'SF Pro Display', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; max-width: 600px; margin: 0 auto;">
           <div style="background: linear-gradient(135deg, #28a745 0%, #20c997 100%); padding: 40px; text-align: center; color: white;">
-            <h1 style="margin: 0; font-size: 28px;">New Booking!</h1>
+            <h1 style="margin: 0; font-size: 28px; font-weight: 600; letter-spacing: -0.02em;">New Booking!</h1>
             <p style="margin: 10px 0 0 0; opacity: 0.9;">Your item has been booked</p>
           </div>
           
@@ -229,7 +229,7 @@ class EmailService {
                 </tr>
                 <tr>
                   <td style="padding: 8px 0; color: #666;"><strong>Total Earnings:</strong></td>
-                  <td style="padding: 8px 0; color: #333; font-size: 18px; font-weight: bold; color: #28a745;">
+                  <td style="padding: 8px 0; color: #333; font-size: 18px; font-weight: 600; color: #28a745; letter-spacing: -0.01em;">
                     ${this.formatCurrency(booking.totalPrice)}
                   </td>
                 </tr>
@@ -277,9 +277,9 @@ class EmailService {
     const template: EmailTemplate = {
       subject: `Booking Cancelled: ${booking.listingTitle}`,
       html: `
-        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+        <div style="font-family: 'SF Pro Display', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; max-width: 600px; margin: 0 auto;">
           <div style="background: linear-gradient(135deg, #dc3545 0%, #c82333 100%); padding: 40px; text-align: center; color: white;">
-            <h1 style="margin: 0; font-size: 28px;">Booking Cancelled</h1>
+            <h1 style="margin: 0; font-size: 28px; font-weight: 600; letter-spacing: -0.02em;">Booking Cancelled</h1>
           </div>
           
           <div style="padding: 30px; background: white;">
@@ -324,9 +324,9 @@ class EmailService {
     const template: EmailTemplate = {
       subject: `Payment Confirmed: ${this.formatCurrency(payment.amount)}`,
       html: `
-        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+        <div style="font-family: 'SF Pro Display', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; max-width: 600px; margin: 0 auto;">
           <div style="background: linear-gradient(135deg, #28a745 0%, #20c997 100%); padding: 40px; text-align: center; color: white;">
-            <h1 style="margin: 0; font-size: 28px;">Payment Confirmed!</h1>
+            <h1 style="margin: 0; font-size: 28px; font-weight: 600; letter-spacing: -0.02em;">Payment Confirmed!</h1>
             <p style="margin: 10px 0 0 0; opacity: 0.9;">${this.formatCurrency(payment.amount)} processed successfully</p>
           </div>
           
@@ -380,9 +380,9 @@ class EmailService {
     const template: EmailTemplate = {
       subject: 'Welcome to RenThing!',
       html: `
-        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+        <div style="font-family: 'SF Pro Display', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; max-width: 600px; margin: 0 auto;">
           <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 40px; text-align: center; color: white;">
-            <h1 style="margin: 0; font-size: 28px;">Welcome to RenThing!</h1>
+            <h1 style="margin: 0; font-size: 28px; font-weight: 600; letter-spacing: -0.02em;">Welcome to RenThing!</h1>
             <p style="margin: 10px 0 0 0; opacity: 0.9;">Start renting and earning today</p>
           </div>
           
@@ -403,7 +403,7 @@ class EmailService {
             
             <div style="text-align: center; margin: 30px 0;">
               <a href="${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}" 
-                 style="background: #667eea; color: white; padding: 12px 30px; text-decoration: none; border-radius: 6px; font-weight: bold;">
+                 style="background: #667eea; color: white; padding: 12px 30px; text-decoration: none; border-radius: 6px; font-weight: 600; letter-spacing: -0.01em;">
                 Start Exploring
               </a>
             </div>

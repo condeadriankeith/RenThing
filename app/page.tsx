@@ -15,8 +15,8 @@ export default function HomePage() {
       {/* Hero Section */}
       <main className="container mx-auto px-4 sm:px-6 lg:px-8 py-16 md:py-24">
         <div className="max-w-4xl mx-auto text-center">
-          <h1 className="text-4xl md:text-6xl font-bold text-gray-900 dark:text-white mb-6 leading-tight">
-            Rent Anything, <span className="text-blue-600">Book Everything</span>
+          <h1 className="text-5xl md:text-7xl lg:text-8xl font-black text-gray-900 dark:text-white mb-6 leading-tight">
+            Rent <span className="aurora-text-mask">Anything</span>, Anytime
           </h1>
           <p className="text-lg md:text-xl text-gray-600 dark:text-gray-300 mb-8 max-w-2xl mx-auto">
             Your one-stop marketplace for rentals and services. From equipment to experiences, find what you need or offer what you have.
@@ -248,8 +248,8 @@ export default function HomePage() {
       {/* Footer */}
       <footer className="bg-gray-900 text-white py-12 mt-16">
         <div className="container mx-auto px-4">
-          <div className="flex justify-center">
-            <div className="grid md:grid-cols-4 gap-8 max-w-4xl">
+          <div className="max-w-6xl mx-auto">
+            <div className="grid md:grid-cols-4 gap-8">
               <div>
                 <div className="flex items-center space-x-2 mb-4">
                   <Image 
@@ -286,9 +286,9 @@ export default function HomePage() {
                 </ul>
               </div>
             </div>
-          </div>
-          <div className="border-t border-gray-800 mt-8 pt-8 text-center text-gray-400">
-            <p>&copy; 2025 RenThing. All rights reserved.</p>
+            <div className="border-t border-gray-800 mt-8 pt-8 text-center text-gray-400">
+              <p>&copy; 2025 RenThing. All rights reserved.</p>
+            </div>
           </div>
         </div>
       </footer>

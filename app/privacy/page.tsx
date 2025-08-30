@@ -4,7 +4,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Shield, Eye, Lock, UserCheck, Database, Globe } from "lucide-react"
 
 export default function PrivacyPage() {
-  const lastUpdated = "January 1, 2024"
+  const lastUpdated = "August 30, 2025"
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900">

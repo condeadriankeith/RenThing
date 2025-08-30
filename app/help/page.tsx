@@ -139,21 +139,21 @@ export default function HelpPage() {
               <h3 className="font-semibold text-gray-900 dark:text-white">Contact Support</h3>
               <p className="text-sm text-gray-600 dark:text-gray-300">Get personalized help</p>
             </Link>
-            <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-sm">
+            <Link href="/help/safety-guide" className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-sm hover:shadow-md transition-shadow">
               <Shield className="w-8 h-8 text-green-600 mb-3" />
               <h3 className="font-semibold text-gray-900 dark:text-white">Safety Guide</h3>
               <p className="text-sm text-gray-600 dark:text-gray-300">Stay safe while renting</p>
-            </div>
-            <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-sm">
+            </Link>
+            <Link href="/help/payment-help" className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-sm hover:shadow-md transition-shadow">
               <CreditCard className="w-8 h-8 text-purple-600 mb-3" />
               <h3 className="font-semibold text-gray-900 dark:text-white">Payment Help</h3>
               <p className="text-sm text-gray-600 dark:text-gray-300">Manage payments & refunds</p>
-            </div>
-            <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-sm">
+            </Link>
+            <Link href="/help/item-guidelines" className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-sm hover:shadow-md transition-shadow">
               <Package className="w-8 h-8 text-orange-600 mb-3" />
               <h3 className="font-semibold text-gray-900 dark:text-white">Item Guidelines</h3>
               <p className="text-sm text-gray-600 dark:text-gray-300">Listing & renting rules</p>
-            </div>
+            </Link>
           </div>
         </div>
       </section>
