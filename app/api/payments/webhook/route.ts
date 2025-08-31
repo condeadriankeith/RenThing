@@ -32,15 +32,7 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    await paymentService.handleWebhook(
-      event.event,
-      invoice.external_id,
-      invoice.status,
-      invoice.amount,
-      invoice.currency,
-      invoice.id,
-      null // No subscription ID for Xendit invoices
-    )
+    await paymentService.handleWebhook(event)
   }
 
   return NextResponse.json({ received: true })

@@ -5,7 +5,6 @@ import bcrypt from "bcryptjs"
 import { prisma } from "./prisma"
 import { logger } from './logger';
 import { analytics } from './analytics';
-import { User as PrismaUser } from '@prisma/client';
 
 declare module "next-auth" {
   interface Session extends DefaultSession {
@@ -45,7 +44,7 @@ export const authOptions: NextAuthOptions = {
           where: {
             email: credentials.email,
           }
-        }) as (PrismaUser & { password: string; role: string }) | null
+        })
 
         if (!user || !user.password) {
           return null
