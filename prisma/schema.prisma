@@ -83,11 +83,12 @@ model Transaction {
   id          String    @id @default(uuid())
   bookingId   String    @unique
   booking     Booking   @relation(fields: [bookingId], references: [id])
+  userId      String
   amount      Float
   currency    String
   paymentMethod String
-
   xenditInvoiceId String?
+  stripePaymentIntentId String?
   status      String
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @updatedAt

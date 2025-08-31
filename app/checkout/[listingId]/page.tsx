@@ -177,15 +177,12 @@ export default function CheckoutPage() {
                 </CardTitle>
               </CardHeader>
               <CardContent>
-
-                  <XenditCheckout
-                    amount={totalAmount}
-                    currency="PHP"
-                    onSuccess={handlePaymentSuccess}
-                    disabled={!bookingDetails.startDate || !bookingDetails.endDate || isProcessing}
-                  />
-
-                )}
+                <XenditCheckout
+                  amount={totalAmount}
+                  currency="PHP"
+                  onSuccess={handlePaymentSuccess}
+                  disabled={!bookingDetails.startDate || !bookingDetails.endDate || isProcessing}
+                />
               </CardContent>
             </Card>
           </div>

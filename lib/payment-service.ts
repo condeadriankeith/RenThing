@@ -1,52 +1,8 @@
-// Initialize Stripe conditionally to avoid build errors when API key is missing
-let stripe: Stripe | null = null
-if (process.env.STRIPE_SECRET_KEY) {
-  stripe = new Stripe(process.env.STRIPE_SECRET_KEY, {
-    apiVersion: '2022-11-15',
-  })
-}
-
-export interface PaymentIntent {
-  id: string
-  amount: number
-  currency: string
-  status: "requires_payment_method" | "requires_confirmation" | "succeeded" | "canceled"
-  client_secret?: string
-  payment_method?: string
-  created: string
-}
-
->>>>>>> 01aebbedb4356c91206f374ff2fddbc879fde893
-export interface Transaction {
-  id: string
-  xenditInvoiceId: string
-  amount: number
-  currency: string
-  status: "pending" | "completed" | "failed" | "refunded"
-  paymentMethod: "xendit"
-  bookingId: string
-  userId: string
-  created: string
-  updated: string
-}
-=======
+import Stripe from 'stripe'
 import { prisma } from '@/lib/prisma'
 import { emailTriggers } from './email-triggers'
 import { logger } from '@/lib/logger'
 
-export interface Transaction {
-  id: string
-  xenditInvoiceId: string
-  amount: number
-  currency: string
-  status: "pending" | "completed" | "failed" | "refunded"
-  paymentMethod: "xendit"
-  bookingId: string
-  userId: string
-  created: string
-  updated: string
-}
-=======
 // Initialize Stripe conditionally to avoid build errors when API key is missing
 let stripe: Stripe | null = null
 if (process.env.STRIPE_SECRET_KEY) {
@@ -65,14 +21,14 @@ export interface PaymentIntent {
   created: string
 }
 
->>>>>>> 01aebbedb4356c91206f374ff2fddbc879fde893
 export interface Transaction {
   id: string
-  xenditInvoiceId: string
+  xenditInvoiceId?: string
+  stripePaymentIntentId?: string
   amount: number
   currency: string
   status: "pending" | "completed" | "failed" | "refunded"
-  paymentMethod: "xendit"
+  paymentMethod: "xendit" | "stripe"
   bookingId: string
   userId: string
   created: string
@@ -80,8 +36,6 @@ export interface Transaction {
 }
 
 class PaymentService {
-<<<<<<< HEAD
-=======
   // Stripe Integration
   async createStripePaymentIntent(amount: number, currency = "PHP", bookingId: string) {
     if (!stripe) {
@@ -144,7 +98,6 @@ class PaymentService {
       throw new Error('Failed to confirm payment')
     }
   }
->>>>>>> 01aebbedb4356c91206f374ff2fddbc879fde893
 
   // Xendit Integration
   async createXenditPayment(amount: number, currency = "PHP", bookingId: string, customerEmail: string) {
@@ -193,8 +146,8 @@ class PaymentService {
     amount: number
     currency: string
     paymentMethod: string
-
     xenditInvoiceId?: string
+    stripePaymentIntentId?: string
   }) {
     try {
       const transaction = await prisma.transaction.create({
@@ -204,6 +157,8 @@ class PaymentService {
           currency: data.currency,
           paymentMethod: data.paymentMethod,
           status: 'pending',
+          xenditInvoiceId: data.xenditInvoiceId,
+          stripePaymentIntentId: data.stripePaymentIntentId,
         },
         include: {
           booking: {
@@ -269,28 +224,6 @@ class PaymentService {
         throw new Error('Transaction not found')
       }
 
-<<<<<<< HEAD
-      if (transaction.xenditInvoiceId) {
-        // Check Xendit payment status
-        const response = await fetch(`https://api.xendit.co/v2/invoices/${transaction.xenditInvoiceId}`, {
-          headers: {
-            'Authorization': `Basic ${Buffer.from(process.env.XENDIT_SECRET_KEY!).toString('base64')}`
-          }
-        });
-        
-        if (response.ok) {
-          const invoice = await response.json();
-          if (invoice.status === 'PAID') {
-            await prisma.transaction.update({
-              where: { id: transactionId },
-              data: { status: 'completed' }
-            });
-            
-            await prisma.booking.update({
-              where: { id: transaction.bookingId },
-              data: { status: 'confirmed' }
-            });
-=======
       // For Stripe payments
       if (transaction.stripePaymentIntentId) {
         if (!stripe) {
@@ -311,9 +244,33 @@ class PaymentService {
             where: { id: transaction.bookingId },
             data: { status: 'confirmed' }
           })
->>>>>>> 01aebbedb4356c91206f374ff2fddbc879fde893
 
-            return { success: true, transaction };
+          return { success: true, transaction }
+        }
+      }
+
+      // For Xendit payments
+      if (transaction.xenditInvoiceId) {
+        const response = await fetch(`https://api.xendit.co/v2/invoices/${transaction.xenditInvoiceId}`, {
+          headers: {
+            'Authorization': `Basic ${Buffer.from(process.env.XENDIT_SECRET_KEY!).toString('base64')}`
+          }
+        })
+        
+        if (response.ok) {
+          const invoice = await response.json()
+          if (invoice.status === 'PAID') {
+            await prisma.transaction.update({
+              where: { id: transactionId },
+              data: { status: 'completed' }
+            })
+            
+            await prisma.booking.update({
+              where: { id: transaction.bookingId },
+              data: { status: 'confirmed' }
+            })
+
+            return { success: true, transaction }
           }
         }
       }
@@ -337,9 +294,6 @@ class PaymentService {
 
       let refundSuccess = false
 
-<<<<<<< HEAD
-      if (transaction.xenditInvoiceId) {
-=======
       if (transaction.stripePaymentIntentId) {
         if (!stripe) {
           throw new Error('Stripe not configured - missing STRIPE_SECRET_KEY')
@@ -351,7 +305,6 @@ class PaymentService {
         })
         refundSuccess = refund.status === 'succeeded'
       } else if (transaction.xenditInvoiceId) {
->>>>>>> 01aebbedb4356c91206f374ff2fddbc879fde893
         // Xendit refund implementation
         const response = await fetch('https://api.xendit.co/refunds', {
           method: 'POST',
@@ -417,7 +370,7 @@ class PaymentService {
 
       return { received: true }
     } catch (error) {
-      logger.error('Webhook error', error as Error, { context: 'payment-service' });
+      logger.error('Webhook error', error as Error, { context: 'payment-service' })
       throw new Error('Webhook processing failed')
     }
   }
