@@ -335,6 +335,23 @@ class PaymentService {
       throw new Error('Webhook processing failed')
     }
   }
+
+  async healthCheck() {
+    if (!process.env.STRIPE_SECRET_KEY) {
+      return { status: 'error', message: 'Payment service not configured - missing STRIPE_SECRET_KEY environment variable' }
+    }
+
+    try {
+      // Test Stripe connection by listing payment methods (this is a lightweight call)
+      await stripe.paymentMethods.list({ limit: 1 })
+      return { status: 'ok', message: 'Payment service is healthy' }
+    } catch (error) {
+      return { 
+        status: 'error', 
+        message: error instanceof Error ? error.message : 'Payment service connection failed' 
+      }
+    }
+  }
 }
 
 // Export singleton instance
