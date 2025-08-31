@@ -67,6 +67,23 @@ export class EmailService {
     this.transporter = nodemailer.createTransport(config)
   }
 
+  async healthCheck() {
+    if (!this.transporter) {
+      return { status: 'error', message: 'Email service not configured - missing SMTP environment variables' }
+    }
+
+    try {
+      // Test the connection
+      await this.transporter.verify()
+      return { status: 'ok', message: 'Email service is healthy' }
+    } catch (error) {
+      return { 
+        status: 'error', 
+        message: error instanceof Error ? error.message : 'Email service connection failed' 
+      }
+    }
+  }
+
   private async sendEmail(to: string, template: EmailTemplate) {
     if (!this.transporter) {
       console.warn('Email service not configured - skipping email')
