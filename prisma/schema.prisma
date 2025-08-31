@@ -86,7 +86,7 @@ model Transaction {
   amount      Float
   currency    String
   paymentMethod String
-  stripePaymentIntentId String?
+
   xenditInvoiceId String?
   status      String
   createdAt   DateTime  @default(now())

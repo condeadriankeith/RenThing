@@ -1,34 +1,14 @@
-import Stripe from 'stripe'
 import { prisma } from '@/lib/prisma'
 import { emailTriggers } from './email-triggers'
 import { logger } from '@/lib/logger'
 
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
-  apiVersion: '2022-11-15',
-})
-
-export interface PaymentIntent {
-  id: string
-  amount: number
-  currency: string
-  status: "requires_payment_method" | "requires_confirmation" | "succeeded" | "canceled"
-  client_secret?: string
-  payment_method?: string
-  created: string
-}
-
 export interface Transaction {
   id: string
-  paymentIntentId: string
+  xenditInvoiceId: string
   amount: number
   currency: string
   status: "pending" | "completed" | "failed" | "refunded"
-  paymentMethod: "stripe" | "xendit"
-  paymentDetails: {
-    method: string
-    last4?: string
-    brand?: string
-  }
+  paymentMethod: "xendit"
   bookingId: string
   userId: string
   created: string
@@ -36,60 +16,6 @@ export interface Transaction {
 }
 
 class PaymentService {
-  // Stripe Integration
-  async createStripePaymentIntent(amount: number, currency = "PHP", bookingId: string) {
-    try {
-      const paymentIntent = await stripe.paymentIntents.create({
-        amount: Math.round(amount * 100), // Convert to cents
-        currency: currency.toLowerCase(),
-        metadata: {
-          bookingId,
-        },
-        automatic_payment_methods: {
-          enabled: true,
-        },
-      })
-
-      return {
-        id: paymentIntent.id,
-        clientSecret: paymentIntent.client_secret,
-        amount: paymentIntent.amount,
-        currency: paymentIntent.currency,
-        status: paymentIntent.status,
-      }
-    } catch (error) {
-      console.error('Stripe payment intent creation error:', error)
-      throw new Error('Failed to create payment intent')
-    }
-  }
-
-  async confirmStripePayment(paymentIntentId: string) {
-    try {
-      const paymentIntent = await stripe.paymentIntents.retrieve(paymentIntentId)
-      
-      if (paymentIntent.status === 'succeeded') {
-        const transaction = await prisma.transaction.update({
-          where: { stripePaymentIntentId: paymentIntentId },
-          data: {
-            status: 'completed',
-          },
-        })
-
-        // Update booking status
-        await prisma.booking.update({
-          where: { id: paymentIntent.metadata?.bookingId },
-          data: { status: 'confirmed' }
-        })
-
-        return { success: true, transaction }
-      }
-
-      return { success: false, error: 'Payment not completed' }
-    } catch (error) {
-      console.error('Stripe payment confirmation error:', error)
-      throw new Error('Failed to confirm payment')
-    }
-  }
 
   // Xendit Integration
   async createXenditPayment(amount: number, currency = "PHP", bookingId: string, customerEmail: string) {
@@ -138,7 +64,7 @@ class PaymentService {
     amount: number
     currency: string
     paymentMethod: string
-    stripePaymentIntentId?: string
+
     xenditInvoiceId?: string
   }) {
     try {
@@ -214,24 +140,29 @@ class PaymentService {
         throw new Error('Transaction not found')
       }
 
-      // For Stripe payments
-      if (transaction.stripePaymentIntentId) {
-        const paymentIntent = await stripe.paymentIntents.retrieve(
-          transaction.stripePaymentIntentId
-        )
+      if (transaction.xenditInvoiceId) {
+        // Check Xendit payment status
+        const response = await fetch(`https://api.xendit.co/v2/invoices/${transaction.xenditInvoiceId}`, {
+          headers: {
+            'Authorization': `Basic ${Buffer.from(process.env.XENDIT_SECRET_KEY!).toString('base64')}`
+          }
+        });
         
-        if (paymentIntent.status === 'succeeded') {
-          await prisma.transaction.update({
-            where: { id: transactionId },
-            data: { status: 'completed' }
-          })
-          
-          await prisma.booking.update({
-            where: { id: transaction.bookingId },
-            data: { status: 'confirmed' }
-          })
+        if (response.ok) {
+          const invoice = await response.json();
+          if (invoice.status === 'PAID') {
+            await prisma.transaction.update({
+              where: { id: transactionId },
+              data: { status: 'completed' }
+            });
+            
+            await prisma.booking.update({
+              where: { id: transaction.bookingId },
+              data: { status: 'confirmed' }
+            });
 
-          return { success: true, transaction }
+            return { success: true, transaction };
+          }
         }
       }
 
@@ -254,13 +185,7 @@ class PaymentService {
 
       let refundSuccess = false
 
-      if (transaction.stripePaymentIntentId) {
-        const refund = await stripe.refunds.create({
-          payment_intent: transaction.stripePaymentIntentId,
-          amount: amount ? Math.round(amount * 100) : undefined,
-        })
-        refundSuccess = refund.status === 'succeeded'
-      } else if (transaction.xenditInvoiceId) {
+      if (transaction.xenditInvoiceId) {
         // Xendit refund implementation
         const response = await fetch('https://api.xendit.co/refunds', {
           method: 'POST',
@@ -296,37 +221,32 @@ class PaymentService {
 
   async handleWebhook(event: any) {
     try {
-      switch (event.type) {
-        case 'payment_intent.succeeded':
-          const paymentIntent = event.data.object
-          const transaction = await prisma.transaction.update({
-            where: { stripePaymentIntentId: paymentIntent.id },
-            data: {
-              status: 'completed',
-            },
-          })
+      if (event.event === 'invoice.paid') {
+        const invoice = event.data
+        const transaction = await prisma.transaction.update({
+          where: { xenditInvoiceId: invoice.id },
+          data: {
+            status: 'completed',
+          },
+        })
 
-          // Update booking status
-          await prisma.booking.update({
-            where: { id: paymentIntent.metadata?.bookingId },
-            data: { status: 'confirmed' }
-          })
-          await emailTriggers.onPaymentConfirmed(transaction.id)
-          break
-        case 'payment_intent.payment_failed':
-          const failedPaymentIntent = event.data.object
-          console.log(`Payment failed: ${failedPaymentIntent.id}`)
-          // Handle failed payment
-          const failedTransaction = await prisma.transaction.update({
-            where: { stripePaymentIntentId: failedPaymentIntent.id },
-            data: {
-              status: 'failed',
-            },
-          })
-          await emailTriggers.onPaymentFailed(failedTransaction.id, failedPaymentIntent.last_payment_error?.message || 'Unknown error')
-          break
-        default:
-          console.log(`Unhandled event type ${event.type}`)
+        // Update booking status
+        await prisma.booking.update({
+          where: { id: invoice.external_id },
+          data: { status: 'confirmed' }
+        })
+        await emailTriggers.onPaymentConfirmed(transaction.id)
+      } else if (event.event === 'invoice.failed') {
+        const invoice = event.data
+        const failedTransaction = await prisma.transaction.update({
+          where: { xenditInvoiceId: invoice.id },
+          data: {
+            status: 'failed',
+          },
+        })
+        await emailTriggers.onPaymentFailed(failedTransaction.id, invoice.failure_reason || 'Unknown error')
+      } else {
+        console.log(`Unhandled event type ${event.event}`)
       }
 
       return { received: true }

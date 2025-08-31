@@ -65,13 +65,7 @@ export async function POST(request: NextRequest) {
 
     let paymentData
 
-    if (paymentMethod === 'stripe') {
-      paymentData = await paymentService.createStripePaymentIntent(
-        totalAmount,
-        booking.listing.currency || 'PHP',
-        bookingId
-      )
-    } else if (paymentMethod === 'xendit') {
+    if (paymentMethod === 'xendit') {
       paymentData = await paymentService.createXenditPayment(
         totalAmount,
         booking.listing.currency || 'PHP',
@@ -91,7 +85,7 @@ export async function POST(request: NextRequest) {
       amount: totalAmount,
       currency: booking.listing.currency || 'PHP',
       paymentMethod,
-      stripePaymentIntentId: paymentMethod === 'stripe' ? paymentData.id : undefined,
+
       xenditInvoiceId: paymentMethod === 'xendit' ? paymentData.id : undefined,
     })
 

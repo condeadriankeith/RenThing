@@ -12,7 +12,7 @@ import { Badge } from "@/components/ui/badge"
 import { ShoppingBag, CreditCard, Shield, ArrowLeft, Calendar, MapPin } from "lucide-react"
 import { mockListings } from "@/lib/mock-data"
 import { PaymentMethodSelector } from "@/components/payment-method-selector"
-import { StripeCheckout } from "@/components/stripe-checkout"
+
 import { XenditCheckout } from "@/components/xendit-checkout"
 import { useToast } from "@/hooks/use-toast"
 
@@ -21,7 +21,7 @@ export default function CheckoutPage() {
   const params = useParams()
   const router = useRouter()
   const { toast } = useToast()
-  const [selectedPaymentMethod, setSelectedPaymentMethod] = useState<"stripe" | "xendit">("stripe")
+  const [selectedPaymentMethod, setSelectedPaymentMethod] = useState<"xendit">("xendit")
   const [bookingDetails, setBookingDetails] = useState({
     startDate: "",
     endDate: "",
@@ -177,15 +177,7 @@ export default function CheckoutPage() {
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                {selectedPaymentMethod === "stripe" ? (
-                  <StripeCheckout
-                    amount={totalAmount}
-                    currency="PHP"
-                    onSuccess={handlePaymentSuccess}
-                    disabled={!bookingDetails.startDate || !bookingDetails.endDate || isProcessing}
-                  />
 
-                ) : (
                   <XenditCheckout
                     amount={totalAmount}
                     currency="PHP"

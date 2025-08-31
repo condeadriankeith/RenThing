@@ -1,47 +1,48 @@
 import { NextRequest, NextResponse } from "next/server"
-import Stripe from 'stripe'
+import { NextResponse, NextRequest } from "next/server"
 import { paymentService } from "@/lib/payment-service"
 
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
-  apiVersion: '2024-06-20',
-})
-
-// POST /api/payments/webhook - Handle Stripe webhooks
+// POST /api/payments/webhook - Handle Xendit webhooks
 export async function POST(request: NextRequest) {
   const body = await request.text()
-  const sig = request.headers.get('stripe-signature')
+  const xCallbackToken = request.headers.get("x-callback-token")
 
-  if (!sig) {
+  if (xCallbackToken !== process.env.XENDIT_WEBHOOK_TOKEN) {
     return NextResponse.json(
-      { error: "Missing signature" },
+      { error: "Unauthorized" },
+      { status: 401 }
+    )
+  }
+
+  let event
+  try {
+    event = JSON.parse(body)
+  } catch (err: any) {
+    return NextResponse.json(
+      { error: `Webhook Error: ${err.message}` },
       { status: 400 }
     )
   }
 
-  let event: Stripe.Event
+  if (event.event === "invoice.paid") {
+    const invoice = event.data
+    if (!invoice?.external_id) {
+      return NextResponse.json(
+        { error: "External ID (bookingId) missing" },
+        { status: 400 }
+      )
+    }
 
-  try {
-    event = stripe.webhooks.constructEvent(
-      body,
-      sig,
-      process.env.STRIPE_WEBHOOK_SECRET!
-    )
-  } catch (err) {
-    console.error('Webhook signature verification failed:', err)
-    return NextResponse.json(
-      { error: "Invalid signature" },
-      { status: 400 }
+    await paymentService.handleWebhook(
+      event.event,
+      invoice.external_id,
+      invoice.status,
+      invoice.amount,
+      invoice.currency,
+      invoice.id,
+      null // No subscription ID for Xendit invoices
     )
   }
 
-  try {
-    await paymentService.handleWebhook(event)
-    return NextResponse.json({ received: true })
-  } catch (error) {
-    console.error('Webhook processing error:', error)
-    return NextResponse.json(
-      { error: "Webhook processing failed" },
-      { status: 500 }
-    )
-  }
+  return NextResponse.json({ received: true })
 }
