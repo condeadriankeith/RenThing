@@ -3,9 +3,13 @@ import { prisma } from '@/lib/prisma'
 import { emailTriggers } from './email-triggers'
 import { logger } from '@/lib/logger'
 
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
-  apiVersion: '2022-11-15',
-})
+// Initialize Stripe conditionally to avoid build errors when API key is missing
+let stripe: Stripe | null = null
+if (process.env.STRIPE_SECRET_KEY) {
+  stripe = new Stripe(process.env.STRIPE_SECRET_KEY, {
+    apiVersion: '2022-11-15',
+  })
+}
 
 export interface PaymentIntent {
   id: string
@@ -38,6 +42,10 @@ export interface Transaction {
 class PaymentService {
   // Stripe Integration
   async createStripePaymentIntent(amount: number, currency = "PHP", bookingId: string) {
+    if (!stripe) {
+      throw new Error('Stripe not configured - missing STRIPE_SECRET_KEY')
+    }
+
     try {
       const paymentIntent = await stripe.paymentIntents.create({
         amount: Math.round(amount * 100), // Convert to cents
@@ -64,9 +72,13 @@ class PaymentService {
   }
 
   async confirmStripePayment(paymentIntentId: string) {
+    if (!stripe) {
+      throw new Error('Stripe not configured - missing STRIPE_SECRET_KEY')
+    }
+
     try {
       const paymentIntent = await stripe.paymentIntents.retrieve(paymentIntentId)
-      
+
       if (paymentIntent.status === 'succeeded') {
         const transaction = await prisma.transaction.update({
           where: { stripePaymentIntentId: paymentIntentId },
@@ -216,16 +228,20 @@ class PaymentService {
 
       // For Stripe payments
       if (transaction.stripePaymentIntentId) {
+        if (!stripe) {
+          throw new Error('Stripe not configured - missing STRIPE_SECRET_KEY')
+        }
+
         const paymentIntent = await stripe.paymentIntents.retrieve(
           transaction.stripePaymentIntentId
         )
-        
+
         if (paymentIntent.status === 'succeeded') {
           await prisma.transaction.update({
             where: { id: transactionId },
             data: { status: 'completed' }
           })
-          
+
           await prisma.booking.update({
             where: { id: transaction.bookingId },
             data: { status: 'confirmed' }
@@ -255,6 +271,10 @@ class PaymentService {
       let refundSuccess = false
 
       if (transaction.stripePaymentIntentId) {
+        if (!stripe) {
+          throw new Error('Stripe not configured - missing STRIPE_SECRET_KEY')
+        }
+
         const refund = await stripe.refunds.create({
           payment_intent: transaction.stripePaymentIntentId,
           amount: amount ? Math.round(amount * 100) : undefined,
@@ -337,7 +357,7 @@ class PaymentService {
   }
 
   async healthCheck() {
-    if (!process.env.STRIPE_SECRET_KEY) {
+    if (!stripe) {
       return { status: 'error', message: 'Payment service not configured - missing STRIPE_SECRET_KEY environment variable' }
     }
 
@@ -346,9 +366,9 @@ class PaymentService {
       await stripe.paymentMethods.list({ limit: 1 })
       return { status: 'ok', message: 'Payment service is healthy' }
     } catch (error) {
-      return { 
-        status: 'error', 
-        message: error instanceof Error ? error.message : 'Payment service connection failed' 
+      return {
+        status: 'error',
+        message: error instanceof Error ? error.message : 'Payment service connection failed'
       }
     }
   }
