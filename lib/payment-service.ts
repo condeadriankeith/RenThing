@@ -1,3 +1,35 @@
+// Initialize Stripe conditionally to avoid build errors when API key is missing
+let stripe: Stripe | null = null
+if (process.env.STRIPE_SECRET_KEY) {
+  stripe = new Stripe(process.env.STRIPE_SECRET_KEY, {
+    apiVersion: '2022-11-15',
+  })
+}
+
+export interface PaymentIntent {
+  id: string
+  amount: number
+  currency: string
+  status: "requires_payment_method" | "requires_confirmation" | "succeeded" | "canceled"
+  client_secret?: string
+  payment_method?: string
+  created: string
+}
+
+>>>>>>> 01aebbedb4356c91206f374ff2fddbc879fde893
+export interface Transaction {
+  id: string
+  xenditInvoiceId: string
+  amount: number
+  currency: string
+  status: "pending" | "completed" | "failed" | "refunded"
+  paymentMethod: "xendit"
+  bookingId: string
+  userId: string
+  created: string
+  updated: string
+}
+=======
 import { prisma } from '@/lib/prisma'
 import { emailTriggers } from './email-triggers'
 import { logger } from '@/lib/logger'
@@ -14,8 +46,105 @@ export interface Transaction {
   created: string
   updated: string
 }
+=======
+// Initialize Stripe conditionally to avoid build errors when API key is missing
+let stripe: Stripe | null = null
+if (process.env.STRIPE_SECRET_KEY) {
+  stripe = new Stripe(process.env.STRIPE_SECRET_KEY, {
+    apiVersion: '2022-11-15',
+  })
+}
+
+export interface PaymentIntent {
+  id: string
+  amount: number
+  currency: string
+  status: "requires_payment_method" | "requires_confirmation" | "succeeded" | "canceled"
+  client_secret?: string
+  payment_method?: string
+  created: string
+}
+
+>>>>>>> 01aebbedb4356c91206f374ff2fddbc879fde893
+export interface Transaction {
+  id: string
+  xenditInvoiceId: string
+  amount: number
+  currency: string
+  status: "pending" | "completed" | "failed" | "refunded"
+  paymentMethod: "xendit"
+  bookingId: string
+  userId: string
+  created: string
+  updated: string
+}
 
 class PaymentService {
+<<<<<<< HEAD
+=======
+  // Stripe Integration
+  async createStripePaymentIntent(amount: number, currency = "PHP", bookingId: string) {
+    if (!stripe) {
+      throw new Error('Stripe not configured - missing STRIPE_SECRET_KEY')
+    }
+
+    try {
+      const paymentIntent = await stripe.paymentIntents.create({
+        amount: Math.round(amount * 100), // Convert to cents
+        currency: currency.toLowerCase(),
+        metadata: {
+          bookingId,
+        },
+        automatic_payment_methods: {
+          enabled: true,
+        },
+      })
+
+      return {
+        id: paymentIntent.id,
+        clientSecret: paymentIntent.client_secret,
+        amount: paymentIntent.amount,
+        currency: paymentIntent.currency,
+        status: paymentIntent.status,
+      }
+    } catch (error) {
+      console.error('Stripe payment intent creation error:', error)
+      throw new Error('Failed to create payment intent')
+    }
+  }
+
+  async confirmStripePayment(paymentIntentId: string) {
+    if (!stripe) {
+      throw new Error('Stripe not configured - missing STRIPE_SECRET_KEY')
+    }
+
+    try {
+      const paymentIntent = await stripe.paymentIntents.retrieve(paymentIntentId)
+
+      if (paymentIntent.status === 'succeeded') {
+        const transaction = await prisma.transaction.update({
+          where: { stripePaymentIntentId: paymentIntentId },
+          data: {
+            status: 'completed',
+          },
+        })
+
+        // Update booking status
+        await prisma.booking.update({
+          where: { id: paymentIntent.metadata?.bookingId },
+          data: { status: 'confirmed' }
+        })
+
+        return { success: true, transaction }
+      }
+
+      return { success: false, error: 'Payment not completed' }
+    } catch (error) {
+      console.error('Stripe payment confirmation error:', error)
+      throw new Error('Failed to confirm payment')
+    }
+  }
+>>>>>>> 01aebbedb4356c91206f374ff2fddbc879fde893
 
   // Xendit Integration
   async createXenditPayment(amount: number, currency = "PHP", bookingId: string, customerEmail: string) {
@@ -140,6 +269,7 @@ class PaymentService {
         throw new Error('Transaction not found')
       }
 
+<<<<<<< HEAD
       if (transaction.xenditInvoiceId) {
         // Check Xendit payment status
         const response = await fetch(`https://api.xendit.co/v2/invoices/${transaction.xenditInvoiceId}`, {
@@ -160,6 +290,28 @@ class PaymentService {
               where: { id: transaction.bookingId },
               data: { status: 'confirmed' }
             });
+=======
+      // For Stripe payments
+      if (transaction.stripePaymentIntentId) {
+        if (!stripe) {
+          throw new Error('Stripe not configured - missing STRIPE_SECRET_KEY')
+        }
+
+        const paymentIntent = await stripe.paymentIntents.retrieve(
+          transaction.stripePaymentIntentId
+        )
+
+        if (paymentIntent.status === 'succeeded') {
+          await prisma.transaction.update({
+            where: { id: transactionId },
+            data: { status: 'completed' }
+          })
+
+          await prisma.booking.update({
+            where: { id: transaction.bookingId },
+            data: { status: 'confirmed' }
+          })
+>>>>>>> 01aebbedb4356c91206f374ff2fddbc879fde893
 
             return { success: true, transaction };
           }
@@ -185,7 +337,21 @@ class PaymentService {
 
       let refundSuccess = false
 
+<<<<<<< HEAD
       if (transaction.xenditInvoiceId) {
+=======
+      if (transaction.stripePaymentIntentId) {
+        if (!stripe) {
+          throw new Error('Stripe not configured - missing STRIPE_SECRET_KEY')
+        }
+
+        const refund = await stripe.refunds.create({
+          payment_intent: transaction.stripePaymentIntentId,
+          amount: amount ? Math.round(amount * 100) : undefined,
+        })
+        refundSuccess = refund.status === 'succeeded'
+      } else if (transaction.xenditInvoiceId) {
+>>>>>>> 01aebbedb4356c91206f374ff2fddbc879fde893
         // Xendit refund implementation
         const response = await fetch('https://api.xendit.co/refunds', {
           method: 'POST',
@@ -253,6 +419,23 @@ class PaymentService {
     } catch (error) {
       logger.error('Webhook error', error as Error, { context: 'payment-service' });
       throw new Error('Webhook processing failed')
+    }
+  }
+
+  async healthCheck() {
+    if (!stripe) {
+      return { status: 'error', message: 'Payment service not configured - missing STRIPE_SECRET_KEY environment variable' }
+    }
+
+    try {
+      // Test Stripe connection by listing payment methods (this is a lightweight call)
+      await stripe.paymentMethods.list({ limit: 1 })
+      return { status: 'ok', message: 'Payment service is healthy' }
+    } catch (error) {
+      return {
+        status: 'error',
+        message: error instanceof Error ? error.message : 'Payment service connection failed'
+      }
     }
   }
 }
