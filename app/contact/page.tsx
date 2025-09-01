@@ -9,6 +9,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Mail, Phone, MapPin, Clock, MessageCircle, Send } from "lucide-react"
+import { SpinningLogo } from "@/components/ui/spinning-logo"
 
 export default function ContactPage() {
   const [formData, setFormData] = useState({
@@ -208,7 +209,7 @@ export default function ContactPage() {
                   >
                     {isSubmitting ? (
                       <>
-                        <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin mr-2" />
+                        <SpinningLogo size="sm" className="mr-2 text-white" />
                         Sending...
                       </>
                     ) : (

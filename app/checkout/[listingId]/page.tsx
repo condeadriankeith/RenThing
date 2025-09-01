@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { useParams, useRouter } from "next/navigation"
+import { useParams, useRouter, useSearchParams } from "next/navigation"
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
@@ -17,9 +17,9 @@ import { XenditCheckout } from "@/components/xendit-checkout"
 import { useToast } from "@/hooks/use-toast"
 
 export default function CheckoutPage() {
-
   const params = useParams()
   const router = useRouter()
+  const searchParams = useSearchParams()
   const { toast } = useToast()
   const [selectedPaymentMethod, setSelectedPaymentMethod] = useState<"xendit">("xendit")
   const [bookingDetails, setBookingDetails] = useState({
@@ -46,29 +46,75 @@ export default function CheckoutPage() {
   }
 
   useEffect(() => {
-    if (listing && bookingDetails.startDate && bookingDetails.endDate) {
-      const start = new Date(bookingDetails.startDate)
-      const end = new Date(bookingDetails.endDate)
-      const diffTime = Math.abs(end.getTime() - start.getTime())
-      const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24))
-      setBookingDetails((prev) => ({
-        ...prev,
-        duration: diffDays,
-        totalPrice: diffDays * (listing.price || 0),
-      }))
+    // Read booking details from URL parameters
+    const startDate = searchParams.get('startDate') || ''
+    const endDate = searchParams.get('endDate') || ''
+    const days = parseInt(searchParams.get('days') || '1')
+    const total = parseFloat(searchParams.get('total') || '0')
+    
+    if (startDate && endDate && listing) {
+      setBookingDetails({
+        startDate,
+        endDate,
+        duration: days,
+        totalPrice: total - Math.round(total * 0.05), // Remove service fee from total to get base price
+      })
     }
-  }, [bookingDetails.startDate, bookingDetails.endDate, listing])
+  }, [searchParams, listing])
 
   const serviceFee = Math.round(bookingDetails.totalPrice * 0.05) // 5% service fee
   const totalAmount = bookingDetails.totalPrice + serviceFee
 
-  function handlePaymentSuccess(paymentData: { transactionId: string }) {
-    setIsProcessing(false)
-    toast({
-      title: "Payment successful!",
-      description: "Your booking has been confirmed. Check your email for details.",
-    })
-    router.push(`/booking-confirmation/${paymentData.transactionId}`)
+  async function handlePaymentSuccess(paymentData: { transactionId: string }) {
+    if (!listing) {
+      toast({
+        title: "Error",
+        description: "Listing not found. Please try again.",
+        variant: "destructive",
+      })
+      return
+    }
+    
+    try {
+      setIsProcessing(true)
+      
+      // Create the booking
+      const bookingResponse = await fetch('/api/bookings', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          listingId: listing.id,
+          startDate: bookingDetails.startDate,
+          endDate: bookingDetails.endDate,
+        }),
+      })
+      
+      if (!bookingResponse.ok) {
+        const error = await bookingResponse.json()
+        throw new Error(error.error || 'Failed to create booking')
+      }
+      
+      const booking = await bookingResponse.json()
+      
+      toast({
+        title: "Booking confirmed!",
+        description: "Your booking has been successfully created. Check your email for details.",
+      })
+      
+      // Redirect to my-bookings page to see the new booking
+      router.push('/my-bookings')
+    } catch (error: any) {
+      console.error('Booking creation error:', error)
+      toast({
+        title: "Booking failed",
+        description: error.message || "There was an error creating your booking. Please try again.",
+        variant: "destructive",
+      })
+    } finally {
+      setIsProcessing(false)
+    }
   }
 
   return (

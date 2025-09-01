@@ -10,6 +10,8 @@ import { ThemeProvider } from './contexts/ThemeContext';
 
 import BottomTabNavigator from './navigation/BottomTabNavigator';
 import AuthNavigator from './navigation/AuthNavigator';
+import LandingScreen from './screens/LandingScreen';
+import SplashScreen from './screens/SplashScreen';
 
 import { useAuth } from './contexts/AuthContext';
 
@@ -19,7 +21,7 @@ function RootNavigator() {
   const { user, loading } = useAuth();
 
   if (loading) {
-    return null; // Show splash screen
+    return <SplashScreen />;
   }
 
   return (
@@ -29,7 +31,10 @@ function RootNavigator() {
           <Stack.Screen name="Main" component={BottomTabNavigator} />
         </Stack.Navigator>
       ) : (
-        <AuthNavigator />
+        <Stack.Navigator screenOptions={{ headerShown: false }}>
+          <Stack.Screen name="Landing" component={LandingScreen} />
+          <Stack.Screen name="Auth" component={AuthNavigator} />
+        </Stack.Navigator>
       )}
     </NavigationContainer>
   );

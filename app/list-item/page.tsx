@@ -12,12 +12,42 @@ import { Textarea } from "@/components/ui/textarea"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { ShoppingBag, Upload, X, Plus } from "lucide-react"
 import { useToast } from "@/hooks/use-toast"
+import { SpinningLogo } from "@/components/ui/spinning-logo"
+import { useSession } from "next-auth/react"
 
 export default function ListItemPage() {
+  const { data: session, status } = useSession()
   const [images, setImages] = useState<string[]>([])
   const [features, setFeatures] = useState<string[]>([""])
   const [isLoading, setIsLoading] = useState(false)
   const { toast } = useToast()
+
+  if (status === "loading") {
+    return (
+      <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex items-center justify-center">
+        <div className="flex flex-col items-center space-y-4">
+          <SpinningLogo size="xl" className="text-blue-500" />
+          <p className="text-gray-600 dark:text-gray-400">Loading...</p>
+        </div>
+      </div>
+    )
+  }
+
+  if (!session) {
+    return (
+      <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex items-center justify-center">
+        <Card className="max-w-md mx-auto">
+          <CardContent className="text-center py-12">
+            <h2 className="text-2xl font-bold mb-4">Please Sign In</h2>
+            <p className="text-gray-600 mb-6">Sign in to list your items on RenThing</p>
+            <Button asChild>
+              <Link href="/auth/login?from=/list-item">Sign In</Link>
+            </Button>
+          </CardContent>
+        </Card>
+      </div>
+    )
+  }
 
   const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files

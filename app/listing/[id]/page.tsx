@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { useParams } from "next/navigation"
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
@@ -9,24 +9,83 @@ import { Badge } from "@/components/ui/badge"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Separator } from "@/components/ui/separator"
 import { ShoppingBag, Star, MapPin, Share, Heart, ArrowLeft } from "lucide-react"
-import { mockListings } from "@/lib/mock-data"
 import { BookingCalendar } from "@/components/booking-calendar"
 import { ContactOwnerChat } from "@/components/contact-owner-chat-fixed"
+import { SpinningLogo } from "@/components/ui/spinning-logo"
 
-
+interface Listing {
+  id: string
+  title: string
+  description: string
+  price: number
+  location: string
+  images: string[]
+  features: string[]
+  averageRating: number
+  reviewCount: number
+  owner: {
+    id: string
+    name: string
+    email: string
+  }
+  reviews: Array<{
+    id: string
+    rating: number
+    comment: string
+    user: {
+      id: string
+      name: string
+    }
+    createdAt: string
+  }>
+  createdAt: string
+}
 
 export default function ListingDetailPage() {
   const params = useParams()
+  const [listing, setListing] = useState<Listing | null>(null)
+  const [isLoading, setIsLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
   const [selectedImageIndex, setSelectedImageIndex] = useState(0)
 
-  // Find the listing by ID
-  const listing = mockListings.find((l) => l.id === params.id)
+  useEffect(() => {
+    const fetchListing = async () => {
+      try {
+        const response = await fetch(`/api/listings/${params.id}`)
+        if (!response.ok) {
+          throw new Error('Failed to fetch listing')
+        }
+        const data = await response.json()
+        setListing(data)
+      } catch (err: any) {
+        setError(err.message)
+      } finally {
+        setIsLoading(false)
+      }
+    }
 
-  if (!listing) {
+    if (params.id) {
+      fetchListing()
+    }
+  }, [params.id])
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex items-center justify-center">
+        <div className="flex flex-col items-center space-y-4">
+          <SpinningLogo size="xl" className="text-blue-500" />
+          <p className="text-gray-600 dark:text-gray-400">Loading listing...</p>
+        </div>
+      </div>
+    )
+  }
+
+  if (error || !listing) {
     return (
       <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex items-center justify-center">
         <div className="text-center">
           <h1 className="text-2xl font-bold mb-4">Listing not found</h1>
+          <p className="text-gray-600 dark:text-gray-400 mb-6">{error || 'The listing you\'re looking for doesn\'t exist.'}</p>
           <Button asChild>
             <Link href="/browse">Back to Browse</Link>
           </Button>
@@ -82,12 +141,12 @@ export default function ListingDetailPage() {
             <div>
               <div className="flex items-start justify-between mb-4">
                 <div>
-                  <Badge className="mb-2">{listing.category}</Badge>
+                  <Badge className="mb-2">listing</Badge>
                   <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">{listing.title}</h1>
                   <div className="flex items-center space-x-4 text-sm text-gray-600 dark:text-gray-400">
                     <div className="flex items-center space-x-1">
                       <Star className="h-4 w-4 fill-yellow-400 text-yellow-400" />
-                      <span className="font-medium">{listing.rating}</span>
+                      <span className="font-medium">{listing.averageRating.toFixed(1)}</span>
                       <span>({listing.reviewCount} reviews)</span>
                     </div>
                     <div className="flex items-center space-x-1">
@@ -108,20 +167,17 @@ export default function ListingDetailPage() {
 
               <div className="flex items-baseline space-x-2 mb-6">
                 <span className="text-4xl font-bold text-blue-600">₱{listing.price}</span>
-
-                <span className="text-lg text-gray-600 dark:text-gray-400">per {listing.priceUnit}</span>
+                <span className="text-lg text-gray-600 dark:text-gray-400">per day</span>
               </div>
 
               <p className="text-gray-700 dark:text-gray-300 leading-relaxed mb-6">{listing.description}</p>
 
               <BookingCalendar listing={listing} />
 
-              {listing.available && (
-                <div className="flex items-center space-x-2 text-green-600 mt-4">
-                  <div className="w-2 h-2 bg-green-600 rounded-full"></div>
-                  <span className="font-medium">Available for booking</span>
-                </div>
-              )}
+              <div className="flex items-center space-x-2 text-green-600 mt-4">
+                <div className="w-2 h-2 bg-green-600 rounded-full"></div>
+                <span className="font-medium">Available for booking</span>
+              </div>
             </div>
 
             <Separator />
@@ -134,7 +190,7 @@ export default function ListingDetailPage() {
               <CardContent>
                 <div className="flex items-center space-x-4">
                   <Avatar className="h-12 w-12">
-                    <AvatarImage src={listing.owner.avatar || "/placeholder.svg"} />
+                    <AvatarImage src="/placeholder.svg" />
                     <AvatarFallback>{listing.owner.name.charAt(0)}</AvatarFallback>
                   </Avatar>
                   <div className="flex-1">
@@ -142,10 +198,10 @@ export default function ListingDetailPage() {
                     <div className="flex items-center space-x-4 text-sm text-gray-600 dark:text-gray-400">
                       <div className="flex items-center space-x-1">
                         <Star className="h-3 w-3 fill-yellow-400 text-yellow-400" />
-                        <span>{listing.owner.rating}</span>
+                        <span>{listing.averageRating.toFixed(1)}</span>
                       </div>
-                      <span>{listing.owner.reviewCount} reviews</span>
-                      <span>Joined {listing.owner.joinedDate}</span>
+                      <span>{listing.reviewCount} reviews</span>
+                      <span>Verified Owner</span>
                     </div>
                   </div>
                   <div className="flex flex-col space-y-2">
@@ -156,7 +212,6 @@ export default function ListingDetailPage() {
                       listingId={listing.id}
                     />
                   </div>
-
                 </div>
               </CardContent>
             </Card>
@@ -182,32 +237,40 @@ export default function ListingDetailPage() {
 
         {/* Reviews Section */}
         <div className="mt-12">
-          <h2 className="text-2xl font-bold mb-6">Reviews</h2>
-          <div className="grid md:grid-cols-2 gap-6">
-            {listing.reviews.map((review) => (
-              <Card key={review.id}>
-                <CardContent className="pt-6">
-                  <div className="flex items-start space-x-4">
-                    <Avatar>
-                      <AvatarImage src={review.user.avatar || "/placeholder.svg"} />
-                      <AvatarFallback>{review.user.name.charAt(0)}</AvatarFallback>
-                    </Avatar>
-                    <div className="flex-1">
-                      <div className="flex items-center justify-between mb-2">
-                        <h4 className="font-semibold">{review.user.name}</h4>
-                        <div className="flex items-center space-x-1">
-                          <Star className="h-4 w-4 fill-yellow-400 text-yellow-400" />
-                          <span className="text-sm">{review.rating}</span>
+          <h2 className="text-2xl font-bold mb-6">Reviews ({listing.reviewCount})</h2>
+          {listing.reviews && listing.reviews.length > 0 ? (
+            <div className="grid md:grid-cols-2 gap-6">
+              {listing.reviews.map((review) => (
+                <Card key={review.id}>
+                  <CardContent className="pt-6">
+                    <div className="flex items-start space-x-4">
+                      <Avatar>
+                        <AvatarImage src="/placeholder.svg" />
+                        <AvatarFallback>{review.user.name.charAt(0)}</AvatarFallback>
+                      </Avatar>
+                      <div className="flex-1">
+                        <div className="flex items-center justify-between mb-2">
+                          <h4 className="font-semibold">{review.user.name}</h4>
+                          <div className="flex items-center space-x-1">
+                            <Star className="h-4 w-4 fill-yellow-400 text-yellow-400" />
+                            <span className="text-sm">{review.rating}</span>
+                          </div>
                         </div>
+                        <p className="text-gray-600 dark:text-gray-400 text-sm mb-2">{review.comment}</p>
+                        <p className="text-xs text-gray-500">{new Date(review.createdAt).toLocaleDateString()}</p>
                       </div>
-                      <p className="text-gray-600 dark:text-gray-400 text-sm mb-2">{review.comment}</p>
-                      <span className="text-xs text-gray-500">{review.date}</span>
                     </div>
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          ) : (
+            <Card>
+              <CardContent className="pt-6 text-center">
+                <p className="text-gray-500">No reviews yet. Be the first to leave a review!</p>
+              </CardContent>
+            </Card>
+          )}
         </div>
       </div>
     </div>

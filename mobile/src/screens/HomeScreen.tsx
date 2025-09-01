@@ -2,8 +2,10 @@ import React, { useState, useEffect } from 'react';
 import { View, ScrollView, StyleSheet, Dimensions, FlatList, Image } from 'react-native';
 import { Text, Button, Card, Searchbar, ActivityIndicator } from 'react-native-paper';
 import { useNavigation } from '@react-navigation/native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { apiClient } from '../services/api/client';
+import Header from '../components/Header';
 
 const { width } = Dimensions.get('window');
 const CARD_WIDTH = (width - 48) / 2; // 16px padding on each side + 16px between cards
@@ -103,7 +105,9 @@ export default function HomeScreen() {
   };
 
   return (
-    <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
+    <SafeAreaView style={styles.container}>
+      <Header showLogo title="Welcome to RenThing" />
+      <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false}>
       {/* Hero Section */}
       <View style={styles.heroSection}>
         <Text style={styles.heroTitle}>Find what you need</Text>
@@ -205,16 +209,21 @@ export default function HomeScreen() {
         </View>
       </View>
     </ScrollView>
+    </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+    backgroundColor: 'white',
+  },
+  scrollView: {
+    flex: 1,
     backgroundColor: '#f5f5f5',
   },
   heroSection: {
-    backgroundColor: '#1976d2',
+    backgroundColor: '#2563eb',
     padding: 24,
     paddingTop: 48,
   },
@@ -324,7 +333,7 @@ const styles = StyleSheet.create({
   featuredPrice: {
     fontSize: 16,
     fontWeight: 'bold',
-    color: '#1976d2',
+    color: '#2563eb',
   },
   stepsContainer: {
     backgroundColor: 'white',
@@ -341,7 +350,7 @@ const styles = StyleSheet.create({
     width: 32,
     height: 32,
     borderRadius: 16,
-    backgroundColor: '#1976d2',
+    backgroundColor: '#2563eb',
     color: 'white',
     textAlign: 'center',
     lineHeight: 32,

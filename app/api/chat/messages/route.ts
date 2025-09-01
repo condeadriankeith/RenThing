@@ -14,7 +14,7 @@ type SessionWithId = {
   expires: string;
 } | null;
 
-// GET /api/chat/rooms - Get user's chat rooms
+// GET /api/chat/messages - Get messages for a room
 export async function GET(request: NextRequest) {
   try {
     const session = await getServerSession(authOptions) as SessionWithId
@@ -26,23 +26,33 @@ export async function GET(request: NextRequest) {
       )
     }
 
-    const rooms = await chatService.getUserRooms(session.user.id)
+    const { searchParams } = new URL(request.url)
+    const roomId = searchParams.get('roomId')
+    
+    if (!roomId) {
+      return NextResponse.json(
+        { error: "Room ID is required" },
+        { status: 400 }
+      )
+    }
+
+    const messages = await chatService.getRoomMessages(roomId, session.user.id)
     
     return NextResponse.json({
       success: true,
-      rooms
+      messages
     })
 
   } catch (error) {
-    console.error('Error fetching chat rooms:', error)
+    console.error('Error fetching messages:', error)
     return NextResponse.json(
-      { error: "Failed to fetch chat rooms" },
+      { error: "Failed to fetch messages" },
       { status: 500 }
     )
   }
 }
 
-// POST /api/chat/rooms - Create or get chat room
+// POST /api/chat/messages - Send a message
 export async function POST(request: NextRequest) {
   try {
     const session = await getServerSession(authOptions) as SessionWithId
@@ -54,50 +64,32 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    const { listingId, receiverId, content } = await request.json();
+    const { roomId, content, receiverId, listingId } = await request.json();
 
-    if (!listingId || !content) {
+    if (!roomId || !content || !receiverId || !listingId) {
       return NextResponse.json(
-        { error: "Listing ID and content are required" },
+        { error: "Missing required fields" },
         { status: 400 }
       )
     }
-
-    if (!receiverId) {
-      return NextResponse.json(
-        { error: "Receiver ID is required" },
-        { status: 400 }
-      )
-    }
-
-    // Validate that listingId exists in database
-    console.log('Creating chat room with:', { listingId, receiverId, senderId: session.user.id });
-
-    // Create or get the chat room
-    const room = await chatService.createOrGetRoom({
-        listingId,
-        receiverId,
-        senderId: session.user.id,
-    });
 
     const message = await chatService.createMessage({
       content,
       senderId: session.user.id,
       receiverId,
       listingId,
-      roomId: room.id
+      roomId
     })
 
     return NextResponse.json({
       success: true,
-      roomId: room.id,
       message
     })
 
   } catch (error) {
-    console.error('Error creating chat room:', error)
+    console.error('Error sending message:', error)
     return NextResponse.json(
-      { error: "Failed to create chat room" },
+      { error: "Failed to send message" },
       { status: 500 }
     )
   }

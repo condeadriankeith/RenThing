@@ -28,7 +28,30 @@ class ConsoleAnalyticsService implements AnalyticsService {
 
 // In a real application, you would swap this out for a proper analytics SDK (e.g., Google Analytics, Mixpanel, Segment)
 // For now, we'll use a console-based logger.
-export const analytics = new ConsoleAnalyticsService();
+export const analytics = {
+  track: (event: string, properties?: Record<string, any>) => {
+    // In development, just log to console
+    if (process.env.NODE_ENV === 'development') {
+      console.log(`[ANALYTICS] ${event}`, properties)
+    }
+    
+    // In production, you would send to your analytics service
+    // Example: mixpanel.track(event, properties)
+    // or: amplitude.logEvent(event, properties)
+  },
+  
+  identify: (userId: string, traits?: Record<string, any>) => {
+    if (process.env.NODE_ENV === 'development') {
+      console.log(`[ANALYTICS] identify ${userId}`, traits)
+    }
+  },
+  
+  page: (name: string, properties?: Record<string, any>) => {
+    if (process.env.NODE_ENV === 'development') {
+      console.log(`[ANALYTICS] page ${name}`, properties)
+    }
+  }
+}
 
 export const trackBooking = (listingId: string, amount: number) => {
   analytics.track('booking_created', { listingId, amount });

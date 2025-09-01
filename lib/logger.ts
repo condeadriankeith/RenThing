@@ -69,4 +69,19 @@ class Logger {
 
 // Initialize logger with default level from environment variable or INFO
 const logLevel = (process.env.NEXT_PUBLIC_LOG_LEVEL as LogLevel) || LogLevel.INFO;
-export const logger = Logger.getInstance(logLevel);
+export const logger = {
+  info: (message: string, data?: any) => {
+    console.log(`[INFO] ${message}`, data ? JSON.stringify(data) : '')
+  },
+  error: (message: string, error?: any) => {
+    console.error(`[ERROR] ${message}`, error)
+  },
+  warn: (message: string, data?: any) => {
+    console.warn(`[WARN] ${message}`, data ? JSON.stringify(data) : '')
+  },
+  debug: (message: string, data?: any) => {
+    if (process.env.NODE_ENV === 'development') {
+      console.debug(`[DEBUG] ${message}`, data ? JSON.stringify(data) : '')
+    }
+  }
+}

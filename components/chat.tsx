@@ -1,8 +1,17 @@
 
 "use client";
+/**
+ * Chat Component - Handles Customer-Owner Communication
+ * 
+ * BUSINESS LOGIC:
+ * - Creates permanent transaction history when customer first contacts owner
+ * - All messages are immutable and serve as evidence of rental inquiries
+ * - Chat rooms cannot be deleted as they represent business transaction records
+ */
 import React, { useState, useRef, useEffect } from "react";
-import { useSocket } from "@/lib/use-socket";
+import { useSession } from "next-auth/react";
 import { useToast } from "@/hooks/use-toast";
+import { SpinningLogo } from "@/components/ui/spinning-logo";
 
 interface Message {
   id: string;
@@ -24,129 +33,144 @@ interface ChatProps {
 }
 
 export const Chat: React.FC<ChatProps> = ({ ownerId, listingId, onOpenFullChat }) => {
+  const { data: session } = useSession();
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState("");
   const [roomId, setRoomId] = useState<string | null>(null);
-  const [isTyping, setIsTyping] = useState(false);
-  const [otherUserTyping, setOtherUserTyping] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
+  const [isSending, setIsSending] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement | null>(null);
-  const typingTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const { toast } = useToast();
 
-  const {
-    isConnected,
-    error,
-    sendMessage,
-    joinRoom,
-    markMessagesAsRead,
-    startTyping,
-    stopTyping,
-    on,
-    off
-  } = useSocket({
-    onConnect: async () => {
-      console.log("Socket connected");
-      try {
-        // Get or create chat room from API
-        const response = await fetch('/api/chat/rooms', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({ 
-            listingId, 
-            receiverId: ownerId, 
-            content: 'Chat initiated' 
-          }),
-        });
-        
-        const data = await response.json();
-        
-        if (data.success && data.message?.roomId) {
-          const newRoomId = data.message.roomId;
-          setRoomId(newRoomId);
-          joinRoom(newRoomId);
-        } else {
-          throw new Error('Failed to get room ID');
-        }
-      } catch (error) {
-        console.error("Error getting room ID:", error);
-        toast({
-          title: "Connection Error",
-          description: "Failed to initialize chat room. Please try again.",
-          variant: "destructive"
-        });
-      }
-    },
-    onDisconnect: () => {
-      console.log("Socket disconnected");
-    },
-    onError: (errorMessage) => {
-      console.error("Socket error:", errorMessage);
+  // Initialize chat room and load messages
+  useEffect(() => {
+    if (!session?.user?.id) {
+      setIsLoading(false);
+      return;
+    }
+
+    if (!listingId) {
+      console.error("Missing listingId for chat initialization");
       toast({
-        title: "Connection Error",
-        description: "Failed to connect to chat service. Please try again.",
+        title: "Configuration Error",
+        description: "Missing listing information. Please try again.",
         variant: "destructive"
       });
+      setIsLoading(false);
+      return;
     }
-  });
 
+    initializeChat();
+  }, [session, listingId, ownerId]);
 
-  // Handle incoming messages
-  useEffect(() => {
-    const handleNewMessage = (data: any) => {
-      if (data.roomId === roomId) {
-        setMessages(prev => [...prev, data.message]);
+  const initializeChat = async () => {
+    try {
+      setIsLoading(true);
+      
+      // Create or get chat room
+      const roomResponse = await fetch('/api/chat/rooms', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ 
+          listingId, 
+          receiverId: ownerId, 
+          content: 'Chat initiated' 
+        }),
+      });
+      
+      const roomData = await roomResponse.json();
+      
+      if (roomData.success && roomData.roomId) {
+        setRoomId(roomData.roomId);
+        
+        // Load existing messages
+        await loadMessages(roomData.roomId);
+      } else {
+        throw new Error(roomData.error || 'Failed to initialize chat');
       }
-    };
+    } catch (error) {
+      console.error("Error initializing chat:", error);
+      toast({
+        title: "Connection Error",
+        description: "Failed to initialize chat. Please try again.",
+        variant: "destructive"
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
-    const handleTyping = (data: any) => {
-      if (data.roomId === roomId && data.userId !== ownerId) {
-        setOtherUserTyping(true);
+  const loadMessages = async (roomId: string) => {
+    try {
+      const response = await fetch(`/api/chat/messages?roomId=${roomId}`);
+      const data = await response.json();
+      
+      if (data.success) {
+        setMessages(data.messages || []);
       }
-    };
-
-    const handleStopTyping = (data: any) => {
-      if (data.roomId === roomId && data.userId !== ownerId) {
-        setOtherUserTyping(false);
-      }
-    };
-
-    on('new_message', handleNewMessage);
-    on('user_typing', handleTyping);
-    on('user_stop_typing', handleStopTyping);
-
-    return () => {
-      off('new_message', handleNewMessage);
-      off('user_typing', handleTyping);
-      off('user_stop_typing', handleStopTyping);
-    };
-  }, [roomId, ownerId, on, off]);
+    } catch (error) {
+      console.error("Error loading messages:", error);
+    }
+  };
 
   // Scroll to bottom when messages change
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
 
-  // Mark messages as read when component mounts
+  // Poll for new messages every 3 seconds
   useEffect(() => {
-    if (roomId) {
-      markMessagesAsRead(roomId);
-    }
-  }, [roomId, markMessagesAsRead]);
+    if (!roomId) return;
 
-  const handleSend = () => {
-    if (!input.trim() || !roomId) return;
+    const interval = setInterval(() => {
+      loadMessages(roomId);
+    }, 3000);
+
+    return () => clearInterval(interval);
+  }, [roomId]);
+
+  const handleSend = async () => {
+    if (!input.trim() || !roomId || !session?.user?.id || isSending) return;
     
-    sendMessage(roomId, input, ownerId, listingId || "");
-    setInput("");
+    setIsSending(true);
+    const messageContent = input.trim();
+    setInput(""); // Clear input immediately for better UX
     
-    // Reset typing indicator
-    if (typingTimeoutRef.current) {
-      clearTimeout(typingTimeoutRef.current);
-      typingTimeoutRef.current = null;
+    try {
+      const response = await fetch('/api/chat/messages', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          roomId,
+          content: messageContent,
+          receiverId: ownerId,
+          listingId
+        }),
+      });
+      
+      const data = await response.json();
+      
+      if (data.success) {
+        // Add the new message to the list immediately
+        setMessages(prev => [...prev, data.message]);
+      } else {
+        throw new Error(data.error || 'Failed to send message');
+      }
+    } catch (error) {
+      console.error("Error sending message:", error);
+      setInput(messageContent); // Restore input on error
+      toast({
+        title: "Error",
+        description: "Failed to send message. Please try again.",
+        variant: "destructive"
+      });
+    } finally {
+      setIsSending(false);
     }
-    stopTyping(roomId, ownerId);
   };
 
   const handleInputKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
@@ -155,50 +179,36 @@ export const Chat: React.FC<ChatProps> = ({ ownerId, listingId, onOpenFullChat }
     }
   };
 
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setInput(e.target.value);
-    
-    // Send typing indicator
-    if (roomId && !isTyping) {
-      setIsTyping(true);
-      startTyping(roomId, ownerId);
-      
-      // Stop typing after 1 second of inactivity
-      if (typingTimeoutRef.current) {
-        clearTimeout(typingTimeoutRef.current);
-      }
-      typingTimeoutRef.current = setTimeout(() => {
-        setIsTyping(false);
-        stopTyping(roomId, ownerId);
-      }, 1000);
-    }
-  };
+  const isConnected = !isLoading && roomId !== null;
 
   return (
     <div className="flex flex-col h-[70vh] max-h-[600px] min-h-[350px] w-full max-w-2xl mx-auto border rounded-lg shadow bg-white sm:h-[500px] sm:max-h-[600px]">
       <div className="flex-1 overflow-y-auto p-2 sm:p-4 space-y-2">
-        {!isConnected && (
-          <div className="text-center text-gray-500 py-2">
-            Connecting to chat...
+        {isLoading && (
+          <div className="flex flex-col items-center justify-center py-4 space-y-2">
+            <SpinningLogo size="md" className="text-blue-500" />
+            <div className="text-center text-gray-500 text-sm">
+              Connecting to chat...
+            </div>
           </div>
         )}
         
-        {error && (
+        {!isLoading && !isConnected && (
           <div className="text-center text-red-500 py-2">
-            {error}
+            Failed to connect to chat
           </div>
         )}
         
         {messages.map((msg) => (
           <div
             key={msg.id}
-            className={`flex ${msg.senderId === ownerId ? "justify-start" : "justify-end"}`}
+            className={`flex ${msg.senderId === session?.user?.id ? "justify-end" : "justify-start"}`}
           >
             <div
               className={`px-3 py-2 rounded-2xl max-w-[80vw] sm:max-w-xs break-words text-sm shadow-sm ${
-                msg.senderId === ownerId
-                  ? "bg-gray-200 text-gray-900"
-                  : "bg-blue-500 text-white"
+                msg.senderId === session?.user?.id
+                  ? "bg-blue-500 text-white"
+                  : "bg-gray-200 text-gray-900"
               }`}
               title={new Date(msg.timestamp).toLocaleString()}
               style={{ wordBreak: "break-word" }}
@@ -208,14 +218,6 @@ export const Chat: React.FC<ChatProps> = ({ ownerId, listingId, onOpenFullChat }
           </div>
         ))}
         
-        {otherUserTyping && (
-          <div className="flex justify-start">
-            <div className="px-3 py-2 rounded-2xl bg-gray-200 text-gray-900 text-sm">
-              Typing...
-            </div>
-          </div>
-        )}
-        
         <div ref={messagesEndRef} />
       </div>
       
@@ -223,19 +225,26 @@ export const Chat: React.FC<ChatProps> = ({ ownerId, listingId, onOpenFullChat }
         <input
           type="text"
           className="flex-1 border rounded-full px-3 py-2 focus:outline-none focus:ring text-sm sm:text-base"
-          placeholder="Type your message..."
+          placeholder={isConnected ? "Type your message..." : "Chat not available"}
           value={input}
-          onChange={handleInputChange}
+          onChange={(e) => setInput(e.target.value)}
           onKeyDown={handleInputKeyDown}
           autoComplete="off"
-          disabled={!isConnected}
+          disabled={!isConnected || isSending}
         />
         <button
-          className="bg-blue-500 text-white px-4 py-2 rounded-full hover:bg-blue-600 disabled:opacity-50 text-sm sm:text-base"
+          className="bg-blue-500 text-white px-4 py-2 rounded-full hover:bg-blue-600 disabled:opacity-50 text-sm sm:text-base flex items-center justify-center"
           onClick={handleSend}
-          disabled={!input.trim() || !isConnected}
+          disabled={!input.trim() || !isConnected || isSending}
         >
-          Send
+          {isSending ? (
+            <>
+              <SpinningLogo size="sm" className="mr-2 text-white" />
+              Sending...
+            </>
+          ) : (
+            "Send"
+          )}
         </button>
       </div>
       

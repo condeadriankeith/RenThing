@@ -5,6 +5,18 @@ import jwt from 'jsonwebtoken'
 
 const prisma = new PrismaClient()
 
+/**
+ * BUSINESS LOGIC DOCUMENTATION
+ * 
+ * Chat System Transaction History Rules:
+ * 1. Chat rooms are created when a customer first messages an owner about a listing
+ * 2. Chat rooms represent PERMANENT transaction history and cannot be deleted
+ * 3. Messages serve as evidence of customer-owner interactions and are immutable
+ * 4. Each chat room is tied to a specific listing for transaction context
+ * 5. Both customer and owner can view the complete message history
+ * 6. All messages maintain direct links to both the chat room and the original listing
+ */
+
 export interface ChatMessage {
   id: string
   content: string
@@ -181,43 +193,70 @@ export class ChatService {
     listingId: string
     roomId?: string
   }): Promise<ChatMessage> {
-    // Find or create chat room
-    let room = await prisma.chatRoom.findFirst({
-      where: {
-        listingId: data.listingId,
-        customerId: data.senderId,
-        ownerId: data.receiverId
+    let room;
+    
+    if (data.roomId) {
+      // Use existing room
+      room = await prisma.chatRoom.findUnique({
+        where: { id: data.roomId }
+      });
+      
+      if (!room) {
+        throw new Error('Room not found');
       }
-    })
-
-    if (!room) {
-      const listing = await prisma.listing.findUnique({
-        where: { id: data.listingId }
-      })
-
-      if (!listing) throw new Error('Listing not found')
-
-      // Determine customer and owner IDs
-      const isSenderOwner = data.senderId === listing.ownerId;
-      const customerId = isSenderOwner ? data.receiverId : data.senderId;
-      const ownerId = listing.ownerId;
-
-      room = await prisma.chatRoom.create({
-        data: {
+    } else {
+      // BUSINESS LOGIC: Create new chat room when customer sends first message to owner
+      // This represents the beginning of a transaction history that CANNOT be deleted
+      // Each chat room is permanent evidence of customer-owner interaction
+      
+      // Find existing room first (bidirectional check)
+      room = await prisma.chatRoom.findFirst({
+        where: {
           listingId: data.listingId,
-          customerId: customerId,
-          ownerId: ownerId
+          OR: [
+            { customerId: data.senderId, ownerId: data.receiverId },
+            { customerId: data.receiverId, ownerId: data.senderId }
+          ]
         }
       })
+
+      if (!room) {
+        // Validate listing exists before creating transaction history
+        const listing = await prisma.listing.findUnique({
+          where: { id: data.listingId }
+        })
+
+        if (!listing) throw new Error('Listing not found')
+
+        // Determine customer and owner IDs based on listing ownership
+        const isSenderOwner = data.senderId === listing.ownerId;
+        const customerId = isSenderOwner ? data.receiverId : data.senderId;
+        const ownerId = listing.ownerId;
+
+        // Create new chat room - this marks the beginning of PERMANENT transaction history
+        room = await prisma.chatRoom.create({
+          data: {
+            listingId: data.listingId,
+            customerId: customerId,
+            ownerId: ownerId
+          }
+        })
+        
+        console.log(`🔒 PERMANENT TRANSACTION HISTORY CREATED: Chat room ${room.id} for listing ${data.listingId}`);
+        console.log(`Customer: ${customerId}, Owner: ${ownerId}`);
+      }
     }
 
+    // Create the message - this becomes part of the PERMANENT transaction record
+    // Messages represent the complete communication history and cannot be deleted
+    // as they serve as evidence of customer-owner interactions
     const message = await prisma.message.create({
       data: {
         content: data.content,
         senderId: data.senderId,
         receiverId: data.receiverId,
         roomId: room.id,
-        listingId: data.listingId
+        listingId: data.listingId  // Essential: links message to specific listing transaction
       },
       include: {
         sender: {
@@ -234,7 +273,11 @@ export class ChatService {
       listingId: message.listingId,
       timestamp: message.createdAt,
       read: message.read,
-      sender: message.sender
+      sender: message.sender ? {
+        id: message.sender.id,
+        name: message.sender.name || 'Unknown User',
+        avatar: message.sender.avatar || undefined
+      } : undefined
     }
   }
 
@@ -243,37 +286,84 @@ export class ChatService {
     receiverId: string;
     senderId: string;
   }): Promise<ChatRoom> {
-    // Find or create chat room
+    // Validate inputs
+    if (!data.listingId || !data.receiverId || !data.senderId) {
+      throw new Error('Missing required parameters: listingId, receiverId, or senderId');
+    }
+
+    // Prevent self-chat
+    if (data.senderId === data.receiverId) {
+      throw new Error('Cannot create chat room with yourself');
+    }
+
+    console.log('createOrGetRoom called with:', data);
+
+    // Find existing chat room (check both directions)
     let room = await prisma.chatRoom.findFirst({
       where: {
         listingId: data.listingId,
-        customerId: data.senderId,
-        ownerId: data.receiverId
+        OR: [
+          { customerId: data.senderId, ownerId: data.receiverId },
+          { customerId: data.receiverId, ownerId: data.senderId }
+        ]
       }
     });
 
     if (!room) {
+      // Validate that the listing exists
       const listing = await prisma.listing.findUnique({
-        where: { id: data.listingId }
+        where: { id: data.listingId },
+        select: { id: true, ownerId: true }
       });
 
-      if (!listing) throw new Error('Listing not found');
+      if (!listing) {
+        throw new Error(`Listing with ID ${data.listingId} not found`);
+      }
+
+      // Validate that both users exist
+      const [sender, receiver] = await Promise.all([
+        prisma.user.findUnique({ where: { id: data.senderId }, select: { id: true } }),
+        prisma.user.findUnique({ where: { id: data.receiverId }, select: { id: true } })
+      ]);
+
+      if (!sender) {
+        throw new Error(`Sender with ID ${data.senderId} not found`);
+      }
+      if (!receiver) {
+        throw new Error(`Receiver with ID ${data.receiverId} not found`);
+      }
 
       // Determine customer and owner IDs
       const isSenderOwner = data.senderId === listing.ownerId;
       const customerId = isSenderOwner ? data.receiverId : data.senderId;
       const ownerId = listing.ownerId;
 
-      room = await prisma.chatRoom.create({
-        data: {
-          listingId: data.listingId,
-          customerId: customerId,
-          ownerId: ownerId
-        }
-      });
+      console.log('Creating new chat room:', { listingId: data.listingId, customerId, ownerId });
+
+      try {
+        room = await prisma.chatRoom.create({
+          data: {
+            listingId: data.listingId,
+            customerId: customerId,
+            ownerId: ownerId
+          }
+        });
+        console.log('Chat room created successfully:', room);
+      } catch (createError) {
+        console.error('Error creating chat room:', createError);
+        throw new Error(`Failed to create chat room: ${createError}`);
+      }
     }
 
-    return room;
+    return {
+      ...room,
+      listing: {
+        title: '',
+        images: [],
+        price: 0
+      },
+      unreadCount: 0
+    };
   }
 
   async getUserRooms(userId: string): Promise<ChatRoom[]> {
@@ -318,7 +408,11 @@ export class ChatService {
         listingId: room.messages[0].listingId,
         timestamp: room.messages[0].createdAt,
         read: room.messages[0].read,
-        sender: room.messages[0].sender
+        sender: room.messages[0].sender ? {
+          id: room.messages[0].sender.id,
+          name: room.messages[0].sender.name || 'Unknown User',
+          avatar: room.messages[0].sender.avatar || undefined
+        } : undefined
       } : undefined,
       unreadCount: 0 // Will be calculated separately
     }))
@@ -353,7 +447,11 @@ export class ChatService {
       listingId: message.listingId,
       timestamp: message.createdAt,
       read: message.read,
-      sender: message.sender
+      sender: message.sender ? {
+        id: message.sender.id,
+        name: message.sender.name || 'Unknown User',
+        avatar: message.sender.avatar || undefined
+      } : undefined
     })).reverse()
   }
 
@@ -375,6 +473,67 @@ export class ChatService {
         read: false
       }
     })
+  }
+
+  // BUSINESS RULE: Chat rooms and messages cannot be deleted
+  // These methods are intentionally NOT implemented to protect transaction history
+  
+  /**
+   * @deprecated Chat rooms represent permanent transaction history and cannot be deleted
+   * @throws Error Always throws an error to prevent accidental deletion
+   */
+  async deleteChatRoom(roomId: string): Promise<never> {
+    throw new Error(
+      '🚫 BUSINESS RULE VIOLATION: Chat rooms represent permanent transaction history ' +
+      'between customers and owners and cannot be deleted. They serve as evidence of ' +
+      'rental inquiries and negotiations.'
+    );
+  }
+
+  /**
+   * @deprecated Messages represent permanent transaction records and cannot be deleted
+   * @throws Error Always throws an error to prevent accidental deletion
+   */
+  async deleteMessage(messageId: string): Promise<never> {
+    throw new Error(
+      '🚫 BUSINESS RULE VIOLATION: Messages represent permanent transaction records ' +
+      'and cannot be deleted. They serve as evidence of customer-owner communication ' +
+      'history for legal and business purposes.'
+    );
+  }
+
+  /**
+   * Get chat room statistics for business analytics
+   * This helps track customer engagement and transaction patterns
+   */
+  async getChatRoomStats(listingId?: string) {
+    const whereClause = listingId ? { listingId } : {};
+    
+    const [totalRooms, totalMessages, activeRooms] = await Promise.all([
+      prisma.chatRoom.count({ where: whereClause }),
+      prisma.message.count({ 
+        where: listingId ? { listingId } : {} 
+      }),
+      prisma.chatRoom.count({
+        where: {
+          ...whereClause,
+          messages: {
+            some: {
+              createdAt: {
+                gte: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000) // Last 7 days
+              }
+            }
+          }
+        }
+      })
+    ]);
+
+    return {
+      totalRooms,
+      totalMessages,
+      activeRooms,
+      averageMessagesPerRoom: totalRooms > 0 ? Math.round(totalMessages / totalRooms) : 0
+    };
   }
 }
 

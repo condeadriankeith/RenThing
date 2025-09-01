@@ -50,27 +50,47 @@ export default function BrowsePage() {
     const fetchListings = async () => {
       setIsLoading(true)
       try {
-        const response = await fetch("/api/listings")
+        // Fetch more listings with pagination
+        const response = await fetch("/api/listings?limit=50")
         if (!response.ok) {
           throw new Error("Failed to fetch listings")
         }
         const data = await response.json()
-        const enrichedListings: Listing[] = data.listings.map((listing: any) => ({
-          id: listing.id,
-          title: listing.title,
-          description: listing.description,
-          price: listing.price,
-          location: listing.location,
-          images: listing.images,
-          features: listing.features,
-          createdAt: listing.createdAt,
-          // Add missing fields from mock data structure
-          category: "tools",
-          available: true,
-          rating: listing.averageRating || 0,
-          reviewCount: listing.reviewCount || 0,
-          priceUnit: "day",
-        }))
+        const enrichedListings: Listing[] = data.listings.map((listing: any) => {
+          // Determine category based on title and features
+          let category = "tools" // default
+          const titleLower = listing.title.toLowerCase()
+          const featuresLower = listing.features.map((f: string) => f.toLowerCase()).join(" ")
+          const searchText = titleLower + " " + featuresLower
+          
+          if (searchText.includes("macbook") || searchText.includes("ipad") || searchText.includes("camera") || searchText.includes("drone") || searchText.includes("projector")) {
+            category = "electronics"
+          } else if (searchText.includes("tesla") || searchText.includes("bmw") || searchText.includes("bike") || searchText.includes("motorcycle") || searchText.includes("van") || searchText.includes("rv") || searchText.includes("atv") || searchText.includes("boat")) {
+            category = "vehicles"
+          } else if (searchText.includes("piano") || searchText.includes("guitar") || searchText.includes("drum") || searchText.includes("violin") || searchText.includes("keyboard")) {
+            category = "services" // Musical instruments as services
+          } else if (searchText.includes("golf") || searchText.includes("surf") || searchText.includes("ski") || searchText.includes("kayak") || searchText.includes("tennis") || searchText.includes("camping") || searchText.includes("paddleboard")) {
+            category = "sports"
+          } else if (searchText.includes("tent") || searchText.includes("wedding") || searchText.includes("party") || searchText.includes("bounce") || searchText.includes("dj") || searchText.includes("karaoke")) {
+            category = "events"
+          }
+          
+          return {
+            id: listing.id,
+            title: listing.title,
+            description: listing.description,
+            price: listing.price,
+            location: listing.location,
+            images: listing.images,
+            features: listing.features,
+            createdAt: listing.createdAt,
+            category: category,
+            available: true,
+            rating: listing.averageRating || 0,
+            reviewCount: listing.reviewCount || 0,
+            priceUnit: "day",
+          }
+        })
         setAllListings(enrichedListings)
 
       } catch (err: any) {

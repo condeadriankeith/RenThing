@@ -9,6 +9,7 @@ import { DayPicker } from "react-day-picker"
 import type { DateRange } from "react-day-picker"
 import type { Listing } from "@/lib/mock-data"
 import { useToast } from "@/hooks/use-toast"
+import { ContactOwnerChat } from "@/components/contact-owner-chat-fixed"
 import "react-day-picker/dist/style.css"
 
 interface BookingCalendarProps {
@@ -46,7 +47,7 @@ export function BookingCalendar({ listing }: BookingCalendarProps) {
   const finalTotal = totalPrice + serviceFee
 
   const handleBookNow = () => {
-  if (!selectedDates || !selectedDates.from || !selectedDates.to) {
+    if (!selectedDates || !selectedDates.from || !selectedDates.to) {
       toast({
         title: "Please select dates",
         description: "Choose your rental start and end dates to continue.",
@@ -59,8 +60,8 @@ export function BookingCalendar({ listing }: BookingCalendarProps) {
 
     // Store booking details in URL params for checkout
     const searchParams = new URLSearchParams({
-  startDate: selectedDates?.from?.toISOString().split("T")[0],
-  endDate: selectedDates?.to?.toISOString().split("T")[0],
+      startDate: selectedDates.from.toISOString().split("T")[0],
+      endDate: selectedDates.to.toISOString().split("T")[0],
       days: totalDays.toString(),
       total: finalTotal.toString(),
     })
@@ -69,11 +70,8 @@ export function BookingCalendar({ listing }: BookingCalendarProps) {
   }
 
   const handleContactOwner = () => {
-    // TODO: Implement messaging system
-    toast({
-      title: "Message sent!",
-      description: `Your message has been sent to ${listing.owner.name}.`,
-    })
+    // This will be handled by the ContactOwnerChat component below
+    // No need for additional logic here
   }
 
   return (
@@ -178,10 +176,14 @@ export function BookingCalendar({ listing }: BookingCalendarProps) {
           >
             {isBooking ? "Processing..." : "Book Now"}
           </Button>
-          <Button variant="outline" size="lg" className="flex-1 bg-transparent" onClick={handleContactOwner}>
-            <MessageCircle className="h-4 w-4 mr-2" />
-            Contact Owner
-          </Button>
+          <ContactOwnerChat 
+            ownerId={listing.owner.id} 
+            ownerName={listing.owner.name}
+            listingId={listing.id}
+            variant="outline"
+            size="lg"
+            className="flex-1 bg-transparent"
+          />
         </div>
 
         {/* Quick Stats */}

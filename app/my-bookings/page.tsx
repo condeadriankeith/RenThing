@@ -8,8 +8,9 @@ import { Badge } from "@/components/ui/badge"
 import { Input } from "@/components/ui/input"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { Calendar, Search } from "lucide-react"
+import { Calendar, Search, MapPin } from "lucide-react"
 import { useSession } from "next-auth/react"
+import { SpinningLogo } from "@/components/ui/spinning-logo"
 
 interface Booking {
   id: string
@@ -29,11 +30,14 @@ export default function MyBookingsPage() {
   const [statusFilter, setStatusFilter] = useState("all")
   const [bookings, setBookings] = useState<Booking[]>([])
   const [isLoading, setIsLoading] = useState(true)
-  const { data: session } = useSession()
+  const { data: session, status } = useSession()
 
   useEffect(() => {
     // Fetch actual bookings from API
     const fetchBookings = async () => {
+      if (status === "loading") {
+        return
+      }
       if (!session?.user?.id) {
         setIsLoading(false)
         return
@@ -53,7 +57,7 @@ export default function MyBookingsPage() {
     }
 
     fetchBookings()
-  }, [session])
+  }, [session, status])
 
   // Filter bookings based on search and status
   const filteredBookings = bookings.filter((booking) => {
@@ -87,6 +91,17 @@ export default function MyBookingsPage() {
       default:
         return "bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-100"
     }
+  }
+
+  if (status === "loading" || isLoading) {
+    return (
+      <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex items-center justify-center">
+        <div className="flex flex-col items-center space-y-4">
+          <SpinningLogo size="xl" className="text-blue-500" />
+          <p className="text-gray-600 dark:text-gray-400">Loading your bookings...</p>
+        </div>
+      </div>
+    )
   }
 
   if (!session) {

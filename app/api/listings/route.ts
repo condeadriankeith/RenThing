@@ -6,6 +6,9 @@ import { prisma } from "@/lib/prisma"
 // GET /api/listings - Get all listings
 export async function GET(request: NextRequest) {
   try {
+    // Add more detailed error logging
+    console.log('Fetching listings from database...')
+    
     const { searchParams } = new URL(request.url)
     const page = parseInt(searchParams.get("page") || "1")
     const limit = parseInt(searchParams.get("limit") || "10")
@@ -32,6 +35,8 @@ export async function GET(request: NextRequest) {
       },
     }
 
+    console.log('Query parameters:', { page, limit, search, minPrice, maxPrice, location })
+
     const listingsData = await prisma.listing.findMany({
       where,
       skip,
@@ -53,6 +58,8 @@ export async function GET(request: NextRequest) {
       orderBy: { createdAt: "desc" },
     })
 
+    console.log(`Found ${listingsData.length} listings`)
+
     const total = await prisma.listing.count({ where })
 
     const listings = listingsData.map((listing) => {
@@ -71,6 +78,8 @@ export async function GET(request: NextRequest) {
       }
     })
 
+    console.log('Successfully processed listings')
+
     return NextResponse.json({
       listings,
       pagination: {
@@ -82,8 +91,13 @@ export async function GET(request: NextRequest) {
     })
   } catch (error) {
     console.error("Listings GET error:", error)
+    console.error("Error details:", {
+      message: error instanceof Error ? error.message : 'Unknown error',
+      stack: error instanceof Error ? error.stack : undefined,
+      cause: error instanceof Error ? error.cause : undefined
+    })
     return NextResponse.json(
-      { error: "Internal server error" },
+      { error: "Internal server error", details: error instanceof Error ? error.message : 'Unknown error' },
       { status: 500 }
     )
   }

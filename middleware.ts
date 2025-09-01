@@ -65,6 +65,7 @@ export async function middleware(request: NextRequest) {
   // Protect authenticated routes
   if (request.nextUrl.pathname.startsWith('/my-bookings') || 
       request.nextUrl.pathname.startsWith('/chat') ||
+      request.nextUrl.pathname.startsWith('/inbox') ||
       request.nextUrl.pathname.startsWith('/list-item')) {
     if (!token) {
       return NextResponse.redirect(new URL('/auth/login', request.url));
@@ -84,6 +85,7 @@ export const config = {
     '/api/:path*',
     '/my-bookings/:path*',
     '/chat/:path*',
+    '/inbox/:path*',
     '/list-item/:path*',
   ],
 };
