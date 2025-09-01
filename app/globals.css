@@ -118,9 +118,9 @@
 
 /* Aurora Effect Styles */
 .hero-text {
-  line-height: clamp(1.2, 1.2 + 0.2 * ((100vw - 320px) / (1920 - 320)), 1.4) !important;
+  line-height: clamp(1.1, 1.1 + 0.1 * ((100vw - 320px) / (1920 - 320)), 1.2) !important;
   overflow: visible !important;
-  padding-bottom: 0.1em;
+  padding-bottom: 0.05em;
 }
 
 .aurora-text-mask {
