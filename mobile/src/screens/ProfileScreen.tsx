@@ -1,18 +1,50 @@
 import React, { useState, useEffect } from 'react';
-import { View, ScrollView, StyleSheet, Dimensions, TouchableOpacity } from 'react-native';
+import { View, ScrollView, StyleSheet, Dimensions, TouchableOpacity, Alert } from 'react-native';
 import { Avatar, Button, Card, Text, Divider, IconButton } from 'react-native-paper';
 import { useAuth } from '../contexts/AuthContext';
+import { useNavigation } from '@react-navigation/native';
 
 const { width } = Dimensions.get('window');
 
 export default function ProfileScreen() {
   const { user, logout } = useAuth();
+  const navigation = useNavigation();
   const [stats, setStats] = useState({
     itemsListed: 12,
     itemsRented: 5,
     rating: 4.8,
     totalEarnings: 340,
   });
+
+  const handleMenuItemPress = (itemTitle: string) => {
+    switch (itemTitle) {
+      case 'Edit Profile':
+        (navigation as any).navigate('EditProfile');
+        break;
+      case 'My Items':
+        (navigation as any).navigate('MyItems');
+        break;
+      case 'Payment Methods':
+        (navigation as any).navigate('PaymentMethods');
+        break;
+      case 'Settings':
+        (navigation as any).navigate('Settings');
+        break;
+      case 'Help & Support':
+        (navigation as any).navigate('HelpSupport');
+        break;
+      default:
+        break;
+    }
+  };
+
+  const handleListItem = () => {
+    (navigation as any).navigate('CreateListing');
+  };
+
+  const handleBrowse = () => {
+    (navigation as any).navigate('Browse');
+  };
 
   const menuItems = [
     { title: 'Edit Profile', icon: 'account-edit' },
@@ -63,7 +95,7 @@ export default function ProfileScreen() {
         <View style={styles.actionRow}>
           <Button 
             mode="contained" 
-            onPress={() => {}}
+            onPress={handleListItem}
             style={styles.actionButton}
             icon="plus"
             contentStyle={styles.actionButtonContent}
@@ -72,7 +104,7 @@ export default function ProfileScreen() {
           </Button>
           <Button 
             mode="outlined" 
-            onPress={() => {}}
+            onPress={handleBrowse}
             style={styles.actionButton}
             icon="magnify"
             contentStyle={styles.actionButtonContent}
@@ -88,7 +120,7 @@ export default function ProfileScreen() {
         <Card style={styles.menuCard}>
           {menuItems.map((item, index) => (
             <React.Fragment key={item.title}>
-              <TouchableOpacity onPress={() => {}} style={styles.menuItem}>
+              <TouchableOpacity onPress={() => handleMenuItemPress(item.title)} style={styles.menuItem}>
                 <View style={styles.menuItemContent}>
                   <IconButton 
                     icon={item.icon} 

@@ -69,7 +69,10 @@ export default function BrowseScreen({ navigation }: any) {
       setListings(response.data);
       setFilteredListings(response.data);
     } catch (error) {
-      console.error('Error fetching listings:', error);
+      // Log error for debugging but provide fallback for users
+      if (__DEV__) {
+        console.error('Error fetching listings:', error);
+      }
       const mockListings: Listing[] = [
         {
           id: '1',

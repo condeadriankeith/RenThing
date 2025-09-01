@@ -2,12 +2,28 @@
 import Link from "next/link"
 import Image from "next/image"
 import { useState } from "react"
+import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Search, ShoppingBag, Calendar, MessageCircle, Menu, MapPin } from "lucide-react"
 
 export default function HomePage() {
   const [mobileNavOpen, setMobileNavOpen] = useState(false)
+  const [searchQuery, setSearchQuery] = useState("")
+  const [location, setLocation] = useState("")
+  const router = useRouter()
+
+  const handleSearch = (e: React.FormEvent) => {
+    e.preventDefault()
+    const params = new URLSearchParams()
+    if (searchQuery.trim()) {
+      params.set('q', searchQuery.trim())
+    }
+    if (location.trim()) {
+      params.set('location', location.trim())
+    }
+    router.push(`/browse${params.toString() ? '?' + params.toString() : ''}`)
+  }
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 dark:from-gray-900 dark:to-gray-800">
 
@@ -33,19 +49,34 @@ export default function HomePage() {
 
         {/* Search Bar */}
         <div className="max-w-3xl mx-auto mt-12 mb-16 bg-white dark:bg-gray-800 rounded-xl shadow-xl p-4">
-          <div className="flex flex-col md:flex-row gap-2">
+          <form onSubmit={handleSearch} className="flex flex-col md:flex-row gap-2">
             <div className="flex-1 relative">
-              <input type="text" placeholder="What are you looking for?" className="w-full px-4 py-3 rounded-lg border border-gray-200 dark:border-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700" />
-              <i className="fas fa-search absolute right-4 top-4 text-gray-400"></i>
+              <input 
+                type="text" 
+                placeholder="What are you looking for?" 
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="w-full px-4 py-3 pr-10 rounded-lg border border-gray-200 dark:border-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white" 
+              />
+              <Search className="absolute right-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
             </div>
             <div className="relative">
-              <input type="text" placeholder="Location" className="w-full px-4 py-3 rounded-lg border border-gray-200 dark:border-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700" />
-              <i className="fas fa-map-marker-alt absolute right-4 top-4 text-gray-400"></i>
+              <input 
+                type="text" 
+                placeholder="Location" 
+                value={location}
+                onChange={(e) => setLocation(e.target.value)}
+                className="w-full px-4 py-3 pr-10 rounded-lg border border-gray-200 dark:border-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white" 
+              />
+              <MapPin className="absolute right-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
             </div>
-            <button className="px-6 py-3 bg-blue-600 text-white font-bold rounded-lg hover:bg-blue-700 transition-colors">
+            <Button 
+              type="submit"
+              className="px-6 py-3 bg-blue-600 text-white font-bold rounded-lg hover:bg-blue-700 transition-colors min-w-[100px]"
+            >
               Search
-            </button>
-          </div>
+            </Button>
+          </form>
         </div>
 
         {/* Features Grid */}

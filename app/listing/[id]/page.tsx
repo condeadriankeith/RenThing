@@ -12,6 +12,8 @@ import { ShoppingBag, Star, MapPin, Share, Heart, ArrowLeft } from "lucide-react
 import { BookingCalendar } from "@/components/booking-calendar"
 import { ContactOwnerChat } from "@/components/contact-owner-chat-fixed"
 import { SpinningLogo } from "@/components/ui/spinning-logo"
+import { WishlistButton } from "@/components/wishlist-button"
+import { ShareButton } from "@/components/share-button"
 
 interface Listing {
   id: string
@@ -156,12 +158,15 @@ export default function ListingDetailPage() {
                   </div>
                 </div>
                 <div className="flex items-center space-x-2">
-                  <Button variant="outline" size="sm">
-                    <Heart className="h-4 w-4" />
-                  </Button>
-                  <Button variant="outline" size="sm">
-                    <Share className="h-4 w-4" />
-                  </Button>
+                  <WishlistButton listingId={listing.id} variant="outline" size="sm" />
+                  <ShareButton 
+                    listingId={listing.id}
+                    listingTitle={listing.title}
+                    listingPrice={listing.price}
+                    listingImage={listing.images[0]}
+                    variant="outline" 
+                    size="sm" 
+                  />
                 </div>
               </div>
 
@@ -205,7 +210,9 @@ export default function ListingDetailPage() {
                     </div>
                   </div>
                   <div className="flex flex-col space-y-2">
-                    <Button variant="outline" size="sm">View Profile</Button>
+                    <Button variant="outline" size="sm" asChild>
+                      <Link href={`/profile/${listing.owner.id}`}>View Profile</Link>
+                    </Button>
                     <ContactOwnerChat 
                       ownerId={listing.owner.id} 
                       ownerName={listing.owner.name}

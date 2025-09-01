@@ -412,5 +412,5 @@ export function getPaymentMethodIcon(method: string): string {
     gcash: "/gcash-logo.png",
     grabpay: "/grabpay-logo.png",
   }
-  return icons[method.toLowerCase()] || "/credit-card-icon.png"
+  return icons[method.toLowerCase()] || "/credit-card-icon.svg"
 }

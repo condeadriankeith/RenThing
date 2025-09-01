@@ -1,16 +1,108 @@
 "use client"
 
+"use client"
+
 import { useParams } from "next/navigation"
 import Link from "next/link"
+import { useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Separator } from "@/components/ui/separator"
 import { ShoppingBag, CheckCircle, Calendar, MapPin, CreditCard, Download, MessageCircle } from "lucide-react"
+import { useToast } from "@/hooks/use-toast"
 
 export default function BookingConfirmationPage() {
   const params = useParams()
   const transactionId = params.transactionId as string
+  const { toast } = useToast()
+  const [isDownloading, setIsDownloading] = useState(false)
+  const [isCancelling, setIsCancelling] = useState(false)
+
+  const handleDownloadReceipt = async () => {
+    setIsDownloading(true)
+    try {
+      const response = await fetch(`/api/receipts/${transactionId}`)
+      
+      if (!response.ok) {
+        throw new Error('Failed to generate receipt')
+      }
+
+      const blob = await response.blob()
+      const url = window.URL.createObjectURL(blob)
+      const a = document.createElement('a')
+      a.style.display = 'none'
+      a.href = url
+      a.download = `receipt-${transactionId}.pdf`
+      document.body.appendChild(a)
+      a.click()
+      window.URL.revokeObjectURL(url)
+      document.body.removeChild(a)
+      
+      toast({
+        title: "Receipt Downloaded",
+        description: "Your receipt has been downloaded successfully.",
+      })
+    } catch (error) {
+      if (process.env.NODE_ENV === 'development') {
+        console.error('Download error:', error)
+      }
+      toast({
+        title: "Download Failed",
+        description: "Unable to download receipt. Please try again later.",
+        variant: "destructive",
+      })
+    } finally {
+      setIsDownloading(false)
+    }
+  }
+
+  const handleCancelBooking = async () => {
+    if (!confirm('Are you sure you want to cancel this booking? This action cannot be undone.')) {
+      return
+    }
+
+    setIsCancelling(true)
+    try {
+      const response = await fetch(`/api/bookings/${bookingData.id}`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          status: 'cancelled',
+          reason: 'Customer cancellation'
+        }),
+      })
+
+      if (!response.ok) {
+        throw new Error('Failed to cancel booking')
+      }
+
+      toast({
+        title: "Booking Cancelled",
+        description: "Your booking has been cancelled successfully.",
+      })
+      
+      // Redirect to bookings page after a short delay
+      setTimeout(() => {
+        window.location.href = '/my-bookings'
+      }, 2000)
+    } catch (error) {
+      console.error('Cancellation error:', error)
+      toast({
+        title: "Cancellation Failed",
+        description: "Unable to cancel booking. Please contact support.",
+        variant: "destructive",
+      })
+    } finally {
+      setIsCancelling(false)
+    }
+  }
+
+  const handleContactSupport = () => {
+    window.location.href = '/contact?subject=Booking Support&booking=' + transactionId
+  }
 
   // Mock booking data - in production, fetch from API
   const bookingData = {
@@ -172,15 +264,25 @@ export default function BookingConfirmationPage() {
               <CardTitle>Manage Booking</CardTitle>
             </CardHeader>
             <CardContent className="space-y-3">
-              <Button variant="outline" className="w-full bg-transparent">
+              <Button 
+                variant="outline" 
+                className="w-full bg-transparent" 
+                onClick={handleDownloadReceipt}
+                disabled={isDownloading}
+              >
                 <Download className="h-4 w-4 mr-2" />
-                Download Receipt
+                {isDownloading ? "Downloading..." : "Download Receipt"}
               </Button>
               <Button variant="outline" className="w-full bg-transparent" asChild>
                 <Link href="/my-bookings">View All Bookings</Link>
               </Button>
-              <Button variant="outline" className="w-full bg-transparent">
-                Cancel Booking
+              <Button 
+                variant="outline" 
+                className="w-full bg-transparent" 
+                onClick={handleCancelBooking}
+                disabled={isCancelling}
+              >
+                {isCancelling ? "Cancelling..." : "Cancel Booking"}
               </Button>
             </CardContent>
           </Card>
@@ -193,7 +295,11 @@ export default function BookingConfirmationPage() {
               <p className="text-sm text-gray-600 dark:text-gray-400 mb-3">
                 Our support team is available 24/7 to help with any questions or issues.
               </p>
-              <Button variant="outline" className="w-full bg-transparent">
+              <Button 
+                variant="outline" 
+                className="w-full bg-transparent"
+                onClick={handleContactSupport}
+              >
                 Contact Support
               </Button>
             </CardContent>

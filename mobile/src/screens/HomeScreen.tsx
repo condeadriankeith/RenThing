@@ -55,8 +55,14 @@ export default function HomeScreen() {
       const response = await apiClient.get('/listings?limit=6&featured=true');
       setFeaturedItems(response.data);
     } catch (error) {
-      console.error('Error fetching featured items:', error);
-      // Fallback to mock data
+      // Log error for debugging but provide fallback for users
+      if (__DEV__) {
+        console.error('Error fetching featured items:', error);
+      }
+      
+      // Show user-friendly error message
+      // In production, you might want to show a toast or banner
+      // For now, gracefully fallback to mock data to keep the app functional
       setFeaturedItems([
         { id: '1', title: 'Professional Camera', price: 25, images: ['https://via.placeholder.com/300x200'], category: 'Electronics', location: { city: 'San Francisco', state: 'CA' } },
         { id: '2', title: 'Power Drill Set', price: 15, images: ['https://via.placeholder.com/300x200'], category: 'Tools', location: { city: 'New York', state: 'NY' } },

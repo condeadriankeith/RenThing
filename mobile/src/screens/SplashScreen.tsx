@@ -1,6 +1,6 @@
 import React from 'react';
 import { View, StyleSheet, Image, Text } from 'react-native';
-import { ActivityIndicator } from 'react-native-paper';
+import { SpinningLogo } from '../components/SpinningLogo';
 
 export default function SplashScreen() {
   return (
@@ -16,7 +16,7 @@ export default function SplashScreen() {
       </View>
       
       <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" color="#2563eb" />
+        <SpinningLogo size={60} />
         <Text style={styles.loadingText}>Loading...</Text>
       </View>
     </View>

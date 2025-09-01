@@ -81,7 +81,13 @@ export default function Header() {
                 </div>
                 <DropdownMenuSeparator />
                 <DropdownMenuItem asChild>
+                  <Link href="/profile">My Profile</Link>
+                </DropdownMenuItem>
+                <DropdownMenuItem asChild>
                   <Link href="/my-bookings">My Bookings</Link>
+                </DropdownMenuItem>
+                <DropdownMenuItem asChild>
+                  <Link href="/wishlist">Wishlist</Link>
                 </DropdownMenuItem>
                 <DropdownMenuItem asChild>
                   <Link href="/inbox">Inbox</Link>
@@ -125,8 +131,14 @@ export default function Header() {
             </Link>
             {isAuthenticated && (
               <>
+                <Link href="/profile" className="block text-gray-700 dark:text-gray-200 py-2" onClick={() => setMobileNavOpen(false)}>
+                  My Profile
+                </Link>
                 <Link href="/my-bookings" className="block text-gray-700 dark:text-gray-200 py-2" onClick={() => setMobileNavOpen(false)}>
                   My Bookings
+                </Link>
+                <Link href="/wishlist" className="block text-gray-700 dark:text-gray-200 py-2" onClick={() => setMobileNavOpen(false)}>
+                  Wishlist
                 </Link>
                 <Link href="/inbox" className="block text-gray-700 dark:text-gray-200 py-2" onClick={() => setMobileNavOpen(false)}>
                   Inbox
@@ -142,7 +154,13 @@ export default function Header() {
               ) : isAuthenticated ? (
                 <>
                   <Button variant="outline" className="w-full justify-start" asChild>
+                    <Link href="/profile" onClick={() => setMobileNavOpen(false)}>My Profile</Link>
+                  </Button>
+                  <Button variant="outline" className="w-full justify-start" asChild>
                     <Link href="/my-bookings" onClick={() => setMobileNavOpen(false)}>My Bookings</Link>
+                  </Button>
+                  <Button variant="outline" className="w-full justify-start" asChild>
+                    <Link href="/wishlist" onClick={() => setMobileNavOpen(false)}>Wishlist</Link>
                   </Button>
                   <Button variant="outline" className="w-full justify-start" asChild>
                     <Link href="/inbox" onClick={() => setMobileNavOpen(false)}>Inbox</Link>

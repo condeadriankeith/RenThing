@@ -17,10 +17,21 @@ import { useSession } from "next-auth/react"
 
 export default function ListItemPage() {
   const { data: session, status } = useSession()
-  const [images, setImages] = useState<string[]>([])
+  const [images, setImages] = useState<{url: string, publicId?: string}[]>([])
   const [features, setFeatures] = useState<string[]>([""])
   const [isLoading, setIsLoading] = useState(false)
+  const [isUploadingImages, setIsUploadingImages] = useState(false)
   const { toast } = useToast()
+  
+  // Form state
+  const [formData, setFormData] = useState({
+    title: '',
+    description: '',
+    price: '',
+    location: '',
+    category: '',
+    priceUnit: ''
+  })
 
   if (status === "loading") {
     return (
@@ -49,12 +60,50 @@ export default function ListItemPage() {
     )
   }
 
-  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files
-    if (files) {
-      // TODO: Implement actual image upload to MinIO
-      const newImages = Array.from(files).map((file) => URL.createObjectURL(file))
+    if (!files || files.length === 0) return
+
+    setIsUploadingImages(true)
+    
+    try {
+      const formData = new FormData()
+      Array.from(files).forEach(file => {
+        formData.append('files', file)
+      })
+      formData.append('folder', 'listings')
+
+      const response = await fetch('/api/upload', {
+        method: 'POST',
+        body: formData,
+      })
+
+      if (!response.ok) {
+        const error = await response.json()
+        throw new Error(error.error || 'Failed to upload images')
+      }
+
+      const result = await response.json()
+      const newImages = result.images.map((img: any) => ({
+        url: img.url,
+        publicId: img.publicId
+      }))
+      
       setImages((prev) => [...prev, ...newImages].slice(0, 8)) // Max 8 images
+      
+      toast({
+        title: "Images uploaded successfully!",
+        description: `Uploaded ${newImages.length} image(s)`,
+      })
+    } catch (error: any) {
+      console.error('Error uploading images:', error)
+      toast({
+        title: "Upload failed",
+        description: error.message || "Failed to upload images. Please try again.",
+        variant: "destructive",
+      })
+    } finally {
+      setIsUploadingImages(false)
     }
   }
 
@@ -78,14 +127,64 @@ export default function ListItemPage() {
     e.preventDefault()
     setIsLoading(true)
 
-    // TODO: Implement actual listing creation
-    setTimeout(() => {
-      setIsLoading(false)
+    try {
+      const listingData = {
+        title: formData.title,
+        description: formData.description,
+        price: parseFloat(formData.price),
+        location: formData.location,
+        category: formData.category,
+        priceUnit: formData.priceUnit,
+        images: images.map(img => img.url), // Use uploaded image URLs
+        features: features.filter(f => f.trim() !== '') // Remove empty features
+      }
+
+      // Validate required fields
+      if (!listingData.title || !listingData.description || !listingData.price || !listingData.location || !listingData.category || !listingData.priceUnit) {
+        throw new Error('Please fill in all required fields')
+      }
+
+      if (listingData.price <= 0) {
+        throw new Error('Price must be greater than 0')
+      }
+
+      if (images.length === 0) {
+        throw new Error('Please add at least one image')
+      }
+
+      const response = await fetch('/api/listings', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(listingData),
+      })
+
+      if (!response.ok) {
+        const error = await response.json()
+        throw new Error(error.error || 'Failed to create listing')
+      }
+
+      const newListing = await response.json()
+      
       toast({
         title: "Listing created successfully!",
         description: "Your item is now live on the marketplace.",
       })
-    }, 2000)
+
+      // Redirect to the new listing page
+      window.location.href = `/listing/${newListing.id}`
+      
+    } catch (error: any) {
+      console.error('Error creating listing:', error)
+      toast({
+        title: "Error creating listing",
+        description: error.message || "Failed to create listing. Please try again.",
+        variant: "destructive",
+      })
+    } finally {
+      setIsLoading(false)
+    }
   }
 
   return (
@@ -111,11 +210,17 @@ export default function ListItemPage() {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <Label htmlFor="title">Title *</Label>
-                  <Input id="title" placeholder="e.g., Professional Camera Kit" required />
+                  <Input 
+                    id="title" 
+                    value={formData.title}
+                    onChange={(e) => setFormData(prev => ({...prev, title: e.target.value}))}
+                    placeholder="e.g., Professional Camera Kit" 
+                    required 
+                  />
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="category">Category *</Label>
-                  <Select required>
+                  <Select value={formData.category} onValueChange={(value) => setFormData(prev => ({...prev, category: value}))} required>
                     <SelectTrigger>
                       <SelectValue placeholder="Select category" />
                     </SelectTrigger>
@@ -134,6 +239,8 @@ export default function ListItemPage() {
                 <Label htmlFor="description">Description *</Label>
                 <Textarea
                   id="description"
+                  value={formData.description}
+                  onChange={(e) => setFormData(prev => ({...prev, description: e.target.value}))}
                   placeholder="Describe your item or service in detail..."
                   className="min-h-32"
                   required
@@ -154,7 +261,7 @@ export default function ListItemPage() {
                   {images.map((image, index) => (
                     <div key={index} className="relative aspect-square rounded-lg overflow-hidden border">
                       <img
-                        src={image || "/placeholder.svg"}
+                        src={image.url || "/placeholder.svg"}
                         alt={`Upload ${index + 1}`}
                         className="w-full h-full object-cover"
                       />
@@ -170,10 +277,26 @@ export default function ListItemPage() {
                     </div>
                   ))}
                   {images.length < 8 && (
-                    <label className="aspect-square rounded-lg border-2 border-dashed border-gray-300 dark:border-gray-600 flex flex-col items-center justify-center cursor-pointer hover:border-blue-500 transition-colors">
-                      <Upload className="h-8 w-8 text-gray-400 mb-2" />
-                      <span className="text-sm text-gray-500">Add Photo</span>
-                      <input type="file" multiple accept="image/*" className="hidden" onChange={handleImageUpload} />
+                    <label className={`aspect-square rounded-lg border-2 border-dashed border-gray-300 dark:border-gray-600 flex flex-col items-center justify-center cursor-pointer hover:border-blue-500 transition-colors ${isUploadingImages ? 'opacity-50 cursor-not-allowed' : ''}`}>
+                      {isUploadingImages ? (
+                        <>
+                          <SpinningLogo size="sm" className="mb-2" />
+                          <span className="text-sm text-gray-500">Uploading...</span>
+                        </>
+                      ) : (
+                        <>
+                          <Upload className="h-8 w-8 text-gray-400 mb-2" />
+                          <span className="text-sm text-gray-500">Add Photo</span>
+                        </>
+                      )}
+                      <input 
+                        type="file" 
+                        multiple 
+                        accept="image/*" 
+                        className="hidden" 
+                        onChange={handleImageUpload}
+                        disabled={isUploadingImages}
+                      />
                     </label>
                   )}
                 </div>
@@ -191,11 +314,20 @@ export default function ListItemPage() {
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div className="space-y-2">
                   <Label htmlFor="price">Price *</Label>
-                  <Input id="price" type="number" placeholder="0.00" min="0" step="0.01" required />
+                  <Input 
+                    id="price" 
+                    type="number" 
+                    placeholder="0.00" 
+                    min="0" 
+                    step="0.01" 
+                    value={formData.price}
+                    onChange={(e) => setFormData(prev => ({...prev, price: e.target.value}))}
+                    required 
+                  />
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="priceUnit">Price Unit *</Label>
-                  <Select required>
+                  <Select value={formData.priceUnit} onValueChange={(value) => setFormData(prev => ({...prev, priceUnit: value}))} required>
                     <SelectTrigger>
                       <SelectValue placeholder="Select unit" />
                     </SelectTrigger>
@@ -210,7 +342,13 @@ export default function ListItemPage() {
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="location">Location *</Label>
-                  <Input id="location" placeholder="City, State" required />
+                  <Input 
+                    id="location" 
+                    placeholder="City, State" 
+                    value={formData.location}
+                    onChange={(e) => setFormData(prev => ({...prev, location: e.target.value}))}
+                    required 
+                  />
                 </div>
               </div>
             </CardContent>
@@ -249,8 +387,8 @@ export default function ListItemPage() {
             <Button type="button" variant="outline" asChild>
               <Link href="/browse">Cancel</Link>
             </Button>
-            <Button type="submit" disabled={isLoading}>
-              {isLoading ? "Creating Listing..." : "Create Listing"}
+            <Button type="submit" disabled={isLoading || isUploadingImages}>
+              {isLoading ? "Creating Listing..." : isUploadingImages ? "Images uploading..." : "Create Listing"}
             </Button>
           </div>
         </form>

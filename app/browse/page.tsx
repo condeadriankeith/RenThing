@@ -2,6 +2,7 @@
 
 import { useState, useMemo, useEffect } from "react"
 import Link from "next/link"
+import { useSearchParams } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
@@ -11,6 +12,9 @@ import { Slider } from "@/components/ui/slider"
 import { Checkbox } from "@/components/ui/checkbox"
 import { ShoppingBag, Search, Filter, MapPin, Star, Heart, X, TrendingUp } from "lucide-react"
 import { SearchSuggestions } from "@/components/search-suggestions"
+import { SpinningLogo } from "@/components/ui/spinning-logo"
+import { WishlistButton } from "@/components/wishlist-button"
+import { ShareButton } from "@/components/share-button"
 
 import { useDebounce } from "@/hooks/use-debounce"
 
@@ -31,11 +35,11 @@ interface Listing {
 }
 
 export default function BrowsePage() {
+  const searchParams = useSearchParams()
   const [allListings, setAllListings] = useState<Listing[]>([])
-
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
-  const [searchQuery, setSearchQuery] = useState("")
+  const [searchQuery, setSearchQuery] = useState(searchParams.get('q') || "")
   const [selectedCategory, setSelectedCategory] = useState("all")
   const [sortBy, setSortBy] = useState("newest")
   const [showFilters, setShowFilters] = useState(false)
@@ -43,6 +47,7 @@ export default function BrowsePage() {
   const [selectedFeatures, setSelectedFeatures] = useState<string[]>([])
   const [availableOnly, setAvailableOnly] = useState(false)
   const [showSuggestions, setShowSuggestions] = useState(false)
+  const [locationFilter, setLocationFilter] = useState(searchParams.get('location') || "")
 
   const debouncedSearchQuery = useDebounce(searchQuery, 300)
 
@@ -122,6 +127,8 @@ export default function BrowsePage() {
           listing.description.toLowerCase().includes(debouncedSearchQuery.toLowerCase()) ||
           listing.features.some((feature: string) => feature.toLowerCase().includes(debouncedSearchQuery.toLowerCase()))
 
+        const matchesLocation = !locationFilter || 
+          listing.location.toLowerCase().includes(locationFilter.toLowerCase())
 
         const matchesCategory = selectedCategory === "all" || listing.category === selectedCategory
         const matchesPrice = listing.price >= priceRange[0] && listing.price <= priceRange[1]
@@ -133,7 +140,7 @@ export default function BrowsePage() {
           )
 
 
-        return matchesSearch && matchesCategory && matchesPrice && matchesAvailability && matchesFeatures
+        return matchesSearch && matchesLocation && matchesCategory && matchesPrice && matchesAvailability && matchesFeatures
       })
       .sort((a, b) => {
         switch (sortBy) {
@@ -153,7 +160,7 @@ export default function BrowsePage() {
 
         }
       })
-  }, [allListings, debouncedSearchQuery, selectedCategory, sortBy, priceRange, availableOnly, selectedFeatures])
+  }, [allListings, debouncedSearchQuery, locationFilter, selectedCategory, sortBy, priceRange, availableOnly, selectedFeatures])
 
   const popularSearches = ["Camera", "Tesla", "Tools", "Wedding", "Mountain Bike"]
   const trendingItems = allListings.slice(0, 3)
@@ -167,12 +174,16 @@ export default function BrowsePage() {
     setSelectedFeatures([])
     setAvailableOnly(false)
     setSortBy("newest")
+    setLocationFilter("")
   }
 
   if (isLoading) {
     return (
       <div className="flex justify-center items-center h-screen">
-        <div className="animate-spin rounded-full h-32 w-32 border-t-2 border-b-2 border-blue-600"></div>
+        <div className="flex flex-col items-center space-y-4">
+          <SpinningLogo size="xl" className="text-blue-500" />
+          <p className="text-gray-600 dark:text-gray-400">Loading listings...</p>
+        </div>
       </div>
     )
   }
@@ -219,7 +230,17 @@ export default function BrowsePage() {
                     }}
                   />
                 )}
-
+              </div>
+              
+              {/* Location Filter */}
+              <div className="relative mb-4">
+                <MapPin className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
+                <Input
+                  placeholder="Filter by location..."
+                  value={locationFilter}
+                  onChange={(e) => setLocationFilter(e.target.value)}
+                  className="pl-10"
+                />
               </div>
 
               {/* Quick Filters */}
@@ -388,6 +409,7 @@ export default function BrowsePage() {
           {(selectedCategory !== "all" ||
             selectedFeatures.length > 0 ||
             availableOnly ||
+            locationFilter ||
             priceRange[0] > 0 ||
             priceRange[1] < 1000) && (
             <div className="flex flex-wrap gap-2 mb-4">
@@ -396,6 +418,12 @@ export default function BrowsePage() {
                 <Badge variant="secondary" className="flex items-center gap-1">
                   {categories.find((c) => c.value === selectedCategory)?.label}
                   <X className="h-3 w-3 cursor-pointer" onClick={() => setSelectedCategory("all")} />
+                </Badge>
+              )}
+              {locationFilter && (
+                <Badge variant="secondary" className="flex items-center gap-1">
+                  Location: {locationFilter}
+                  <X className="h-3 w-3 cursor-pointer" onClick={() => setLocationFilter("")} />
                 </Badge>
               )}
               {selectedFeatures.map((feature) => (
@@ -441,17 +469,22 @@ export default function BrowsePage() {
                     alt={listing.title}
                     className="w-full h-48 object-cover rounded-t-lg"
                   />
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    className="absolute top-2 right-2 bg-white/80 hover:bg-white"
-                    onClick={(e) => {
-                      e.preventDefault()
-                      // TODO: Implement wishlist functionality
-                    }}
-                  >
-                    <Heart className="h-4 w-4" />
-                  </Button>
+                  <div className="absolute top-2 right-2 flex space-x-1">
+                    <WishlistButton 
+                      listingId={listing.id} 
+                      variant="ghost" 
+                      size="sm" 
+                    />
+                    <ShareButton 
+                      listingId={listing.id}
+                      listingTitle={listing.title}
+                      listingPrice={listing.price}
+                      listingImage={listing.images[0]}
+                      variant="ghost" 
+                      size="sm"
+                      className="bg-white/80 hover:bg-white h-8 w-8 p-0"
+                    />
+                  </div>
                   <Badge className="absolute bottom-2 left-2 bg-blue-600">{listing.category}</Badge>
                 </div>
                 <CardHeader className="pb-2">
