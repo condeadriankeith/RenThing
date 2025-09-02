@@ -4,6 +4,7 @@ import { Text, Card, TextInput, Button, Avatar } from 'react-native-paper';
 import { RouteProp } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { Ionicons } from '@expo/vector-icons';
+import { SpinningLogo } from '../components/SpinningLogo';
 
 import { apiClient } from '../services/api/client';
 import { useAuth } from '../hooks/useAuth';
@@ -97,7 +98,8 @@ export default function ChatScreen({ route, navigation }: Props) {
   if (loading) {
     return (
       <View style={[styles.container, styles.centerContent]}>
-        <ActivityIndicator size="large" />
+        <SpinningLogo size={60} />
+        <Text style={styles.loadingText}>Loading conversations...</Text>
       </View>
     );
   }
@@ -189,6 +191,12 @@ const styles = StyleSheet.create({
     color: '#999',
     textAlign: 'center',
     marginTop: 8,
+  },
+  loadingText: {
+    fontSize: 16,
+    color: '#666',
+    marginTop: 16,
+    textAlign: 'center',
   },
 });
 

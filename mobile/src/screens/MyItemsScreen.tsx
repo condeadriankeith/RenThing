@@ -3,6 +3,7 @@ import { View, ScrollView, StyleSheet, Alert, FlatList, Image } from 'react-nati
 import { Text, Button, Card, ActivityIndicator, IconButton, Divider } from 'react-native-paper';
 import { useNavigation } from '@react-navigation/native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { SpinningLogo } from '../components/SpinningLogo';
 
 import { apiClient } from '../services/api/client';
 import { useAuth } from '../contexts/AuthContext';
@@ -124,7 +125,7 @@ export default function MyItemsScreen() {
       <SafeAreaView style={styles.container}>
         <Header title="My Items" showBack />
         <View style={styles.loadingContainer}>
-          <ActivityIndicator size="large" />
+          <SpinningLogo size={60} />
           <Text style={styles.loadingText}>Loading your items...</Text>
         </View>
       </SafeAreaView>

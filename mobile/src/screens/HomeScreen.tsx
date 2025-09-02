@@ -3,6 +3,7 @@ import { View, ScrollView, StyleSheet, Dimensions, FlatList, Image } from 'react
 import { Text, Button, Card, Searchbar, ActivityIndicator } from 'react-native-paper';
 import { useNavigation } from '@react-navigation/native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { SpinningLogo } from '../components/SpinningLogo';
 
 import { apiClient } from '../services/api/client';
 import Header from '../components/Header';
@@ -179,7 +180,8 @@ export default function HomeScreen() {
         
         {loading ? (
           <View style={styles.loadingContainer}>
-            <ActivityIndicator size="large" />
+            <SpinningLogo size={60} />
+            <Text style={styles.loadingText}>Loading featured items...</Text>
           </View>
         ) : (
           <FlatList
@@ -372,5 +374,11 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: '#666',
     flex: 1,
+  },
+  loadingText: {
+    fontSize: 16,
+    color: '#666',
+    marginTop: 16,
+    textAlign: 'center',
   },
 });
