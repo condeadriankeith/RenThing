@@ -2,7 +2,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { View, ScrollView, StyleSheet, FlatList, Dimensions, RefreshControl } from 'react-native';
 import { Text, Searchbar, Card, Chip, Button, ActivityIndicator, SegmentedButtons } from 'react-native-paper';
 import { Ionicons } from '@expo/vector-icons';
-import { SpinningLogo } from '../components/SpinningLogo';
+import { SpinnerLoader } from '../components/SpinnerLoader';
 
 import { apiClient } from '../services/api/client';
 
@@ -175,7 +175,7 @@ export default function BrowseScreen({ navigation }: any) {
   if (loading) {
     return (
       <View style={[styles.container, styles.centerContent]}>
-        <SpinningLogo size={60} />
+        <SpinnerLoader size={60} />
         <Text style={styles.loadingText}>Loading listings...</Text>
       </View>
     );

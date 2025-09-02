@@ -18,7 +18,7 @@ interface ShareButtonProps {
   listingPrice: number
   listingImage?: string
   variant?: "ghost" | "outline" | "default"
-  size?: "sm" | "md" | "lg"
+  size?: "default" | "sm" | "lg" | "icon"
   className?: string
 }
 
@@ -109,10 +109,9 @@ export function ShareButton({
         <Button
           variant={variant}
           size={size}
-          className={cn("flex items-center space-x-2", className)}
+          className={cn("flex items-center justify-center", className)}
         >
           <Share className="h-4 w-4" />
-          <span className="hidden sm:inline">Share</span>
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="w-48">

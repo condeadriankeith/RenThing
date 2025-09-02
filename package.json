@@ -45,6 +45,7 @@
     "@radix-ui/react-toggle-group": "1.1.1",
     "@radix-ui/react-tooltip": "1.1.6",
     "@react-native-masked-view/masked-view": "0.3.2",
+    "@tailwindcss/line-clamp": "^0.4.4",
     "@types/animejs": "^3.1.13",
     "@types/bcryptjs": "^2.4.6",
     "@types/gsap": "^1.20.2",

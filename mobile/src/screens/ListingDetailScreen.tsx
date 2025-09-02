@@ -4,7 +4,7 @@ import { Text, Button, Card, Chip, Divider, ActivityIndicator } from 'react-nati
 import { RouteProp } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { Ionicons } from '@expo/vector-icons';
-import { SpinningLogo } from '../components/SpinningLogo';
+import { SpinnerLoader } from '../components/SpinnerLoader';
 
 import { useAuth } from '../hooks/useAuth';
 import { apiClient } from '../services/api/client';
@@ -99,7 +99,7 @@ export default function ListingDetailScreen({ route, navigation }: Props) {
   if (loading) {
     return (
       <View style={[styles.container, styles.centerContent]}>
-        <SpinningLogo size={60} />
+        <SpinnerLoader size={60} />
         <Text style={styles.loadingText}>Loading listing details...</Text>
       </View>
     );

@@ -25,10 +25,10 @@ export default function HelpCenterPage() {
       icon: Book,
       description: "Learn the basics of using RenThing",
       articles: [
-        "How to create an account",
-        "Setting up your profile",
-        "Browsing and searching items",
-        "Understanding our community guidelines"
+        { title: "How to create an account", href: "/help/create-account" },
+        { title: "Setting up your profile", href: "/help/setup-profile" },
+        { title: "Browsing and searching items", href: "/help/browsing-items" },
+        { title: "Item Guidelines & Policies", href: "/help/item-guidelines" }
       ]
     },
     {
@@ -36,10 +36,10 @@ export default function HelpCenterPage() {
       icon: CreditCard,
       description: "Everything about bookings and payments",
       articles: [
-        "How to book an item",
-        "Payment methods and security",
-        "Cancellation and refund policy",
-        "Understanding service fees"
+        { title: "How to book an item", href: "/help/booking-guide" },
+        { title: "Payment Help & Support", href: "/help/payment-help" },
+        { title: "Cancellation and refund policy", href: "/help/cancellation-policy" },
+        { title: "Understanding service fees", href: "/help/service-fees" }
       ]
     },
     {
@@ -47,10 +47,10 @@ export default function HelpCenterPage() {
       icon: Shield,
       description: "Stay safe and build trust",
       articles: [
-        "Identity verification",
-        "Insurance and protection",
-        "Reporting issues",
-        "Community standards"
+        { title: "Safety Guidelines", href: "/help/safety-guide" },
+        { title: "Identity verification", href: "/help/identity-verification" },
+        { title: "Insurance and protection", href: "/help/insurance-protection" },
+        { title: "Reporting issues", href: "/help/reporting-issues" }
       ]
     },
     {
@@ -58,10 +58,10 @@ export default function HelpCenterPage() {
       icon: Users,
       description: "Tips for successful rentals",
       articles: [
-        "Creating great listings",
-        "Pricing your items",
-        "Managing bookings",
-        "Maximizing earnings"
+        { title: "Creating great listings", href: "/help/creating-listings" },
+        { title: "Pricing your items", href: "/help/pricing-guide" },
+        { title: "Managing bookings", href: "/help/managing-bookings" },
+        { title: "Maximizing earnings", href: "/help/maximizing-earnings" }
       ]
     }
   ]
@@ -104,24 +104,22 @@ export default function HelpCenterPage() {
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
       {/* Header */}
-      <div className="bg-white dark:bg-gray-800 shadow-sm">
-        <div className="container mx-auto px-4 py-8">
-          <div className="text-center mb-8">
-            <h1 className="text-4xl font-bold text-gray-900 dark:text-white mb-4">
-              Help Center
-            </h1>
-            <p className="text-xl text-gray-600 dark:text-gray-300 mb-6">
-              Find answers to your questions and get help when you need it
-            </p>
-            
-            {/* Search Bar */}
-            <div className="max-w-2xl mx-auto relative">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-5 w-5" />
-              <Input 
-                placeholder="Search for help articles, FAQs, and guides..."
-                className="pl-10 py-3 text-lg"
-              />
-            </div>
+      <div className="bg-gradient-to-br from-blue-600 to-purple-700 text-white py-16">
+        <div className="container mx-auto px-4 text-center">
+          <h1 className="text-4xl md:text-5xl font-bold text-white mb-4">
+            Help Center
+          </h1>
+          <p className="text-xl text-white max-w-2xl mx-auto opacity-90">
+            Find answers to your questions and get help when you need it
+          </p>
+          
+          {/* Search Bar */}
+          <div className="max-w-2xl mx-auto relative mt-6">
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-white/60 h-5 w-5" />
+            <Input 
+              placeholder="Search for help articles, FAQs, and guides..."
+              className="pl-10 py-3 text-lg"
+            />
           </div>
         </div>
       </div>
@@ -175,6 +173,83 @@ export default function HelpCenterPage() {
           </Card>
         </div>
 
+        {/* Featured Help Articles */}
+        <div className="mb-12">
+          <h2 className="text-3xl font-bold text-gray-900 dark:text-white mb-8 text-center">
+            Popular Help Articles
+          </h2>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <Card className="hover:shadow-lg transition-shadow">
+              <CardHeader>
+                <div className="flex items-center space-x-3">
+                  <Book className="h-8 w-8 text-blue-600" />
+                  <div>
+                    <CardTitle className="text-lg">Item Guidelines</CardTitle>
+                    <CardDescription>Learn how to list items properly</CardDescription>
+                  </div>
+                </div>
+              </CardHeader>
+              <CardContent>
+                <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
+                  Comprehensive guide on listing items, pricing strategies, and community guidelines.
+                </p>
+                <Button className="w-full" asChild>
+                  <Link href="/help/item-guidelines">
+                    Read Guidelines
+                    <ChevronRight className="w-4 h-4 ml-2" />
+                  </Link>
+                </Button>
+              </CardContent>
+            </Card>
+
+            <Card className="hover:shadow-lg transition-shadow">
+              <CardHeader>
+                <div className="flex items-center space-x-3">
+                  <CreditCard className="h-8 w-8 text-green-600" />
+                  <div>
+                    <CardTitle className="text-lg">Payment Help</CardTitle>
+                    <CardDescription>Understand payments and fees</CardDescription>
+                  </div>
+                </div>
+              </CardHeader>
+              <CardContent>
+                <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
+                  Everything about payment methods, security, and troubleshooting payment issues.
+                </p>
+                <Button className="w-full" asChild>
+                  <Link href="/help/payment-help">
+                    Get Payment Help
+                    <ChevronRight className="w-4 h-4 ml-2" />
+                  </Link>
+                </Button>
+              </CardContent>
+            </Card>
+
+            <Card className="hover:shadow-lg transition-shadow">
+              <CardHeader>
+                <div className="flex items-center space-x-3">
+                  <Shield className="h-8 w-8 text-purple-600" />
+                  <div>
+                    <CardTitle className="text-lg">Safety Guide</CardTitle>
+                    <CardDescription>Stay safe while renting</CardDescription>
+                  </div>
+                </div>
+              </CardHeader>
+              <CardContent>
+                <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
+                  Important safety tips and best practices for secure rental transactions.
+                </p>
+                <Button className="w-full" asChild>
+                  <Link href="/help/safety-guide">
+                    Read Safety Guide
+                    <ChevronRight className="w-4 h-4 ml-2" />
+                  </Link>
+                </Button>
+              </CardContent>
+            </Card>
+          </div>
+        </div>
+
         {/* Help Categories */}
         <div className="mb-12">
           <h2 className="text-3xl font-bold text-gray-900 dark:text-white mb-8 text-center">
@@ -197,9 +272,18 @@ export default function HelpCenterPage() {
                   <CardContent>
                     <div className="space-y-2">
                       {category.articles.map((article, articleIndex) => (
-                        <div key={articleIndex} className="flex items-center justify-between p-2 hover:bg-gray-50 dark:hover:bg-gray-700 rounded cursor-pointer">
-                          <span className="text-sm">{article}</span>
-                          <ChevronRight className="h-4 w-4 text-gray-400" />
+                        <div key={articleIndex}>
+                          {article.href ? (
+                            <Link href={article.href} className="flex items-center justify-between p-2 hover:bg-gray-50 dark:hover:bg-gray-700 rounded cursor-pointer transition-colors">
+                              <span className="text-sm font-medium text-blue-600 dark:text-blue-400">{article.title}</span>
+                              <ChevronRight className="h-4 w-4 text-gray-400" />
+                            </Link>
+                          ) : (
+                            <div className="flex items-center justify-between p-2 opacity-60">
+                              <span className="text-sm text-gray-500 dark:text-gray-400">{article.title}</span>
+                              <span className="text-xs text-gray-400">Coming Soon</span>
+                            </div>
+                          )}
                         </div>
                       ))}
                     </div>

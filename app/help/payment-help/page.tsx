@@ -83,11 +83,11 @@ export default function PaymentHelpPage() {
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
       {/* Hero Section */}
-      <section className="bg-gradient-to-br from-purple-600 to-indigo-700 text-white py-16">
+      <section className="bg-gradient-to-br from-blue-600 to-purple-700 text-white py-16">
         <div className="container mx-auto px-4 text-center">
           <CreditCard className="w-16 h-16 mx-auto mb-4" />
-          <h1 className="text-4xl md:text-5xl font-bold mb-4">Payment Help</h1>
-          <p className="text-xl max-w-2xl mx-auto opacity-90">
+          <h1 className="text-4xl font-bold text-white mb-4">Payment Help</h1>
+          <p className="text-xl text-white max-w-2xl mx-auto opacity-90">
             Everything you need to know about payments, refunds, and managing your transactions
           </p>
         </div>
@@ -100,13 +100,13 @@ export default function PaymentHelpPage() {
             {paymentTopics.map((topic, index) => (
               <div key={topic.title} className="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-6">
                 <div className="flex items-center mb-4">
-                  <topic.icon className="w-8 h-8 text-purple-600 mr-3" />
+                  <topic.icon className="w-8 h-8 text-blue-600 mr-3" />
                   <h2 className="text-2xl font-semibold text-gray-900 dark:text-white">{topic.title}</h2>
                 </div>
                 <ul className="space-y-2">
                   {topic.content.map((item, itemIndex) => (
                     <li key={itemIndex} className="flex items-start">
-                      <CheckCircle className="w-4 h-4 text-purple-500 mt-1 mr-3 flex-shrink-0" />
+                      <CheckCircle className="w-4 h-4 text-blue-500 mt-1 mr-3 flex-shrink-0" />
                       <span className="text-gray-700 dark:text-gray-300">{item}</span>
                     </li>
                   ))}
@@ -147,7 +147,7 @@ export default function PaymentHelpPage() {
           <div className="mt-8 text-center">
             <Link 
               href="/help" 
-              className="inline-flex items-center px-6 py-3 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors"
+              className="inline-flex items-center px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
             >
               Back to Help Center
             </Link>

@@ -11,7 +11,7 @@ import { Separator } from "@/components/ui/separator"
 import { ShoppingBag, Star, MapPin, Share, Heart, ArrowLeft } from "lucide-react"
 import { BookingCalendar } from "@/components/booking-calendar"
 import { ContactOwnerChat } from "@/components/contact-owner-chat-fixed"
-import { SpinningLogo } from "@/components/ui/spinning-logo"
+import { SpinnerLoader } from "@/components/ui/spinner-loader"
 import { WishlistButton } from "@/components/wishlist-button"
 import { ShareButton } from "@/components/share-button"
 
@@ -75,7 +75,7 @@ export default function ListingDetailPage() {
     return (
       <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex items-center justify-center">
         <div className="flex flex-col items-center space-y-4">
-          <SpinningLogo size="xl" className="text-blue-500" />
+          <SpinnerLoader size="lg" className="text-blue-500" />
           <p className="text-gray-600 dark:text-gray-400">Loading listing...</p>
         </div>
       </div>

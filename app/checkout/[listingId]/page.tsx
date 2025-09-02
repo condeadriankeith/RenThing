@@ -10,11 +10,26 @@ import { Label } from "@/components/ui/label"
 import { Separator } from "@/components/ui/separator"
 import { Badge } from "@/components/ui/badge"
 import { ShoppingBag, CreditCard, Shield, ArrowLeft, Calendar, MapPin } from "lucide-react"
-import { mockListings } from "@/lib/mock-data"
 import { PaymentMethodSelector } from "@/components/payment-method-selector"
-
 import { XenditCheckout } from "@/components/xendit-checkout"
 import { useToast } from "@/hooks/use-toast"
+import { SpinnerLoader } from "@/components/ui/spinner-loader"
+
+interface Listing {
+  id: string
+  title: string
+  description: string
+  price: number
+  location: string
+  images: string[]
+  features: string[]
+  category: string
+  owner: {
+    id: string
+    name: string
+    email: string
+  }
+}
 
 export default function CheckoutPage() {
   const params = useParams()
@@ -22,6 +37,8 @@ export default function CheckoutPage() {
   const searchParams = useSearchParams()
   const { toast } = useToast()
   const [selectedPaymentMethod, setSelectedPaymentMethod] = useState<"xendit">("xendit")
+  const [listing, setListing] = useState<Listing | null>(null)
+  const [isLoading, setIsLoading] = useState(true)
   const [bookingDetails, setBookingDetails] = useState({
     startDate: "",
     endDate: "",
@@ -30,13 +47,83 @@ export default function CheckoutPage() {
   })
   const [isProcessing, setIsProcessing] = useState(false)
 
-  const listing = mockListings.find((l) => l.id === params.listingId)
+  // Fetch listing data
+  useEffect(() => {
+    const fetchListing = async () => {
+      try {
+        const response = await fetch(`/api/listings/${params.listingId}`)
+        if (!response.ok) {
+          throw new Error('Listing not found')
+        }
+        const data = await response.json()
+        setListing(data)
+      } catch (error) {
+        console.error('Error fetching listing:', error)
+        toast({
+          title: "Error",
+          description: "Could not load listing details. Please try again.",
+          variant: "destructive",
+        })
+        router.push('/browse')
+      } finally {
+        setIsLoading(false)
+      }
+    }
 
+    if (params.listingId) {
+      fetchListing()
+    }
+  }, [params.listingId, router, toast])
+
+  // Initialize booking details from URL parameters
+  useEffect(() => {
+    if (listing) {
+      const startDate = searchParams.get('startDate') || ''
+      const endDate = searchParams.get('endDate') || ''
+      const days = parseInt(searchParams.get('days') || '1')
+      const total = parseFloat(searchParams.get('total') || '0')
+      
+      if (startDate && endDate) {
+        setBookingDetails({
+          startDate,
+          endDate,
+          duration: days,
+          totalPrice: total - Math.round(total * 0.05), // Remove service fee from total to get base price
+        })
+      } else {
+        // Calculate default pricing if no params
+        setBookingDetails({
+          startDate: '',
+          endDate: '',
+          duration: 1,
+          totalPrice: listing.price,
+        })
+      }
+    }
+  }, [searchParams, listing])
+
+  const serviceFee = listing ? Math.round(bookingDetails.totalPrice * 0.05) : 0 // 5% service fee
+  const totalAmount = bookingDetails.totalPrice + serviceFee
+
+  // Show loading state
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex items-center justify-center">
+        <div className="flex flex-col items-center space-y-4">
+          <SpinnerLoader size="lg" />
+          <p className="text-gray-600 dark:text-gray-400">Loading checkout...</p>
+        </div>
+      </div>
+    )
+  }
+
+  // Show error state
   if (!listing) {
     return (
       <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex items-center justify-center">
         <div className="text-center">
           <h1 className="text-2xl font-bold mb-4">Listing not found</h1>
+          <p className="text-gray-600 dark:text-gray-400 mb-6">The listing you're trying to book could not be found.</p>
           <Button asChild>
             <Link href="/browse">Back to Browse</Link>
           </Button>
@@ -44,26 +131,6 @@ export default function CheckoutPage() {
       </div>
     )
   }
-
-  useEffect(() => {
-    // Read booking details from URL parameters
-    const startDate = searchParams.get('startDate') || ''
-    const endDate = searchParams.get('endDate') || ''
-    const days = parseInt(searchParams.get('days') || '1')
-    const total = parseFloat(searchParams.get('total') || '0')
-    
-    if (startDate && endDate && listing) {
-      setBookingDetails({
-        startDate,
-        endDate,
-        duration: days,
-        totalPrice: total - Math.round(total * 0.05), // Remove service fee from total to get base price
-      })
-    }
-  }, [searchParams, listing])
-
-  const serviceFee = Math.round(bookingDetails.totalPrice * 0.05) // 5% service fee
-  const totalAmount = bookingDetails.totalPrice + serviceFee
 
   async function handlePaymentSuccess(paymentData: { transactionId: string }) {
     if (!listing) {

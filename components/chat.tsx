@@ -11,7 +11,7 @@
 import React, { useState, useRef, useEffect } from "react";
 import { useSession } from "next-auth/react";
 import { useToast } from "@/hooks/use-toast";
-import { SpinningLogo } from "@/components/ui/spinning-logo";
+import { SpinnerLoader } from "@/components/ui/spinner-loader";
 
 interface Message {
   id: string;
@@ -186,7 +186,7 @@ export const Chat: React.FC<ChatProps> = ({ ownerId, listingId, onOpenFullChat }
       <div className="flex-1 overflow-y-auto p-2 sm:p-4 space-y-2">
         {isLoading && (
           <div className="flex flex-col items-center justify-center py-4 space-y-2">
-            <SpinningLogo size="md" className="text-blue-500" />
+            <SpinnerLoader size="md" className="text-blue-500" />
             <div className="text-center text-gray-500 text-sm">
               Connecting to chat...
             </div>
@@ -239,7 +239,7 @@ export const Chat: React.FC<ChatProps> = ({ ownerId, listingId, onOpenFullChat }
         >
           {isSending ? (
             <>
-              <SpinningLogo size="sm" className="mr-2 text-white" />
+              <SpinnerLoader size="sm" className="mr-2 text-white" />
               Sending...
             </>
           ) : (

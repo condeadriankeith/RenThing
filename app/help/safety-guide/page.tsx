@@ -64,11 +64,11 @@ export default function SafetyGuidePage() {
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
       {/* Hero Section */}
-      <section className="bg-gradient-to-br from-green-600 to-emerald-700 text-white py-16">
+      <section className="bg-gradient-to-br from-blue-600 to-purple-700 text-white py-16">
         <div className="container mx-auto px-4 text-center">
           <Shield className="w-16 h-16 mx-auto mb-4" />
-          <h1 className="text-4xl md:text-5xl font-bold mb-4">Safety Guide</h1>
-          <p className="text-xl max-w-2xl mx-auto opacity-90">
+          <h1 className="text-4xl font-bold text-white mb-4">Safety Guide</h1>
+          <p className="text-xl text-white max-w-2xl mx-auto opacity-90">
             Stay safe while renting with these essential safety guidelines and best practices
           </p>
         </div>
@@ -81,13 +81,13 @@ export default function SafetyGuidePage() {
             {safetyTopics.map((topic, index) => (
               <div key={topic.title} className="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-6">
                 <div className="flex items-center mb-4">
-                  <topic.icon className="w-8 h-8 text-green-600 mr-3" />
+                  <topic.icon className="w-8 h-8 text-blue-600 mr-3" />
                   <h2 className="text-2xl font-semibold text-gray-900 dark:text-white">{topic.title}</h2>
                 </div>
                 <ul className="space-y-2">
                   {topic.content.map((item, itemIndex) => (
                     <li key={itemIndex} className="flex items-start">
-                      <CheckCircle className="w-4 h-4 text-green-500 mt-1 mr-3 flex-shrink-0" />
+                      <CheckCircle className="w-4 h-4 text-blue-500 mt-1 mr-3 flex-shrink-0" />
                       <span className="text-gray-700 dark:text-gray-300">{item}</span>
                     </li>
                   ))}

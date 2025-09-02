@@ -12,7 +12,7 @@ import { Textarea } from "@/components/ui/textarea"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { ShoppingBag, Upload, X, Plus } from "lucide-react"
 import { useToast } from "@/hooks/use-toast"
-import { SpinningLogo } from "@/components/ui/spinning-logo"
+import { SpinnerLoader } from "@/components/ui/spinner-loader"
 import { useSession } from "next-auth/react"
 
 export default function ListItemPage() {
@@ -37,7 +37,7 @@ export default function ListItemPage() {
     return (
       <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex items-center justify-center">
         <div className="flex flex-col items-center space-y-4">
-          <SpinningLogo size="xl" className="text-blue-500" />
+          <SpinnerLoader size="lg" className="text-blue-500" />
           <p className="text-gray-600 dark:text-gray-400">Loading...</p>
         </div>
       </div>
@@ -280,7 +280,7 @@ export default function ListItemPage() {
                     <label className={`aspect-square rounded-lg border-2 border-dashed border-gray-300 dark:border-gray-600 flex flex-col items-center justify-center cursor-pointer hover:border-blue-500 transition-colors ${isUploadingImages ? 'opacity-50 cursor-not-allowed' : ''}`}>
                       {isUploadingImages ? (
                         <>
-                          <SpinningLogo size="sm" className="mb-2" />
+                          <SpinnerLoader size="sm" className="mb-2" />
                           <span className="text-sm text-gray-500">Uploading...</span>
                         </>
                       ) : (

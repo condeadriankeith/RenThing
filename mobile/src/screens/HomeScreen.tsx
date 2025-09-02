@@ -3,7 +3,7 @@ import { View, ScrollView, StyleSheet, Dimensions, FlatList, Image } from 'react
 import { Text, Button, Card, Searchbar, ActivityIndicator } from 'react-native-paper';
 import { useNavigation } from '@react-navigation/native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { SpinningLogo } from '../components/SpinningLogo';
+import { SpinnerLoader } from '../components/SpinnerLoader';
 
 import { apiClient } from '../services/api/client';
 import Header from '../components/Header';
@@ -180,7 +180,7 @@ export default function HomeScreen() {
         
         {loading ? (
           <View style={styles.loadingContainer}>
-            <SpinningLogo size={60} />
+            <SpinnerLoader size={60} />
             <Text style={styles.loadingText}>Loading featured items...</Text>
           </View>
         ) : (

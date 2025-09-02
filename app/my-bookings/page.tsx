@@ -10,19 +10,28 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Calendar, Search, MapPin } from "lucide-react"
 import { useSession } from "next-auth/react"
-import { SpinningLogo } from "@/components/ui/spinning-logo"
+import { SpinnerLoader } from "@/components/ui/spinner-loader"
 
 interface Booking {
   id: string
   listing: {
+    id: string
     title: string
-    image?: string
+    images?: string[]
     location: string
+    owner?: {
+      name: string
+      email: string
+    }
   }
   startDate: string
   endDate: string
   status: "pending" | "confirmed" | "completed" | "cancelled"
-  totalAmount: number
+  totalPrice: number
+  user?: {
+    name: string
+    email: string
+  }
 }
 
 export default function MyBookingsPage() {
@@ -44,10 +53,12 @@ export default function MyBookingsPage() {
       }
 
       try {
-        const response = await fetch('/api/bookings/user')
+        const response = await fetch('/api/bookings')
         if (response.ok) {
           const data = await response.json()
-          setBookings(data)
+          setBookings(data || [])
+        } else {
+          console.error('Failed to fetch bookings:', response.statusText)
         }
       } catch (error) {
         console.error('Failed to fetch bookings:', error)
@@ -97,7 +108,7 @@ export default function MyBookingsPage() {
     return (
       <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex items-center justify-center">
         <div className="flex flex-col items-center space-y-4">
-          <SpinningLogo size="xl" className="text-blue-500" />
+          <SpinnerLoader size="lg" className="text-blue-500" />
           <p className="text-gray-600 dark:text-gray-400">Loading your bookings...</p>
         </div>
       </div>
@@ -123,25 +134,25 @@ export default function MyBookingsPage() {
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
 
-      <div className="container mx-auto px-2 sm:px-4 py-6 sm:py-8">
-        <div className="mb-6 sm:mb-8">
-          <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white mb-2">My Bookings</h1>
+      <div className="container mx-auto px-3 sm:px-4 lg:px-6 py-4 sm:py-6 lg:py-8">
+        <div className="mb-4 sm:mb-6 lg:mb-8">
+          <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold text-gray-900 dark:text-white mb-2">My Bookings</h1>
           <p className="text-sm sm:text-base text-gray-600 dark:text-gray-400">Manage your rentals and bookings</p>
         </div>
 
         {/* Search and Filters */}
-        <div className="flex flex-col md:flex-row gap-3 sm:gap-4 mb-5 sm:mb-6">
+        <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 mb-4 sm:mb-6">
           <div className="flex-1 relative">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
             <Input
               placeholder="Search bookings..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="pl-10 text-sm sm:text-base"
+              className="pl-10 h-10 sm:h-12 text-sm sm:text-base"
             />
           </div>
           <Select value={statusFilter} onValueChange={setStatusFilter}>
-            <SelectTrigger className="w-full md:w-48 text-sm sm:text-base">
+            <SelectTrigger className="w-full sm:w-48 h-10 sm:h-12 text-sm sm:text-base">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
@@ -156,10 +167,10 @@ export default function MyBookingsPage() {
 
         {/* Booking Tabs */}
         <Tabs defaultValue="upcoming" className="space-y-4 sm:space-y-6">
-          <TabsList className="grid w-full grid-cols-3 text-xs sm:text-base">
-            <TabsTrigger value="upcoming">Upcoming ({upcomingBookings.length})</TabsTrigger>
-            <TabsTrigger value="past">Past ({pastBookings.length})</TabsTrigger>
-            <TabsTrigger value="cancelled">Cancelled ({cancelledBookings.length})</TabsTrigger>
+          <TabsList className="grid w-full grid-cols-3 h-10 sm:h-12">
+            <TabsTrigger value="upcoming" className="text-xs sm:text-sm">Upcoming ({upcomingBookings.length})</TabsTrigger>
+            <TabsTrigger value="past" className="text-xs sm:text-sm">Past ({pastBookings.length})</TabsTrigger>
+            <TabsTrigger value="cancelled" className="text-xs sm:text-sm">Cancelled ({cancelledBookings.length})</TabsTrigger>
           </TabsList>
 
           <TabsContent value="upcoming" className="space-y-3 sm:space-y-4">
@@ -177,44 +188,44 @@ export default function MyBookingsPage() {
             ) : (
               upcomingBookings.map((booking) => (
                 <Card key={booking.id} className="hover:shadow-md transition-shadow">
-                  <CardContent className="p-6">
-                    <div className="flex items-start space-x-4">
+                  <CardContent className="p-3 sm:p-4 lg:p-6">
+                    <div className="flex flex-col sm:flex-row items-start space-y-3 sm:space-y-0 sm:space-x-4">
                       <img
-                        src={booking.listing.image || "/placeholder.svg"}
+                        src={booking.listing.images?.[0] || "/placeholder.svg"}
                         alt={booking.listing.title}
-                        className="w-24 h-24 rounded-lg object-cover"
+                        className="w-full sm:w-20 lg:w-24 h-32 sm:h-20 lg:h-24 rounded-lg object-cover"
                       />
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-start justify-between mb-2">
-                          <div>
-                            <h3 className="text-lg font-semibold text-gray-900 dark:text-white truncate">
+                      <div className="flex-1 min-w-0 w-full">
+                        <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between mb-2 sm:mb-3">
+                          <div className="mb-2 sm:mb-0">
+                            <h3 className="text-base sm:text-lg font-semibold text-gray-900 dark:text-white line-clamp-2">
                               {booking.listing.title}
                             </h3>
-                            <div className="flex items-center text-sm text-gray-600 dark:text-gray-400 mt-1">
-                              <MapPin className="h-3 w-3 mr-1" />
-                              {booking.listing.location}
+                            <div className="flex items-center text-xs sm:text-sm text-gray-600 dark:text-gray-400 mt-1">
+                              <MapPin className="h-3 w-3 mr-1 flex-shrink-0" />
+                              <span className="truncate">{booking.listing.location}</span>
                             </div>
                           </div>
-                          <Badge className={getStatusColor(booking.status)}>
+                          <Badge className={`${getStatusColor(booking.status)} whitespace-nowrap text-xs`}>
                             {booking.status.charAt(0).toUpperCase() + booking.status.slice(1)}
                           </Badge>
                         </div>
 
-                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4 mb-3 sm:mb-4">
                           <div>
-                            <p className="text-sm text-gray-600 dark:text-gray-400">Dates</p>
-                            <p className="font-medium">
+                            <p className="text-xs sm:text-sm text-gray-600 dark:text-gray-400">Dates</p>
+                            <p className="font-medium text-sm sm:text-base">
                               {new Date(booking.startDate).toLocaleDateString()} -{" "}
                               {new Date(booking.endDate).toLocaleDateString()}
                             </p>
                           </div>
                           <div>
-                            <p className="text-sm text-gray-600 dark:text-gray-400">Total</p>
-                            <p className="font-medium text-blue-600">₱{booking.totalAmount.toLocaleString()}</p>
+                            <p className="text-xs sm:text-sm text-gray-600 dark:text-gray-400">Total</p>
+                            <p className="font-medium text-blue-600 text-sm sm:text-base">₱{booking.totalPrice.toLocaleString()}</p>
                           </div>
                         </div>
 
-                        <Button size="sm" asChild>
+                        <Button size="sm" className="w-full sm:w-auto text-xs sm:text-sm" asChild>
                           <Link href={`/booking/${booking.id}`}>View Details</Link>
                         </Button>
                       </div>
@@ -231,7 +242,7 @@ export default function MyBookingsPage() {
                 <CardContent className="p-6">
                   <div className="flex items-start space-x-4">
                     <img
-                      src={booking.listing.image || "/placeholder.svg"}
+                      src={booking.listing.images?.[0] || "/placeholder.svg"}
                       alt={booking.listing.title}
                       className="w-24 h-24 rounded-lg object-cover"
                     />
@@ -259,7 +270,7 @@ export default function MyBookingsPage() {
                         </div>
                         <div>
                           <p className="text-sm text-gray-600 dark:text-gray-400">Total</p>
-                          <p className="font-medium text-blue-600">₱{booking.totalAmount.toLocaleString()}</p>
+                          <p className="font-medium text-blue-600">₱{booking.totalPrice.toLocaleString()}</p>
                         </div>
                       </div>
 
@@ -279,7 +290,7 @@ export default function MyBookingsPage() {
                 <CardContent className="p-6">
                   <div className="flex items-start space-x-4">
                     <img
-                      src={booking.listing.image || "/placeholder.svg"}
+                      src={booking.listing.images?.[0] || "/placeholder.svg"}
                       alt={booking.listing.title}
                       className="w-24 h-24 rounded-lg object-cover grayscale"
                     />
@@ -307,7 +318,7 @@ export default function MyBookingsPage() {
                         </div>
                         <div>
                           <p className="text-sm text-gray-600 dark:text-gray-400">Total</p>
-                          <p className="font-medium">₱{booking.totalAmount.toLocaleString()}</p>
+                          <p className="font-medium">₱{booking.totalPrice.toLocaleString()}</p>
                         </div>
                       </div>
 

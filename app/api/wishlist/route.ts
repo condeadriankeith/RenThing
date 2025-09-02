@@ -49,8 +49,8 @@ export async function GET(request: NextRequest) {
         description: item.listing.description,
         price: item.listing.price,
         location: item.listing.location,
-        images: JSON.parse(item.listing.images),
-        features: JSON.parse(item.listing.features),
+        images: typeof item.listing.images === 'string' ? JSON.parse(item.listing.images || '[]') : item.listing.images,
+        features: typeof item.listing.features === 'string' ? JSON.parse(item.listing.features || '[]') : item.listing.features,
         owner: item.listing.owner,
         createdAt: item.listing.createdAt
       }
@@ -153,8 +153,8 @@ export async function POST(request: NextRequest) {
           description: wishlistItem.listing.description,
           price: wishlistItem.listing.price,
           location: wishlistItem.listing.location,
-          images: JSON.parse(wishlistItem.listing.images),
-          features: JSON.parse(wishlistItem.listing.features),
+          images: typeof wishlistItem.listing.images === 'string' ? JSON.parse(wishlistItem.listing.images || '[]') : wishlistItem.listing.images,
+          features: typeof wishlistItem.listing.features === 'string' ? JSON.parse(wishlistItem.listing.features || '[]') : wishlistItem.listing.features,
           owner: wishlistItem.listing.owner,
           createdAt: wishlistItem.listing.createdAt
         }

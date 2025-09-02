@@ -14,8 +14,7 @@ export default function RootLayout({
   children: React.ReactNode
 }>) {
   return (
-<html lang="en" suppressHydrationWarning>
-
+    <html lang="en" suppressHydrationWarning>
       <head>
         <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
         <link rel="preconnect" href="https://fonts.googleapis.com" />
@@ -25,9 +24,27 @@ export default function RootLayout({
             font-family: "SF Pro Display", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
           }
         `}</style>
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `
+              // Prevent hydration issues caused by browser extensions
+              if (typeof window !== 'undefined') {
+                // Remove Grammarly attributes that cause hydration mismatches
+                window.addEventListener('DOMContentLoaded', function() {
+                  setTimeout(function() {
+                    const body = document.body;
+                    if (body) {
+                      body.removeAttribute('data-new-gr-c-s-check-loaded');
+                      body.removeAttribute('data-gr-ext-installed');
+                    }
+                  }, 100);
+                });
+              }
+            `,
+          }}
+        />
       </head>
-
-      <body>
+      <body suppressHydrationWarning>
         <ClientLayout>{children}</ClientLayout>
       </body>
     </html>

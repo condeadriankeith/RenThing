@@ -12,7 +12,7 @@ import { Separator } from "@/components/ui/separator"
 import { MessageCircle, Search, Send, MoreVertical, ArrowLeft, X } from "lucide-react"
 import { Chat } from "@/components/chat"
 import { useToast } from "@/hooks/use-toast"
-import { SpinningLogo } from "@/components/ui/spinning-logo"
+import { SpinnerLoader } from "@/components/ui/spinner-loader"
 
 interface ChatRoom {
   id: string
@@ -120,7 +120,7 @@ export default function InboxPage() {
     return (
       <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex items-center justify-center">
         <div className="flex flex-col items-center space-y-4">
-          <SpinningLogo size="xl" className="text-blue-500" />
+          <SpinnerLoader size="lg" className="text-blue-500" />
           <p className="text-gray-600 dark:text-gray-400">Loading your messages...</p>
         </div>
       </div>
@@ -178,7 +178,7 @@ export default function InboxPage() {
             <div className="flex-1 overflow-y-auto">
               {isLoading ? (
                 <div className="flex flex-col items-center justify-center h-64 space-y-2">
-                  <SpinningLogo size="md" className="text-blue-500" />
+                  <SpinnerLoader size="md" className="text-blue-500" />
                   <p className="text-gray-600 dark:text-gray-400 text-sm">Loading conversations...</p>
                 </div>
               ) : error ? (

@@ -29,26 +29,26 @@ export default function HomePage() {
 
 
       {/* Hero Section */}
-      <main className="container mx-auto px-4 sm:px-6 lg:px-8 py-16 md:py-24">
+      <main className="container mx-auto px-3 sm:px-4 lg:px-6 xl:px-8 py-12 sm:py-16 md:py-20 lg:py-24">
         <div className="max-w-4xl mx-auto text-center">
-          <h1 className="text-5xl md:text-7xl lg:text-8xl font-black text-gray-900 dark:text-white mb-8 hero-text overflow-visible">
+          <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl xl:text-7xl font-black text-gray-900 dark:text-white mb-6 sm:mb-8 hero-text overflow-visible">
             Rent <span className="aurora-text-mask">Anything</span>, Anytime
           </h1>
-          <p className="text-lg md:text-xl text-gray-600 dark:text-gray-300 mb-8 max-w-2xl mx-auto">
+          <p className="text-base sm:text-lg md:text-xl text-gray-600 dark:text-gray-300 mb-6 sm:mb-8 max-w-2xl mx-auto px-4">
             Your one-stop marketplace for rentals and services. From equipment to experiences, find what you need or offer what you have.
           </p>
-          <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <Button size="lg" className="text-lg px-8" asChild>
+          <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center px-4">
+            <Button size="lg" className="text-base sm:text-lg px-6 sm:px-8 h-12 sm:h-14" asChild>
               <Link href="/browse">Start Browsing</Link>
             </Button>
-            <Button size="lg" variant="outline" className="text-lg px-8 bg-white dark:bg-gray-800" asChild>
+            <Button size="lg" variant="outline" className="text-base sm:text-lg px-6 sm:px-8 h-12 sm:h-14 bg-white dark:bg-gray-800" asChild>
               <Link href="/list-item">List Your Item</Link>
             </Button>
           </div>
         </div>
 
         {/* Search Bar */}
-        <div className="max-w-3xl mx-auto mt-12 mb-16 bg-white dark:bg-gray-800 rounded-xl shadow-xl p-4">
+        <div className="max-w-3xl mx-auto mt-8 sm:mt-12 mb-12 sm:mb-16 bg-white dark:bg-gray-800 rounded-xl shadow-xl p-3 sm:p-4">
           <form onSubmit={handleSearch} className="flex flex-col md:flex-row gap-2">
             <div className="flex-1 relative">
               <input 
@@ -56,9 +56,9 @@ export default function HomePage() {
                 placeholder="What are you looking for?" 
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full px-4 py-3 pr-10 rounded-lg border border-gray-200 dark:border-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white" 
+                className="w-full px-3 sm:px-4 py-2.5 sm:py-3 pr-10 rounded-lg border border-gray-200 dark:border-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white text-sm sm:text-base" 
               />
-              <Search className="absolute right-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
+              <Search className="absolute right-3 top-1/2 transform -translate-y-1/2 h-4 w-4 sm:h-5 sm:w-5 text-gray-400" />
             </div>
             <div className="relative">
               <input 
@@ -66,13 +66,13 @@ export default function HomePage() {
                 placeholder="Location" 
                 value={location}
                 onChange={(e) => setLocation(e.target.value)}
-                className="w-full px-4 py-3 pr-10 rounded-lg border border-gray-200 dark:border-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white" 
+                className="w-full px-3 sm:px-4 py-2.5 sm:py-3 pr-10 rounded-lg border border-gray-200 dark:border-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white text-sm sm:text-base" 
               />
-              <MapPin className="absolute right-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
+              <MapPin className="absolute right-3 top-1/2 transform -translate-y-1/2 h-4 w-4 sm:h-5 sm:w-5 text-gray-400" />
             </div>
             <Button 
               type="submit"
-              className="px-6 py-3 bg-blue-600 text-white font-bold rounded-lg hover:bg-blue-700 transition-colors min-w-[100px]"
+              className="px-4 sm:px-6 py-2.5 sm:py-3 bg-blue-600 text-white font-bold rounded-lg hover:bg-blue-700 transition-colors min-w-[80px] sm:min-w-[100px] text-sm sm:text-base"
             >
               Search
             </Button>
@@ -80,11 +80,11 @@ export default function HomePage() {
         </div>
 
         {/* Features Grid */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 mb-12 sm:mb-16">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 mb-8 sm:mb-12 lg:mb-16 px-4">
           <Card className="text-center">
-            <CardHeader>
-              <Search className="h-10 w-10 sm:h-12 sm:w-12 text-blue-600 mx-auto mb-3 sm:mb-4" />
-              <CardTitle className="text-base sm:text-lg">Smart Search</CardTitle>
+            <CardHeader className="pb-3 sm:pb-4">
+              <Search className="h-8 w-8 sm:h-10 sm:w-10 lg:h-12 lg:w-12 text-blue-600 mx-auto mb-2 sm:mb-3 lg:mb-4" />
+              <CardTitle className="text-sm sm:text-base lg:text-lg">Smart Search</CardTitle>
             </CardHeader>
             <CardContent>
               <CardDescription className="text-xs sm:text-sm">
@@ -94,9 +94,9 @@ export default function HomePage() {
           </Card>
 
           <Card className="text-center">
-            <CardHeader>
-              <Calendar className="h-10 w-10 sm:h-12 sm:w-12 text-green-600 mx-auto mb-3 sm:mb-4" />
-              <CardTitle className="text-base sm:text-lg">Easy Booking</CardTitle>
+            <CardHeader className="pb-3 sm:pb-4">
+              <Calendar className="h-8 w-8 sm:h-10 sm:w-10 lg:h-12 lg:w-12 text-green-600 mx-auto mb-2 sm:mb-3 lg:mb-4" />
+              <CardTitle className="text-sm sm:text-base lg:text-lg">Easy Booking</CardTitle>
             </CardHeader>
             <CardContent>
               <CardDescription className="text-xs sm:text-sm">Schedule rentals and services with our intuitive booking calendar.</CardDescription>
@@ -104,66 +104,66 @@ export default function HomePage() {
           </Card>
 
           <Card className="text-center">
-            <CardHeader>
-              <MessageCircle className="h-12 w-12 text-purple-600 mx-auto mb-4" />
-              <CardTitle>Real-time Chat</CardTitle>
+            <CardHeader className="pb-3 sm:pb-4">
+              <MessageCircle className="h-8 w-8 sm:h-10 sm:w-10 lg:h-12 lg:w-12 text-purple-600 mx-auto mb-2 sm:mb-3 lg:mb-4" />
+              <CardTitle className="text-sm sm:text-base lg:text-lg">Real-time Chat</CardTitle>
             </CardHeader>
             <CardContent>
-              <CardDescription>Connect instantly with providers through our built-in messaging system.</CardDescription>
+              <CardDescription className="text-xs sm:text-sm">Connect instantly with providers through our built-in messaging system.</CardDescription>
             </CardContent>
           </Card>
 
           <Card className="text-center">
-            <CardHeader>
-              <ShoppingBag className="h-12 w-12 text-orange-600 mx-auto mb-4" />
-              <CardTitle>Secure Payments</CardTitle>
+            <CardHeader className="pb-3 sm:pb-4">
+              <ShoppingBag className="h-8 w-8 sm:h-10 sm:w-10 lg:h-12 lg:w-12 text-orange-600 mx-auto mb-2 sm:mb-3 lg:mb-4" />
+              <CardTitle className="text-sm sm:text-base lg:text-lg">Secure Payments</CardTitle>
             </CardHeader>
             <CardContent>
-              <CardDescription>Multiple payment options with secure processing and buyer protection.</CardDescription>
+              <CardDescription className="text-xs sm:text-sm">Multiple payment options with secure processing and buyer protection.</CardDescription>
             </CardContent>
           </Card>
         </div>
 
         {/* How It Works */}
-        <section className="py-16 bg-gray-50 dark:bg-gray-800 rounded-2xl my-12">
+        <section className="py-12 sm:py-16 bg-gray-50 dark:bg-gray-800 rounded-2xl my-8 sm:my-12 mx-4">
           <div className="container mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="text-center mb-12">
-              <h2 className="text-3xl md:text-4xl font-bold text-gray-900 dark:text-white mb-4">How It Works</h2>
-              <p className="text-lg text-gray-600 dark:text-gray-300 max-w-2xl mx-auto">
+            <div className="text-center mb-8 sm:mb-12">
+              <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold text-gray-900 dark:text-white mb-3 sm:mb-4">How It Works</h2>
+              <p className="text-base sm:text-lg text-gray-600 dark:text-gray-300 max-w-2xl mx-auto">
                 Simple steps to rent or list items on our platform
               </p>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 sm:gap-8">
               {/* Step 1 */}
-              <div className="feature-card bg-white dark:bg-gray-700 rounded-xl p-8 text-center transition-all hover:shadow-lg">
-                <div className="w-20 h-20 bg-blue-100 dark:bg-blue-900/30 rounded-full flex items-center justify-center mx-auto mb-6">
-                  <span className="text-blue-600 dark:text-blue-400 font-bold text-2xl">1</span>
+              <div className="feature-card bg-white dark:bg-gray-700 rounded-xl p-6 sm:p-8 text-center transition-all hover:shadow-lg">
+                <div className="w-16 h-16 sm:w-20 sm:h-20 bg-blue-100 dark:bg-blue-900/30 rounded-full flex items-center justify-center mx-auto mb-4 sm:mb-6">
+                  <span className="text-blue-600 dark:text-blue-400 font-bold text-xl sm:text-2xl">1</span>
                 </div>
-                <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-3">Find or List</h3>
-                <p className="text-gray-600 dark:text-gray-300">
+                <h3 className="text-lg sm:text-xl font-bold text-gray-900 dark:text-white mb-2 sm:mb-3">Find or List</h3>
+                <p className="text-sm sm:text-base text-gray-600 dark:text-gray-300">
                   Browse our marketplace or easily list your own items for rent with our simple form.
                 </p>
               </div>
 
               {/* Step 2 */}
-              <div className="feature-card bg-white dark:bg-gray-700 rounded-xl p-8 text-center transition-all hover:shadow-lg">
-                <div className="w-20 h-20 bg-green-100 dark:bg-green-900/30 rounded-full flex items-center justify-center mx-auto mb-6">
-                  <span className="text-green-600 dark:text-green-400 font-bold text-2xl">2</span>
+              <div className="feature-card bg-white dark:bg-gray-700 rounded-xl p-6 sm:p-8 text-center transition-all hover:shadow-lg">
+                <div className="w-16 h-16 sm:w-20 sm:h-20 bg-green-100 dark:bg-green-900/30 rounded-full flex items-center justify-center mx-auto mb-4 sm:mb-6">
+                  <span className="text-green-600 dark:text-green-400 font-bold text-xl sm:text-2xl">2</span>
                 </div>
-                <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-3">Connect & Book</h3>
-                <p className="text-gray-600 dark:text-gray-300">
+                <h3 className="text-lg sm:text-xl font-bold text-gray-900 dark:text-white mb-2 sm:mb-3">Connect & Book</h3>
+                <p className="text-sm sm:text-base text-gray-600 dark:text-gray-300">
                   Message the owner, agree on terms, and book your rental with our secure system.
                 </p>
               </div>
 
               {/* Step 3 */}
-              <div className="feature-card bg-white dark:bg-gray-700 rounded-xl p-8 text-center transition-all hover:shadow-lg">
-                <div className="w-20 h-20 bg-purple-100 dark:bg-purple-900/30 rounded-full flex items-center justify-center mx-auto mb-6">
-                  <span className="text-purple-600 dark:text-purple-400 font-bold text-2xl">3</span>
+              <div className="feature-card bg-white dark:bg-gray-700 rounded-xl p-6 sm:p-8 text-center transition-all hover:shadow-lg">
+                <div className="w-16 h-16 sm:w-20 sm:h-20 bg-purple-100 dark:bg-purple-900/30 rounded-full flex items-center justify-center mx-auto mb-4 sm:mb-6">
+                  <span className="text-purple-600 dark:text-purple-400 font-bold text-xl sm:text-2xl">3</span>
                 </div>
-                <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-3">Enjoy & Return</h3>
-                <p className="text-gray-600 dark:text-gray-300">
+                <h3 className="text-lg sm:text-xl font-bold text-gray-900 dark:text-white mb-2 sm:mb-3">Enjoy & Return</h3>
+                <p className="text-sm sm:text-base text-gray-600 dark:text-gray-300">
                   Use the item as agreed, then return it and leave a review for future users.
                 </p>
               </div>

@@ -12,7 +12,7 @@ import { Slider } from "@/components/ui/slider"
 import { Checkbox } from "@/components/ui/checkbox"
 import { ShoppingBag, Search, Filter, MapPin, Star, Heart, X, TrendingUp } from "lucide-react"
 import { SearchSuggestions } from "@/components/search-suggestions"
-import { SpinningLogo } from "@/components/ui/spinning-logo"
+import { SpinnerLoader } from "@/components/ui/spinner-loader"
 import { WishlistButton } from "@/components/wishlist-button"
 import { ShareButton } from "@/components/share-button"
 
@@ -181,7 +181,7 @@ export default function BrowsePage() {
     return (
       <div className="flex justify-center items-center h-screen">
         <div className="flex flex-col items-center space-y-4">
-          <SpinningLogo size="xl" className="text-blue-500" />
+          <SpinnerLoader size="lg" className="text-blue-500" />
           <p className="text-gray-600 dark:text-gray-400">Loading listings...</p>
         </div>
       </div>
@@ -202,15 +202,15 @@ export default function BrowsePage() {
       {/* Header */}
 
 
-      <div className="container mx-auto px-2 sm:px-4 py-6 sm:py-8">
-        <div className="mb-6 sm:mb-8">
-          <div className="flex flex-col lg:flex-row gap-6">
+      <div className="container mx-auto px-3 sm:px-4 lg:px-6 xl:px-8 py-4 sm:py-6 lg:py-8 max-w-7xl">
+        <div className="mb-4 sm:mb-6 lg:mb-8">
+          <div className="flex flex-col xl:flex-row gap-4 lg:gap-6">
             {/* Main Search */}
             <div className="flex-1">
-              <div className="relative mb-4">
+              <div className="relative mb-3 sm:mb-4">
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
                 <Input
-                  placeholder="Search for items, services, or experiences..."
+                  placeholder="Search for items, services..."
                   value={searchQuery}
                   onChange={(e) => {
                     setSearchQuery(e.target.value)
@@ -218,12 +218,12 @@ export default function BrowsePage() {
                   }}
                   onFocus={() => setShowSuggestions(searchQuery.length > 0)}
                   onBlur={() => setTimeout(() => setShowSuggestions(false), 200)}
-                  className="pl-10 h-12 text-lg"
+                  className="pl-10 h-10 sm:h-12 text-sm sm:text-lg"
                 />
                 {showSuggestions && (
                   <SearchSuggestions
                     query={searchQuery}
-                    listings={allListings}
+                    listings={allListings as any}
                     onSelect={(suggestion) => {
                       setSearchQuery(suggestion)
                       setShowSuggestions(false)
@@ -233,20 +233,20 @@ export default function BrowsePage() {
               </div>
               
               {/* Location Filter */}
-              <div className="relative mb-4">
+              <div className="relative mb-3 sm:mb-4">
                 <MapPin className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
                 <Input
                   placeholder="Filter by location..."
                   value={locationFilter}
                   onChange={(e) => setLocationFilter(e.target.value)}
-                  className="pl-10"
+                  className="pl-10 h-10 sm:h-12 text-sm sm:text-base"
                 />
               </div>
 
-              {/* Quick Filters */}
-              <div className="flex flex-wrap gap-2 mb-4">
+              {/* Quick Filters - Mobile Optimized */}
+              <div className="flex flex-col sm:flex-row flex-wrap gap-2 sm:gap-2 mb-3 sm:mb-4">
                 <Select value={selectedCategory} onValueChange={setSelectedCategory}>
-                  <SelectTrigger className="w-48">
+                  <SelectTrigger className="w-full sm:w-48 h-10 text-sm">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
@@ -258,7 +258,7 @@ export default function BrowsePage() {
                   </SelectContent>
                 </Select>
                 <Select value={sortBy} onValueChange={setSortBy}>
-                  <SelectTrigger className="w-48">
+                  <SelectTrigger className="w-full sm:w-48 h-10 text-sm">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
@@ -268,16 +268,16 @@ export default function BrowsePage() {
                     <SelectItem value="rating">Highest Rated</SelectItem>
                   </SelectContent>
                 </Select>
-                <Button variant="outline" onClick={() => setShowFilters(!showFilters)} className="bg-transparent">
+                <Button variant="outline" onClick={() => setShowFilters(!showFilters)} className="bg-transparent h-10 text-sm">
                   <Filter className="h-4 w-4 mr-2" />
                   More Filters
                 </Button>
               </div>
             </div>
 
-            {/* Trending & Popular */}
+            {/* Trending & Popular - Hide on smaller screens */}
             {!searchQuery && (
-              <div className="lg:w-80 space-y-4">
+              <div className="hidden xl:block xl:w-80 space-y-4">
                 <Card>
                   <CardHeader className="pb-3">
                     <CardTitle className="text-lg flex items-center">
@@ -333,17 +333,17 @@ export default function BrowsePage() {
           </div>
 
           {showFilters && (
-            <Card className="mb-6">
-              <CardHeader>
+            <Card className="mb-4 sm:mb-6">
+              <CardHeader className="pb-3">
                 <div className="flex items-center justify-between">
-                  <CardTitle>Advanced Filters</CardTitle>
-                  <Button variant="ghost" size="sm" onClick={clearFilters}>
+                  <CardTitle className="text-base sm:text-lg">Advanced Filters</CardTitle>
+                  <Button variant="ghost" size="sm" onClick={clearFilters} className="text-sm">
                     Clear All
                   </Button>
                 </div>
               </CardHeader>
-              <CardContent className="space-y-6">
-                <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+              <CardContent className="space-y-4 sm:space-y-6">
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
                   {/* Price Range */}
                   <div className="space-y-3">
                     <label className="text-sm font-medium">Price Range</label>
@@ -412,8 +412,8 @@ export default function BrowsePage() {
             locationFilter ||
             priceRange[0] > 0 ||
             priceRange[1] < 1000) && (
-            <div className="flex flex-wrap gap-2 mb-4">
-              <span className="text-sm text-gray-600 dark:text-gray-400 mr-2">Active filters:</span>
+            <div className="flex flex-wrap gap-2 mb-4 sm:mb-4">
+              <span className="text-xs sm:text-sm text-gray-600 dark:text-gray-400 mr-2">Active filters:</span>
               {selectedCategory !== "all" && (
                 <Badge variant="secondary" className="flex items-center gap-1">
                   {categories.find((c) => c.value === selectedCategory)?.label}
@@ -450,30 +450,37 @@ export default function BrowsePage() {
             </div>
           )}
 
-          <div className="flex items-center justify-between">
-            <p className="text-gray-600 dark:text-gray-400">
+          <div className="flex items-center justify-between mb-4 sm:mb-6">
+            <p className="text-sm sm:text-base text-gray-600 dark:text-gray-400">
               {filteredListings.length} items found
               {debouncedSearchQuery && <span className="ml-2 text-blue-600">for "{debouncedSearchQuery}"</span>}
             </p>
           </div>
         </div>
 
-        {/* Listings Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+        {/* Listings Grid - Optimized for Mobile */}
+        <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6 gap-3 sm:gap-4 md:gap-6">
           {filteredListings.map((listing) => (
-            <Card key={listing.id} className="group hover:shadow-lg transition-shadow cursor-pointer">
+            <Card key={listing.id} className="group hover:shadow-xl transition-all duration-300 cursor-pointer overflow-hidden border-0 shadow-sm bg-white dark:bg-gray-800 rounded-xl">
               <Link href={`/listing/${listing.id}`}>
-                <div className="relative">
-                  <img
-                    src={listing.images[0] || "/placeholder.svg"}
-                    alt={listing.title}
-                    className="w-full h-48 object-cover rounded-t-lg"
-                  />
-                  <div className="absolute top-2 right-2 flex space-x-1">
+                <div className="relative overflow-hidden">
+                  <div className="aspect-[4/3] overflow-hidden bg-gray-100 dark:bg-gray-700">
+                    <img
+                      src={listing.images[0] || "/placeholder.svg"}
+                      alt={listing.title}
+                      className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
+                    />
+                    {/* Overlay gradient */}
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+                  </div>
+                  
+                  {/* Top overlay buttons - Hide on small screens */}
+                  <div className="hidden sm:flex absolute top-3 right-3 space-x-2 opacity-0 group-hover:opacity-100 transition-all duration-200 transform translate-y-1 group-hover:translate-y-0">
                     <WishlistButton 
                       listingId={listing.id} 
                       variant="ghost" 
-                      size="sm" 
+                      size="sm"
+                      className="bg-white/95 hover:bg-white shadow-lg h-8 w-8 backdrop-blur-sm border-0 rounded-full"
                     />
                     <ShareButton 
                       listingId={listing.id}
@@ -482,39 +489,83 @@ export default function BrowsePage() {
                       listingImage={listing.images[0]}
                       variant="ghost" 
                       size="sm"
-                      className="bg-white/80 hover:bg-white h-8 w-8 p-0"
+                      className="bg-white/95 hover:bg-white shadow-lg h-8 w-8 backdrop-blur-sm border-0 rounded-full"
                     />
                   </div>
-                  <Badge className="absolute bottom-2 left-2 bg-blue-600">{listing.category}</Badge>
-                </div>
-                <CardHeader className="pb-2">
-                  <CardTitle className="text-lg line-clamp-1">{listing.title}</CardTitle>
-                  <CardDescription className="line-clamp-2">{listing.description}</CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <div className="flex items-center justify-between mb-2">
-                    <div className="flex items-center space-x-1">
-                      <Star className="h-4 w-4 fill-yellow-400 text-yellow-400" />
-                      <span className="text-sm font-medium">{listing.rating}</span>
-                      <span className="text-sm text-gray-500">({listing.reviewCount})</span>
-                    </div>
-                    <div className="flex items-center text-sm text-gray-500">
-                      <MapPin className="h-3 w-3 mr-1" />
-                      {listing.location}
-                    </div>
+                  
+                  {/* Category badge - Smaller on mobile */}
+                  <div className="absolute bottom-2 left-2 sm:bottom-3 sm:left-3">
+                    <Badge className="bg-white/95 text-gray-800 hover:bg-white shadow-sm font-medium px-2 py-1 sm:px-3 sm:py-1.5 rounded-full border-0 backdrop-blur-sm text-xs">
+                      {listing.category}
+                    </Badge>
                   </div>
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <span className="text-2xl font-bold text-blue-600">₱{listing.price.toLocaleString()}</span>
-                      <span className="text-sm text-gray-500">/{listing.priceUnit}</span>
-                    </div>
-                    {listing.available && (
-                      <Badge variant="secondary" className="bg-green-100 text-green-800">
+                  
+                  {/* Availability indicator - Smaller on mobile */}
+                  {listing.available && (
+                    <div className="absolute top-2 left-2 sm:top-3 sm:left-3">
+                      <div className="bg-green-500 text-white text-xs font-medium px-1.5 py-0.5 sm:px-2 sm:py-1 rounded-full shadow-sm">
                         Available
-                      </Badge>
-                    )}
+                      </div>
+                    </div>
+                  )}
+                </div>
+                
+                <div className="p-3 sm:p-4 lg:p-5 space-y-2 sm:space-y-3 lg:space-y-4">
+                  {/* Title and description */}
+                  <div className="space-y-1 sm:space-y-2">
+                    <h3 className="text-sm sm:text-base lg:text-lg font-semibold line-clamp-1 group-hover:text-blue-600 transition-colors duration-200 text-gray-900 dark:text-white">
+                      {listing.title}
+                    </h3>
+                    <p className="line-clamp-2 text-xs sm:text-sm text-gray-600 dark:text-gray-400 leading-relaxed hidden sm:block">
+                      {listing.description}
+                    </p>
                   </div>
-                </CardContent>
+                  
+                  {/* Rating and location - Simplified on mobile */}
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center space-x-1">
+                      <Star className="h-3 w-3 sm:h-4 sm:w-4 fill-yellow-400 text-yellow-400" />
+                      <span className="text-xs sm:text-sm font-medium text-gray-900 dark:text-white">{listing.rating}</span>
+                      <span className="text-xs sm:text-sm text-gray-500 hidden sm:inline">({listing.reviewCount})</span>
+                    </div>
+                    <div className="flex items-center text-xs sm:text-sm text-gray-500">
+                      <MapPin className="h-3 w-3 sm:h-3.5 sm:w-3.5 mr-1 flex-shrink-0" />
+                      <span className="truncate max-w-[60px] sm:max-w-[100px]">{listing.location}</span>
+                    </div>
+                  </div>
+                  
+                  {/* Pricing section */}
+                  <div className="pt-2 sm:pt-3 border-t border-gray-100 dark:border-gray-700">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-baseline space-x-1">
+                        <span className="text-lg sm:text-xl font-bold text-gray-900 dark:text-white">
+                          ₱{listing.price.toLocaleString()}
+                        </span>
+                        <span className="text-xs sm:text-sm text-gray-500">/{listing.priceUnit}</span>
+                      </div>
+                      <div className="text-right hidden sm:block">
+                        <div className="text-xs text-gray-500 mb-1">Total reviews</div>
+                        <div className="text-sm font-medium text-gray-900 dark:text-white">{listing.reviewCount}</div>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  {/* Quick action button - Hide on very small screens */}
+                  <div className="pt-2 hidden sm:block">
+                    <Button 
+                      variant="outline" 
+                      size="sm" 
+                      className="w-full bg-transparent border-gray-200 hover:bg-blue-50 hover:border-blue-300 hover:text-blue-700 transition-all duration-200 group-hover:border-blue-400 group-hover:bg-blue-50/50 text-xs lg:text-sm"
+                      onClick={(e) => {
+                        e.preventDefault()
+                        e.stopPropagation()
+                        // Handle quick booking or contact owner
+                      }}
+                    >
+                      Quick View
+                    </Button>
+                  </div>
+                </div>
               </Link>
             </Card>
           ))}

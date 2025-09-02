@@ -1,6 +1,6 @@
 import React from 'react';
 import { View, StyleSheet, Image, Text } from 'react-native';
-import { SpinningLogo } from '../components/SpinningLogo';
+import { SpinnerLoader } from '../components/SpinnerLoader';
 
 export default function SplashScreen() {
   return (
@@ -16,7 +16,7 @@ export default function SplashScreen() {
       </View>
       
       <View style={styles.loadingContainer}>
-        <SpinningLogo size={60} />
+        <SpinnerLoader size={60} />
         <Text style={styles.loadingText}>Loading...</Text>
       </View>
     </View>

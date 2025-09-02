@@ -121,11 +121,11 @@ export default function ItemGuidelinesPage() {
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
       {/* Hero Section */}
-      <section className="bg-gradient-to-br from-orange-600 to-red-700 text-white py-16">
+      <section className="bg-gradient-to-br from-blue-600 to-purple-700 text-white py-16">
         <div className="container mx-auto px-4 text-center">
           <Package className="w-16 h-16 mx-auto mb-4" />
-          <h1 className="text-4xl md:text-5xl font-bold mb-4">Item Guidelines</h1>
-          <p className="text-xl max-w-2xl mx-auto opacity-90">
+          <h1 className="text-4xl font-bold text-white mb-4">Item Guidelines</h1>
+          <p className="text-xl text-white max-w-2xl mx-auto opacity-90">
             Comprehensive guidelines for listing and renting items safely and successfully
           </p>
         </div>
@@ -139,13 +139,13 @@ export default function ItemGuidelinesPage() {
             {listingGuidelines.map((guideline, index) => (
               <div key={guideline.title} className="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-6">
                 <div className="flex items-center mb-4">
-                  <guideline.icon className="w-8 h-8 text-orange-600 mr-3" />
+                  <guideline.icon className="w-8 h-8 text-blue-600 mr-3" />
                   <h3 className="text-2xl font-semibold text-gray-900 dark:text-white">{guideline.title}</h3>
                 </div>
                 <ul className="space-y-2">
                   {guideline.content.map((item, itemIndex) => (
                     <li key={itemIndex} className="flex items-start">
-                      <CheckCircle className="w-4 h-4 text-orange-500 mt-1 mr-3 flex-shrink-0" />
+                      <CheckCircle className="w-4 h-4 text-blue-500 mt-1 mr-3 flex-shrink-0" />
                       <span className="text-gray-700 dark:text-gray-300">{item}</span>
                     </li>
                   ))}
@@ -174,13 +174,13 @@ export default function ItemGuidelinesPage() {
               {rentalGuidelines.map((guideline, index) => (
                 <div key={guideline.title} className="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-6">
                   <div className="flex items-center mb-4">
-                    <guideline.icon className="w-8 h-8 text-orange-600 mr-3" />
+                    <guideline.icon className="w-8 h-8 text-blue-600 mr-3" />
                     <h3 className="text-2xl font-semibold text-gray-900 dark:text-white">{guideline.title}</h3>
                   </div>
                   <ul className="space-y-2">
                     {guideline.content.map((item, itemIndex) => (
                       <li key={itemIndex} className="flex items-start">
-                        <CheckCircle className="w-4 h-4 text-orange-500 mt-1 mr-3 flex-shrink-0" />
+                        <CheckCircle className="w-4 h-4 text-blue-500 mt-1 mr-3 flex-shrink-0" />
                         <span className="text-gray-700 dark:text-gray-300">{item}</span>
                       </li>
                     ))}
@@ -191,9 +191,9 @@ export default function ItemGuidelinesPage() {
           </div>
 
           {/* Best Practices */}
-          <div className="mt-12 bg-orange-50 dark:bg-orange-900/20 border border-orange-200 dark:border-orange-800 rounded-lg p-6">
-            <h3 className="text-lg font-semibold text-orange-800 dark:text-orange-200 mb-3">Best Practices</h3>
-            <ul className="space-y-2 text-orange-700 dark:text-orange-300">
+          <div className="mt-12 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-6">
+            <h3 className="text-lg font-semibold text-blue-800 dark:text-blue-200 mb-3">Best Practices</h3>
+            <ul className="space-y-2 text-blue-700 dark:text-blue-300">
               <li>• Always communicate clearly and promptly</li>
               <li>• Take photos/videos of items at pickup and return</li>
               <li>• Keep all agreements and terms in writing</li>
@@ -206,7 +206,7 @@ export default function ItemGuidelinesPage() {
           <div className="mt-8 text-center">
             <Link 
               href="/help" 
-              className="inline-flex items-center px-6 py-3 bg-orange-600 text-white rounded-lg hover:bg-orange-700 transition-colors"
+              className="inline-flex items-center px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
             >
               Back to Help Center
             </Link>
