@@ -1,6 +1,5 @@
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
-import { createServerClient } from '@supabase/ssr';
 import rateLimit from '@/lib/rate-limit';
 
 const securityHeaders = {
@@ -12,91 +11,28 @@ const securityHeaders = {
 };
 
 export async function middleware(request: NextRequest) {
-  // Check if Supabase environment variables are available
-  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-  const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
-
-  // If Supabase variables are not available, create a minimal response without Supabase
-  if (!supabaseUrl || !supabaseAnonKey) {
-    let response = NextResponse.next({
-      request,
-    });
-
-    // Add security headers to all responses
-    Object.entries(securityHeaders).forEach(([key, value]) => {
-      response.headers.set(key, value);
-    });
-
-    // Add HSTS header for HTTPS
-    if (process.env.NODE_ENV === 'production') {
-      response.headers.set(
-        'Strict-Transport-Security',
-        'max-age=31536000; includeSubDomains; preload'
-      );
-    }
-
-    // Set CORS headers for all responses
-    response.headers.append('Access-Control-Allow-Origin', '*');
-    response.headers.append('Access-Control-Allow-Methods', 'GET,DELETE,PATCH,POST,PUT');
-    response.headers.append('Access-Control-Allow-Headers', 'X-CSRF-Token, X-Requested-With, Accept, Accept-Version, Content-Length, Content-MD5, Content-Type, Date, X-Api-Version');
-    response.headers.append('Access-Control-Allow-Credentials', 'true');
-
-    // Handle preflight requests
-    if (request.method === 'OPTIONS') {
-      return NextResponse.json({}, { status: 200, headers: response.headers });
-    }
-
-    return response;
-  }
-
-  let supabaseResponse = NextResponse.next({
+  let response = NextResponse.next({
     request,
   });
 
-  const supabase = createServerClient(
-    supabaseUrl,
-    supabaseAnonKey,
-    {
-      cookies: {
-        getAll() {
-          return request.cookies.getAll()
-        },
-        setAll(cookiesToSet) {
-          cookiesToSet.forEach(({ name, value, options }) => request.cookies.set(name, value))
-          supabaseResponse = NextResponse.next({
-            request,
-          })
-          cookiesToSet.forEach(({ name, value, options }) =>
-            supabaseResponse.cookies.set(name, value, options)
-          )
-        },
-      },
-    }
-  );
-
-  // This will refresh session if expired - required for Server Components
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-
   // Add security headers to all responses
   Object.entries(securityHeaders).forEach(([key, value]) => {
-    supabaseResponse.headers.set(key, value);
+    response.headers.set(key, value);
   });
 
   // Add HSTS header for HTTPS
   if (process.env.NODE_ENV === 'production') {
-    supabaseResponse.headers.set(
+    response.headers.set(
       'Strict-Transport-Security',
       'max-age=31536000; includeSubDomains; preload'
     );
   }
 
   // Set CORS headers for all responses
-  supabaseResponse.headers.append('Access-Control-Allow-Origin', '*');
-  supabaseResponse.headers.append('Access-Control-Allow-Methods', 'GET,DELETE,PATCH,POST,PUT');
-  supabaseResponse.headers.append('Access-Control-Allow-Headers', 'X-CSRF-Token, X-Requested-With, Accept, Accept-Version, Content-Length, Content-MD5, Content-Type, Date, X-Api-Version');
-  supabaseResponse.headers.append('Access-Control-Allow-Credentials', 'true');
+  response.headers.append('Access-Control-Allow-Origin', '*');
+  response.headers.append('Access-Control-Allow-Methods', 'GET,DELETE,PATCH,POST,PUT');
+  response.headers.append('Access-Control-Allow-Headers', 'X-CSRF-Token, X-Requested-With, Accept, Accept-Version, Content-Length, Content-MD5, Content-Type, Date, X-Api-Version');
+  response.headers.append('Access-Control-Allow-Credentials', 'true');
 
   // Rate limiting for API routes
   if (request.nextUrl.pathname.startsWith('/api/')) {
@@ -107,10 +43,10 @@ export async function middleware(request: NextRequest) {
     });
 
     try {
-      await limiter.check(supabaseResponse, 10, identifier);
-      supabaseResponse.headers.set('X-RateLimit-Limit', '10');
-      supabaseResponse.headers.set('X-RateLimit-Remaining', '9');
-      supabaseResponse.headers.set('X-RateLimit-Reset', '60');
+      await limiter.check(response, 10, identifier);
+      response.headers.set('X-RateLimit-Limit', '10');
+      response.headers.set('X-RateLimit-Remaining', '9');
+      response.headers.set('X-RateLimit-Reset', '60');
     } catch (error) {
       return NextResponse.json(
         { error: 'Too many requests', retryAfter: 60 },
@@ -119,29 +55,12 @@ export async function middleware(request: NextRequest) {
     }
   }
 
-  // Protect API routes - check for admin role in user metadata
-  if (request.nextUrl.pathname.startsWith('/api/admin')) {
-    if (!user || user.user_metadata?.role !== 'ADMIN') {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
-  }
-
-  // Protect authenticated routes
-  if (request.nextUrl.pathname.startsWith('/my-bookings') ||
-      request.nextUrl.pathname.startsWith('/chat') ||
-      request.nextUrl.pathname.startsWith('/inbox') ||
-      request.nextUrl.pathname.startsWith('/list-item')) {
-    if (!user) {
-      return NextResponse.redirect(new URL('/auth/login', request.url));
-    }
-  }
-
   // Handle preflight requests
   if (request.method === 'OPTIONS') {
-    return NextResponse.json({}, { status: 200, headers: supabaseResponse.headers });
+    return NextResponse.json({}, { status: 200, headers: response.headers });
   }
 
-  return supabaseResponse;
+  return response;
 }
 
 export const config = {
