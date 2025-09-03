@@ -13,10 +13,5 @@
   ],
   "buildCommand": "npm run build",
   "installCommand": "npm install",
-  "outputDirectory": ".next",
-  "env": {
-    "DATABASE_URL": "postgresql://postgres.aphczgukfgfbvgjwferw:ampRPk6s5AtNUBI9@aws-1-us-east-1.pooler.supabase.com:6543/postgres?sslmode=require&pgbouncer=true",
-    "NEXTAUTH_SECRET": "v9X7q2JmR8sL4pTzW1eF6uY0bN3cD5hK",
-    "NEXTAUTH_URL": "https://renthing.vercel.app"
-  }
+  "outputDirectory": ".next"
 }
