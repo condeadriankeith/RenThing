@@ -1,5 +1,3 @@
-const SUPABASE_DATABASE_URL = "postgres://postgres.aphczgukfgfbvgjwferw:ampRPk6s5AtNUBI9@aws-1-us-east-1.pooler.supabase.com:6543/postgres?sslmode=require&pgbouncer=true";
-
 // Prisma configuration with fallback for build environments
 module.exports = {
   getDatabaseUrl: () => {
@@ -7,12 +5,6 @@ module.exports = {
     // Return a placeholder that will work for Prisma client generation
     if (process.env.DATABASE_URL) {
       return process.env.DATABASE_URL;
-    }
-
-    // Fallback for build environments
-    if (process.env.NODE_ENV === 'production') {
-      // In production, use Supabase database URL
-      return SUPABASE_DATABASE_URL;
     }
 
     // For development or build processes, use SQLite as fallback

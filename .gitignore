@@ -18,9 +18,10 @@ yarn-error.log*
 
 # env files
 .env*
+!.env.example
 
-#
-.vercel
+# vercel
+.vercel/
 
 # typescript
 *.tsbuildinfo
@@ -40,3 +41,12 @@ mobile/*.mobileprovision
 mobile/*.orig.*
 mobile/web-build/
 mobile/.metro-health-check*
+
+# IDE
+.vscode/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
