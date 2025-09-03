@@ -10,9 +10,30 @@ Use this ID when:
 - Configuring deployments
 - Troubleshooting deployment issues
 
-# Project Configuration
+# Supabase Configuration
 
-**Note:** Supabase integration has been removed from the project. All database operations now use Prisma with a direct database connection.
+**Project URL:** https://aphczgukfgfbvgjwferw.supabase.co
+
+**API Key:** [REDACTED FOR SECURITY]
+
+## JavaScript Implementation
+
+```javascript
+import { createClient } from '@supabase/supabase-js'
+
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
+const supabaseKey = process.env.SUPABASE_KEY
+const supabase = createClient(supabaseUrl, supabaseKey)
+```
+
+## Environment Variables for Vercel Deployment
+
+For Vercel deployments, you need to set the following environment variables:
+
+```env
+NEXT_PUBLIC_SUPABASE_URL=https://aphczgukfgfbvgjwferw.supabase.co
+SUPABASE_KEY=your-actual-supabase-service-key
+```
 
 ## Security Notes
 
