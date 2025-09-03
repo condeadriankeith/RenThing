@@ -42,7 +42,8 @@ RenThing is a modern web application for the Philippines, enabling users to list
 - [Next.js](https://nextjs.org/) (React framework)
 - [TypeScript](https://www.typescriptlang.org/)
 - [Tailwind CSS](https://tailwindcss.com/)
-- [Prisma](https://www.prisma.io/) (Database ORM)
+- [Supabase](https://supabase.com/) (Database for production deployments)
+- [Prisma](https://www.prisma.io/) (Database ORM for local development)
 - [Stripe](https://stripe.com/) & [Xendit](https://www.xendit.co/) for payments
 
 ## Screenshots
@@ -81,8 +82,14 @@ Visit [http://localhost:3000](http://localhost:3000)
 Create a `.env.local` file in the root and configure the following:
 
 ```env
-# Example
-DATABASE_URL=your_database_connection_string
+# For local development with SQLite
+DATABASE_URL=file:./dev.db
+
+# For production deployments with Supabase
+NEXT_PUBLIC_SUPABASE_URL=your_supabase_project_url
+SUPABASE_KEY=your_supabase_service_key
+
+# Other required variables
 STRIPE_SECRET_KEY=your_stripe_secret
 XENDIT_API_KEY=your_xendit_key
 NEXT_PUBLIC_BASE_URL=http://localhost:3000
