@@ -18,36 +18,7 @@ To successfully deploy RenThing to Vercel, you need to configure the following e
    - Format: `https://your-domain.vercel.app`
    - Vercel Dashboard Name: `nextauth_url`
 
-### Optional Environment Variables
-
-4. **STRIPE_SECRET_KEY** - Stripe secret API key
-   - Vercel Dashboard Name: `stripe_secret_key`
-
-5. **STRIPE_PUBLISHABLE_KEY** - Stripe publishable API key
-   - Vercel Dashboard Name: `stripe_publishable_key`
-
-6. **STRIPE_WEBHOOK_SECRET** - Stripe webhook secret
-   - Vercel Dashboard Name: `stripe_webhook_secret`
-
-7. **XENDIT_SECRET_KEY** - Xendit API secret key
-   - Vercel Dashboard Name: `xendit_secret_key`
-
-8. **SMTP_HOST** - SMTP server hostname
-   - Vercel Dashboard Name: `smtp_host`
-
-9. **SMTP_PORT** - SMTP server port
-   - Vercel Dashboard Name: `smtp_port`
-
-10. **SMTP_USER** - SMTP username
-    - Vercel Dashboard Name: `smtp_user`
-
-11. **SMTP_PASS** - SMTP password
-    - Vercel Dashboard Name: `smtp_pass`
-
-12. **FROM_EMAIL** - Default sender email
-    - Vercel Dashboard Name: `from_email`
-
-## How to Configure in Vercel Dashboard
+### How to Configure in Vercel Dashboard
 
 1. Go to your Vercel project dashboard
 2. Click on "Settings" tab
@@ -67,6 +38,18 @@ For a production deployment, you would add:
 | nextauth_secret | your-32-character-secret-here | Production |
 | nextauth_url | https://your-domain.vercel.app | Production |
 
+## Database Setup Options
+
+### Option 1: Use a Managed PostgreSQL Service
+- **Neon** (recommended for Vercel deployments): https://neon.tech
+- **Supabase** (if you want to use it just for database): https://supabase.com
+- **Railway**: https://railway.app
+- **Render**: https://render.com
+
+### Option 2: Use Vercel Postgres (if available in your plan)
+- Vercel offers a Postgres database service that integrates seamlessly
+- Check your Vercel dashboard for "Storage" → "Postgres"
+
 ## After Configuration
 
 1. After adding all environment variables, redeploy your application
@@ -77,7 +60,48 @@ For a production deployment, you would add:
 
 If you still encounter issues:
 
-1. Verify all required environment variables are set
-2. Check that your database URL is correctly formatted
-3. Ensure your database is accessible from Vercel (check firewall settings)
-4. Confirm that the database credentials are correct
+1. **Verify all required environment variables are set**
+   - Make sure you've added `database_url`, `nextauth_secret`, and `nextauth_url`
+   - Check that the values are correct and properly formatted
+
+2. **Check that your database URL is correctly formatted**
+   - It should follow the pattern: `postgresql://username:password@host:port/database_name`
+   - Make sure there are no extra spaces or special characters
+
+3. **Ensure your database is accessible from Vercel**
+   - Some database providers require you to whitelist Vercel's IP addresses
+   - Check your database provider's documentation for Vercel compatibility
+
+4. **Confirm that the database credentials are correct**
+   - Test your database connection locally with the same credentials
+   - Make sure the database user has the necessary permissions
+
+## Common Database Providers Setup
+
+### Neon Database Setup
+1. Go to https://neon.tech and create an account
+2. Create a new project
+3. Copy the connection string (it will look like `postgresql://username:password@host.region.neon.tech/database_name`)
+4. Add this as your `database_url` environment variable in Vercel
+
+### Supabase Database Setup
+1. Go to https://supabase.com and create a project
+2. Navigate to "Project Settings" → "Database"
+3. Copy the connection string under "Connection Info"
+4. Add this as your `database_url` environment variable in Vercel
+
+## Post-Deployment Steps
+
+After successful deployment:
+
+1. **Run database migrations** (if needed):
+   ```bash
+   npm run db:migrate
+   ```
+
+2. **Seed the database** with initial data:
+   ```bash
+   npm run db:seed
+   ```
+
+These commands should be run from your local machine or through a Vercel serverless function if you need to initialize your database after deployment.
