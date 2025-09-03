@@ -2,6 +2,7 @@
 
 // Force dynamic rendering for this page
 export const dynamic = 'force-dynamic';
+export const runtime = 'edge';
 
 import { useState, useEffect } from "react"
 import Link from "next/link"
