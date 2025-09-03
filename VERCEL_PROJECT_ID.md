@@ -10,25 +10,12 @@ Use this ID when:
 - Configuring deployments
 - Troubleshooting deployment issues
 
-# Supabase Configuration
+# Project Configuration
 
-**Project URL:** https://aphczgukfgfbvgjwferw.supabase.co
-
-**API Key:** [REDACTED FOR SECURITY]
-
-## JavaScript Implementation
-
-```javascript
-import { createClient } from '@supabase/supabase-js'
-
-const supabaseUrl = 'https://aphczgukfgfbvgjwferw.supabase.co'
-const supabaseKey = process.env.SUPABASE_KEY  // Store in environment variables
-const supabase = createClient(supabaseUrl, supabaseKey)
-```
+**Note:** Supabase integration has been removed from the project. All database operations now use Prisma with a direct database connection.
 
 ## Security Notes
 
 - Never commit actual API keys or secrets to version control
 - Always use environment variables for sensitive information
-- Rotate any exposed keys immediately
 - Use Vercel's secrets management for production deployments
