@@ -1,169 +1,122 @@
 # Supabase Setup Guide for RenThing
 
-This guide will help you set up Supabase for your RenThing application deployment on Vercel.
+## Overview
 
-## 🚀 Quick Setup
+This guide explains how to set up Supabase for the RenThing rental marketplace application. Supabase is used for authentication and real-time features.
+
+## Prerequisites
+
+1. A Supabase account (free tier available at [supabase.com](https://supabase.com))
+2. A Supabase project created
+3. Basic understanding of environment variables
+
+## Setting Up Supabase
 
 ### 1. Create a Supabase Project
 
-1. Go to [supabase.com](https://supabase.com)
-2. Sign up/Login to your account
-3. Click "New Project"
-4. Fill in your project details:
-   - **Name**: `renthing` (or your preferred name)
-   - **Database Password**: Choose a strong password
-   - **Region**: Select the closest region to your users
+1. Go to [supabase.com](https://supabase.com) and sign up or log in
+2. Click "New Project"
+3. Choose an organization or create a new one
+4. Enter a project name (e.g., "RenThing")
+5. Select a region closest to your users
+6. Set a strong database password
+7. Click "Create New Project"
 
-### 2. Get Your Supabase Credentials
+### 2. Get Your API Keys
 
-After your project is created (takes ~2 minutes), go to Settings → API:
+1. After your project is created, go to the project dashboard
+2. In the left sidebar, click on "Project Settings" (gear icon)
+3. Click on "API" in the settings menu
+4. Copy the following values:
+   - Project URL (labeled "Project URL")
+   - anon key (labeled "Project API keys" → "anon" key)
+   - service_role key (labeled "Project API keys" → "service_role" key)
 
-- **Project URL**: `https://your-project-id.supabase.co`
-- **anon/public key**: `eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...`
-- **service_role key**: `eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...`
+### 3. Configure Environment Variables
 
-### 3. Get Your Database Connection String
+Add the following environment variables to your project:
 
-Go to Settings → Database:
-
-- **Connection string**: `postgresql://postgres:[password]@db.your-project-id.supabase.co:5432/postgres`
-
-## 🔧 Vercel Environment Variables Setup
-
-### Option A: Using Vercel Dashboard (Recommended)
-
-1. Go to your Vercel project dashboard
-2. Navigate to Settings → Environment Variables
-3. Add the following variables:
-
-```
-DATABASE_URL = postgresql://postgres:[password]@db.your-project-id.supabase.co:5432/postgres
-NEXT_PUBLIC_SUPABASE_URL = https://your-project-id.supabase.co
-NEXT_PUBLIC_SUPABASE_ANON_KEY = eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
-SUPABASE_SERVICE_ROLE_KEY = eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+#### For Local Development (.env.local)
+```env
+NEXT_PUBLIC_SUPABASE_URL="your-project-url-here"
+NEXT_PUBLIC_SUPABASE_ANON_KEY="your-anon-key-here"
+SUPABASE_SERVICE_ROLE_KEY="your-service-role-key-here"
 ```
 
-### Option B: Using Vercel CLI
+#### For Vercel Deployment
+In your Vercel project dashboard:
+1. Go to Settings → Environment Variables
+2. Add the following variables:
+   - `supabase_url` with your Project URL
+   - `supabase_anon_key` with your anon key
+   - `supabase_service_role_key` with your service_role key
 
-If you have Vercel CLI installed:
+### 4. Database Schema Setup
 
-```bash
-# Set environment variables for production
-vercel env add DATABASE_URL
-vercel env add NEXT_PUBLIC_SUPABASE_URL
-vercel env add NEXT_PUBLIC_SUPABASE_ANON_KEY
-vercel env add SUPABASE_SERVICE_ROLE_KEY
+The application uses Prisma for database operations, but Supabase can be used for authentication. You don't need to set up tables in Supabase if you're using the existing Prisma setup.
 
-# Set environment variables for preview deployments (optional)
-vercel env add DATABASE_URL --environment preview
-vercel env add NEXT_PUBLIC_SUPABASE_URL --environment preview
-vercel env add NEXT_PUBLIC_SUPABASE_ANON_KEY --environment preview
-vercel env add SUPABASE_SERVICE_ROLE_KEY --environment preview
+However, if you want to use Supabase for authentication, you may need to synchronize user data between Prisma and Supabase.
+
+### 5. Authentication Setup
+
+The middleware uses Supabase for authentication. Make sure your Supabase project has authentication enabled:
+
+1. In your Supabase dashboard, go to "Authentication" in the left sidebar
+2. Click on "Providers"
+3. Enable the authentication providers you want to support (Email, Google, etc.)
+
+### 6. Testing the Setup
+
+1. Start your development server:
+   ```bash
+   npm run dev
+   ```
+
+2. Visit http://localhost:3000
+3. Try to access a protected route like /my-bookings
+4. You should be redirected to the login page
+
+## Troubleshooting
+
+### Common Issues
+
+1. **"Your project's URL and Key are required" Error**
+   - Make sure all three environment variables are set:
+     - `NEXT_PUBLIC_SUPABASE_URL`
+     - `NEXT_PUBLIC_SUPABASE_ANON_KEY`
+     - `SUPABASE_SERVICE_ROLE_KEY`
+
+2. **Authentication Not Working**
+   - Check that the Supabase project has authentication enabled
+   - Verify that the API keys are correct
+   - Ensure environment variables are properly loaded
+
+3. **CORS Issues**
+   - In your Supabase dashboard, go to "Settings" → "API"
+   - Check the "Allowed CORS origins" section
+   - Add your domain (e.g., http://localhost:3000 for development)
+
+### Environment Variable Verification
+
+You can verify that your environment variables are loaded correctly by adding temporary logging to your middleware:
+
+```typescript
+console.log('Supabase URL:', process.env.NEXT_PUBLIC_SUPABASE_URL);
+console.log('Supabase Anon Key:', process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY);
 ```
 
-## 🗄️ Database Setup
+**Important:** Remove these logs before deploying to production as they could expose sensitive information.
 
-After setting environment variables, run database migrations:
+## Security Best Practices
 
-### Option A: Using Vercel Build Hooks
+1. Never commit actual API keys to version control
+2. Use different keys for development and production
+3. Regularly rotate your API keys
+4. Restrict CORS origins to only trusted domains
+5. Use the anon key for client-side operations and service_role key only for server-side operations
 
-The database will be automatically set up during deployment.
+## Additional Resources
 
-### Option B: Manual Setup
-
-If you need to run migrations manually:
-
-```bash
-# Install dependencies
-npm install
-
-# Generate Prisma client
-npx prisma generate
-
-# Push database schema
-npx prisma db push
-
-# Seed the database (optional)
-npm run db:seed
-```
-
-## 🔐 Supabase Configuration
-
-### Enable Row Level Security (RLS)
-
-Go to your Supabase dashboard → SQL Editor and run:
-
-```sql
--- Enable RLS on all tables
-ALTER TABLE "User" ENABLE ROW LEVEL SECURITY;
-ALTER TABLE "Listing" ENABLE ROW LEVEL SECURITY;
-ALTER TABLE "Booking" ENABLE ROW LEVEL SECURITY;
-ALTER TABLE "Transaction" ENABLE ROW LEVEL SECURITY;
-ALTER TABLE "Review" ENABLE ROW LEVEL SECURITY;
-ALTER TABLE "Wishlist" ENABLE ROW LEVEL SECURITY;
-ALTER TABLE "ChatRoom" ENABLE ROW LEVEL SECURITY;
-ALTER TABLE "Message" ENABLE ROW LEVEL SECURITY;
-```
-
-### Create Database Policies
-
-You'll need to create appropriate RLS policies for your tables. This is crucial for security.
-
-## 🚀 Deploy to Vercel
-
-1. Push your changes to GitHub
-2. Vercel will automatically trigger a new deployment
-3. The build should now succeed with Supabase integration
-
-## 🧪 Testing Your Setup
-
-After deployment:
-
-1. Visit your deployed application
-2. Try creating a user account
-3. Test authentication flows
-4. Verify database operations work
-
-## 🔍 Troubleshooting
-
-### Build Still Failing?
-
-If you still get DATABASE_URL errors:
-
-1. Check that all environment variables are set correctly in Vercel
-2. Ensure the DATABASE_URL format is correct
-3. Try redeploying manually from Vercel dashboard
-
-### Authentication Issues?
-
-1. Verify your Supabase keys are correct
-2. Check that your Supabase project is active
-3. Ensure RLS policies are configured properly
-
-### Database Connection Issues?
-
-1. Confirm your Supabase project is not paused
-2. Check database password in connection string
-3. Verify network connectivity
-
-## 📞 Support
-
-If you encounter issues:
-
-1. Check Vercel deployment logs
-2. Review Supabase dashboard for errors
-3. Verify all environment variables are set
-4. Test database connection locally first
-
-## 🎯 Next Steps
-
-After successful setup:
-
-1. Configure email authentication in Supabase
-2. Set up file storage for images
-3. Configure real-time subscriptions for chat
-4. Set up monitoring and analytics
-
----
-
-**Note**: Keep your service role key secure and never expose it in client-side code!
+- [Supabase Documentation](https://supabase.com/docs)
+- [Supabase Authentication Guide](https://supabase.com/docs/guides/auth)
+- [Supabase JavaScript Client Library](https://supabase.com/docs/reference/javascript/introduction)

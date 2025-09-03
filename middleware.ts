@@ -12,13 +12,50 @@ const securityHeaders = {
 };
 
 export async function middleware(request: NextRequest) {
+  // Check if Supabase environment variables are available
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+
+  // If Supabase variables are not available, create a minimal response without Supabase
+  if (!supabaseUrl || !supabaseAnonKey) {
+    let response = NextResponse.next({
+      request,
+    });
+
+    // Add security headers to all responses
+    Object.entries(securityHeaders).forEach(([key, value]) => {
+      response.headers.set(key, value);
+    });
+
+    // Add HSTS header for HTTPS
+    if (process.env.NODE_ENV === 'production') {
+      response.headers.set(
+        'Strict-Transport-Security',
+        'max-age=31536000; includeSubDomains; preload'
+      );
+    }
+
+    // Set CORS headers for all responses
+    response.headers.append('Access-Control-Allow-Origin', '*');
+    response.headers.append('Access-Control-Allow-Methods', 'GET,DELETE,PATCH,POST,PUT');
+    response.headers.append('Access-Control-Allow-Headers', 'X-CSRF-Token, X-Requested-With, Accept, Accept-Version, Content-Length, Content-MD5, Content-Type, Date, X-Api-Version');
+    response.headers.append('Access-Control-Allow-Credentials', 'true');
+
+    // Handle preflight requests
+    if (request.method === 'OPTIONS') {
+      return NextResponse.json({}, { status: 200, headers: response.headers });
+    }
+
+    return response;
+  }
+
   let supabaseResponse = NextResponse.next({
     request,
   });
 
   const supabase = createServerClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    supabaseUrl,
+    supabaseAnonKey,
     {
       cookies: {
         getAll() {
