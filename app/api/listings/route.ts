@@ -10,24 +10,66 @@ export async function GET(request: NextRequest) {
     console.log('Fetching listings from database...')
     
     const { searchParams } = new URL(request.url)
-    const page = parseInt(searchParams.get("page") || "1")
-    const limit = parseInt(searchParams.get("limit") || "10")
+    const pageParam = searchParams.get("page")
+    const limitParam = searchParams.get("limit")
     const search = searchParams.get("search")
-    const minPrice = parseFloat(searchParams.get("minPrice") || "0")
-    const maxPrice = parseFloat(searchParams.get("maxPrice") || "999999")
+    const minPriceParam = searchParams.get("minPrice")
+    const maxPriceParam = searchParams.get("maxPrice")
     const location = searchParams.get("location")
+
+    // Parse and validate parameters
+    const page = pageParam ? parseInt(pageParam) : 1
+    const limit = limitParam ? parseInt(limitParam) : 10
+    const minPrice = minPriceParam ? parseFloat(minPriceParam) : 0
+    const maxPrice = maxPriceParam ? parseFloat(maxPriceParam) : 999999
+
+    // Input validation
+    if (isNaN(page) || page < 1) {
+      return NextResponse.json(
+        { error: "Page must be a valid number greater than 0" },
+        { status: 400 }
+      )
+    }
+
+    if (isNaN(limit) || limit < 1) {
+      return NextResponse.json(
+        { error: "Limit must be a valid number greater than 0" },
+        { status: 400 }
+      )
+    }
+
+    if (isNaN(minPrice) || isNaN(maxPrice)) {
+      return NextResponse.json(
+        { error: "Invalid price range parameters" },
+        { status: 400 }
+      )
+    }
+
+    if (minPrice < 0 || maxPrice < 0) {
+      return NextResponse.json(
+        { error: "Price values must be non-negative" },
+        { status: 400 }
+      )
+    }
+
+    if (minPrice > maxPrice) {
+      return NextResponse.json(
+        { error: "Minimum price cannot be greater than maximum price" },
+        { status: 400 }
+      )
+    }
 
     const skip = (page - 1) * limit
 
     const where = {
       ...(search && {
         OR: [
-          { title: { contains: search, mode: "insensitive" as const } },
-          { description: { contains: search, mode: "insensitive" as const } },
+          { title: { contains: search } },
+          { description: { contains: search } },
         ],
       }),
       ...(location && {
-        location: { contains: location, mode: "insensitive" as const },
+        location: { contains: location },
       }),
       price: {
         gte: minPrice,

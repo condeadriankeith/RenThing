@@ -8,10 +8,7 @@ export interface SearchListing {
   title: string
   description: string
   price: number
-  category: string
   location: string
-  latitude: number
-  longitude: number
   images: string[]
   features: string[]
   ownerId: string
@@ -19,7 +16,6 @@ export interface SearchListing {
   ownerImage?: string
   averageRating: number
   reviewCount: number
-  available: boolean
   createdAt: string
   updatedAt: string
 }
@@ -78,51 +74,48 @@ class MeilisearchService {
 
   async initializeIndex() {
     try {
-      const index = await this.client.getIndex(this.indexName)
+      // Try to get existing index
+      const index = this.client.index(this.indexName)
+      // Try to fetch a document to check if index exists
+      await index.getDocuments({ limit: 1 })
       return index
     } catch (error) {
       // Index doesn't exist, create it
-      const index = await this.client.createIndex(this.indexName, {
+      await this.client.createIndex(this.indexName, {
         primaryKey: 'id',
       })
 
-      // Configure searchable attributes
-      await index.updateSearchableAttributes([
-        'title',
-        'description',
-        'category',
-        'location',
-        'features',
-      ])
+      const index = this.client.index(this.indexName)
 
-      // Configure filterable attributes
-      await index.updateFilterableAttributes([
-        'category',
-        'price',
-        'location',
-        'available',
-        'averageRating',
-        'features',
-        'ownerId',
-      ])
-
-      // Configure sortable attributes
-      await index.updateSortableAttributes([
-        'price',
-        'createdAt',
-        'averageRating',
-      ])
-
-      // Configure ranking rules
-      await index.updateRankingRules([
-        'words',
-        'typo',
-        'proximity',
-        'attribute',
-        'sort',
-        'exactness',
-        'averageRating:desc',
-      ])
+      // Configure settings
+      await index.updateSettings({
+        searchableAttributes: [
+          'title',
+          'description',
+          'location',
+          'features',
+        ],
+        filterableAttributes: [
+          'price',
+          'location',
+          'averageRating',
+          'features',
+          'ownerId',
+        ],
+        sortableAttributes: [
+          'price',
+          'createdAt',
+          'averageRating',
+        ],
+        rankingRules: [
+          'words',
+          'typo',
+          'proximity',
+          'attribute',
+          'sort',
+          'exactness',
+        ],
+      })
 
       return index
     }
@@ -133,7 +126,6 @@ class MeilisearchService {
       const listing = await prisma.listing.findUnique({
         where: { id: listingId },
         include: {
-          images: true,
           owner: {
             select: {
               id: true,
@@ -155,23 +147,35 @@ class MeilisearchService {
         ? listing.reviews.reduce((sum, review) => sum + review.rating, 0) / listing.reviews.length
         : 0
 
+      // Parse JSON fields
+      let images: string[] = []
+      let features: string[] = []
+
+      try {
+        images = JSON.parse(listing.images || '[]')
+      } catch {
+        images = []
+      }
+
+      try {
+        features = JSON.parse(listing.features || '[]')
+      } catch {
+        features = []
+      }
+
       const searchListing: SearchListing = {
         id: listing.id,
         title: listing.title,
         description: listing.description,
         price: listing.price,
-        category: listing.category,
         location: listing.location,
-        latitude: listing.latitude,
-        longitude: listing.longitude,
-        images: listing.images.map(img => img.url),
-        features: listing.features || [],
+        images,
+        features,
         ownerId: listing.owner.id,
-        ownerName: listing.owner.name,
+        ownerName: listing.owner.name || '',
         ownerImage: listing.owner.image || undefined,
         averageRating,
         reviewCount: listing.reviews.length,
-        available: listing.available,
         createdAt: listing.createdAt.toISOString(),
         updatedAt: listing.updatedAt.toISOString(),
       }
@@ -209,20 +213,12 @@ class MeilisearchService {
       // Build filter array
       const filters: string[] = []
 
-      if (options.filters?.category?.length) {
-        filters.push(`category IN [${options.filters.category.map(c => `"${c}"`).join(', ')}]`)
-      }
-
       if (options.filters?.priceRange) {
         filters.push(`price >= ${options.filters.priceRange[0]} AND price <= ${options.filters.priceRange[1]}`)
       }
 
       if (options.filters?.location?.length) {
         filters.push(`location IN [${options.filters.location.map(l => `"${l}"`).join(', ')}]`)
-      }
-
-      if (options.filters?.available !== undefined) {
-        filters.push(`available = ${options.filters.available}`)
       }
 
       if (options.filters?.rating) {
@@ -233,10 +229,6 @@ class MeilisearchService {
         options.filters.features.forEach(feature => {
           filters.push(`features CONTAINS "${feature}"`)
         })
-      }
-
-      if (options.geo) {
-        filters.push(`_geoRadius(${options.geo.lat}, ${options.geo.lng}, ${options.geo.radius * 1000})`)
       }
 
       if (filters.length > 0) {
@@ -250,12 +242,18 @@ class MeilisearchService {
       }
 
       // Add facets
-      searchParams.facets = ['category', 'location', 'features', 'averageRating']
+      searchParams.facets = ['location', 'features', 'averageRating']
 
       const searchResult = await index.search(searchParams.q, searchParams)
 
       // Transform facets into structured format
-      const facets = {
+      const facets: {
+        category: Record<string, number>
+        priceRange: Record<string, number>
+        location: Record<string, number>
+        features: Record<string, number>
+        rating: Record<string, number>
+      } = {
         category: {},
         priceRange: {},
         location: {},
@@ -264,15 +262,15 @@ class MeilisearchService {
       }
 
       if (searchResult.facetDistribution) {
-        facets.category = searchResult.facetDistribution.category || {}
         facets.location = searchResult.facetDistribution.location || {}
         facets.features = searchResult.facetDistribution.features || {}
-        
+
         // Transform rating facets
         if (searchResult.facetDistribution.averageRating) {
           Object.entries(searchResult.facetDistribution.averageRating).forEach(([rating, count]) => {
             const ratingRange = Math.floor(parseFloat(rating))
-            facets.rating[`${ratingRange}+`] = (facets.rating[`${ratingRange}+`] || 0) + count
+            const key = `${ratingRange}+` as keyof typeof facets.rating
+            facets.rating[key] = (facets.rating[key] || 0) + count
           })
         }
 
@@ -307,7 +305,132 @@ class MeilisearchService {
         facets,
       }
     } catch (error) {
-      console.error('Error searching listings:', error)
+      console.error('Error searching with Meilisearch, falling back to database search:', error instanceof Error ? error.message : String(error))
+
+      // Fallback to database search
+      return this.fallbackDatabaseSearch(options)
+    }
+  }
+
+  private async fallbackDatabaseSearch(options: SearchOptions): Promise<SearchResult> {
+    try {
+      const page = options.pagination?.page || 1
+      const limit = options.pagination?.limit || 20
+      const skip = (page - 1) * limit
+
+      // Build where clause
+      const where: any = {}
+
+      if (options.query) {
+        where.OR = [
+          { title: { contains: options.query, mode: 'insensitive' } },
+          { description: { contains: options.query, mode: 'insensitive' } },
+          { location: { contains: options.query, mode: 'insensitive' } },
+        ]
+      }
+
+      if (options.filters?.priceRange) {
+        where.price = {
+          gte: options.filters.priceRange[0],
+          lte: options.filters.priceRange[1],
+        }
+      }
+
+      if (options.filters?.location?.length) {
+        where.location = { in: options.filters.location }
+      }
+
+      // Get total count
+      const totalCount = await prisma.listing.count({ where })
+
+      // Get listings with sorting
+      let orderBy: any = { createdAt: 'desc' }
+      if (options.sort) {
+        if (options.sort.field === 'price') {
+          orderBy = { price: options.sort.order }
+        } else if (options.sort.field === 'createdAt') {
+          orderBy = { createdAt: options.sort.order }
+        }
+      }
+
+      const listings = await prisma.listing.findMany({
+        where,
+        include: {
+          owner: {
+            select: {
+              id: true,
+              name: true,
+              image: true,
+            },
+          },
+          reviews: {
+            select: {
+              rating: true,
+            },
+          },
+        },
+        orderBy,
+        skip,
+        take: limit,
+      })
+
+      // Transform to SearchListing format
+      const searchListings: SearchListing[] = listings.map(listing => {
+        const averageRating = listing.reviews.length > 0
+          ? listing.reviews.reduce((sum, review) => sum + review.rating, 0) / listing.reviews.length
+          : 0
+
+        // Parse JSON fields
+        let images: string[] = []
+        let features: string[] = []
+
+        try {
+          images = JSON.parse(listing.images || '[]')
+        } catch {
+          images = []
+        }
+
+        try {
+          features = JSON.parse(listing.features || '[]')
+        } catch {
+          features = []
+        }
+
+        return {
+          id: listing.id,
+          title: listing.title,
+          description: listing.description,
+          price: listing.price,
+          location: listing.location,
+          images,
+          features,
+          ownerId: listing.owner.id,
+          ownerName: listing.owner.name || '',
+          ownerImage: listing.owner.image || undefined,
+          averageRating,
+          reviewCount: listing.reviews.length,
+          createdAt: listing.createdAt.toISOString(),
+          updatedAt: listing.updatedAt.toISOString(),
+        }
+      })
+
+      return {
+        hits: searchListings,
+        query: options.query || '',
+        processingTimeMs: 0,
+        totalHits: totalCount,
+        totalPages: Math.ceil(totalCount / limit),
+        currentPage: page,
+        facets: {
+          category: {},
+          priceRange: {},
+          location: {},
+          features: {},
+          rating: {},
+        },
+      }
+    } catch (error) {
+      console.error('Error in fallback database search:', error)
       throw error
     }
   }
@@ -349,7 +472,6 @@ class MeilisearchService {
       
       const listings = await prisma.listing.findMany({
         include: {
-          images: true,
           owner: {
             select: {
               id: true,
@@ -370,23 +492,35 @@ class MeilisearchService {
           ? listing.reviews.reduce((sum, review) => sum + review.rating, 0) / listing.reviews.length
           : 0
 
+        // Parse JSON fields
+        let images: string[] = []
+        let features: string[] = []
+
+        try {
+          images = JSON.parse(listing.images || '[]')
+        } catch {
+          images = []
+        }
+
+        try {
+          features = JSON.parse(listing.features || '[]')
+        } catch {
+          features = []
+        }
+
         return {
           id: listing.id,
           title: listing.title,
           description: listing.description,
           price: listing.price,
-          category: listing.category,
           location: listing.location,
-          latitude: listing.latitude,
-          longitude: listing.longitude,
-          images: listing.images.map(img => img.url),
-          features: listing.features || [],
+          images,
+          features,
           ownerId: listing.owner.id,
-          ownerName: listing.owner.name,
+          ownerName: listing.owner.name || '',
           ownerImage: listing.owner.image || undefined,
           averageRating,
           reviewCount: listing.reviews.length,
-          available: listing.available,
           createdAt: listing.createdAt.toISOString(),
           updatedAt: listing.updatedAt.toISOString(),
         }
