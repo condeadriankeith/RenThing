@@ -323,9 +323,9 @@ class MeilisearchService {
 
       if (options.query) {
         where.OR = [
-          { title: { contains: options.query, mode: 'insensitive' } },
-          { description: { contains: options.query, mode: 'insensitive' } },
-          { location: { contains: options.query, mode: 'insensitive' } },
+          { title: { contains: options.query } },
+          { description: { contains: options.query } },
+          { location: { contains: options.query } },
         ]
       }
 
