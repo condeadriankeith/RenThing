@@ -1,8 +1,3 @@
-
-<p align="center">
-  <img src="public/RenThing_LOGO.svg" alt="RenThing Logo" width="120" />
-</p>
-
 # RenThing
 
 > The all-in-one rental marketplace for the Philippines
@@ -47,6 +42,7 @@ RenThing is a modern web application for the Philippines, enabling users to list
 - [Next.js](https://nextjs.org/) (React framework)
 - [TypeScript](https://www.typescriptlang.org/)
 - [Tailwind CSS](https://tailwindcss.com/)
+- [Prisma](https://www.prisma.io/) (Database ORM)
 - [Stripe](https://stripe.com/) & [Xendit](https://www.xendit.co/) for payments
 
 ## Screenshots
@@ -86,6 +82,7 @@ Create a `.env.local` file in the root and configure the following:
 
 ```env
 # Example
+DATABASE_URL=your_database_connection_string
 STRIPE_SECRET_KEY=your_stripe_secret
 XENDIT_API_KEY=your_xendit_key
 NEXT_PUBLIC_BASE_URL=http://localhost:3000
