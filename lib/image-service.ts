@@ -1,4 +1,5 @@
 import { v2 as cloudinary } from 'cloudinary'
+import { put, del } from '@vercel/blob'
 import { Readable } from 'stream'
 
 // Configure Cloudinary
@@ -16,6 +17,7 @@ export interface ImageUploadResult {
   width: number
   height: number
   size: number
+  provider: 'cloudinary' | 'vercel-blob'
 }
 
 export interface ImageDeleteResult {
@@ -23,8 +25,49 @@ export interface ImageDeleteResult {
 }
 
 class ImageService {
-  // Upload image to Cloudinary
+  private useBlob = !!process.env.BLOB_READ_WRITE_TOKEN
+
+  // Upload image - automatically chooses provider based on configuration
   async uploadImage(
+    file: Buffer,
+    folder: string = 'listings',
+    filename?: string
+  ): Promise<ImageUploadResult> {
+    if (this.useBlob) {
+      return this.uploadToBlob(file, folder, filename)
+    } else {
+      return this.uploadToCloudinary(file, folder, filename)
+    }
+  }
+
+  // Upload to Vercel Blob
+  private async uploadToBlob(
+    file: Buffer,
+    folder: string,
+    filename?: string
+  ): Promise<ImageUploadResult> {
+    const blobName = filename || `image-${Date.now()}-${Math.random().toString(36).substring(7)}`
+    const pathname = `${folder}/${blobName}`
+
+    const blob = await put(pathname, file, {
+      access: 'public',
+      token: process.env.BLOB_READ_WRITE_TOKEN
+    })
+
+    return {
+      publicId: blob.pathname,
+      url: blob.url,
+      secureUrl: blob.url,
+      format: this.getFileExtension(blob.pathname),
+      width: 0, // Blob doesn't provide image dimensions
+      height: 0,
+      size: file.length,
+      provider: 'vercel-blob'
+    }
+  }
+
+  // Upload to Cloudinary
+  private async uploadToCloudinary(
     file: Buffer,
     folder: string = 'listings',
     filename?: string
@@ -52,7 +95,8 @@ class ImageService {
               format: result.format,
               width: result.width,
               height: result.height,
-              size: result.bytes
+              size: result.bytes,
+              provider: 'cloudinary'
             })
           }
         }
@@ -74,17 +118,29 @@ class ImageService {
     return Promise.all(uploadPromises)
   }
 
-  // Delete image from Cloudinary
+  // Delete image - handles both providers
   async deleteImage(publicId: string): Promise<ImageDeleteResult> {
-    return new Promise((resolve, reject) => {
-      cloudinary.uploader.destroy(publicId, (error, result) => {
-        if (error) {
-          reject(error)
-        } else {
-          resolve({ result: result.result })
-        }
+    // Check if this is a Vercel Blob URL/path (contains folder structure)
+    if (this.useBlob && publicId.includes('/')) {
+      try {
+        await del(publicId, { token: process.env.BLOB_READ_WRITE_TOKEN })
+        return { result: 'ok' }
+      } catch (error) {
+        console.error('Blob deletion error:', error)
+        throw error
+      }
+    } else {
+      // Cloudinary deletion
+      return new Promise((resolve, reject) => {
+        cloudinary.uploader.destroy(publicId, (error, result) => {
+          if (error) {
+            reject(error)
+          } else {
+            resolve({ result: result.result })
+          }
+        })
       })
-    })
+    }
   }
 
   // Delete multiple images
@@ -142,7 +198,7 @@ class ImageService {
     // Check if it's a valid image format by checking the first few bytes
     const validFormats = ['image/jpeg', 'image/png', 'image/webp', 'image/gif']
     const header = file.slice(0, 4).toString('hex')
-    
+
     const formatMap: { [key: string]: string } = {
       'ffd8ffe0': 'image/jpeg',
       'ffd8ffe1': 'image/jpeg',
@@ -152,7 +208,7 @@ class ImageService {
     }
 
     const detectedFormat = formatMap[header.substring(0, 8)]
-    
+
     if (!detectedFormat || !validFormats.includes(detectedFormat)) {
       return {
         valid: false,
@@ -161,6 +217,12 @@ class ImageService {
     }
 
     return { valid: true }
+  }
+
+  // Utility method to get file extension from filename/path
+  private getFileExtension(filename: string): string {
+    const parts = filename.split('.')
+    return parts.length > 1 ? parts[parts.length - 1].toLowerCase() : 'unknown'
   }
 }
 
