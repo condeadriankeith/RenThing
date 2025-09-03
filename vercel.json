@@ -16,7 +16,7 @@
   "outputDirectory": ".next",
   "env": {
     "DATABASE_URL": "postgres://postgres.aphczgukfgfbvgjwferw:ampRPk6s5AtNUBI9@aws-1-us-east-1.pooler.supabase.com:6543/postgres?sslmode=require&pgbouncer=true",
-    "NEXTAUTH_SECRET": "@nextauth_secret",
-    "NEXTAUTH_URL": "@nextauth_url"
+    "NEXTAUTH_SECRET": "KnVWZ3NjJyFOQXhDKydsKSxXSj9WT3JJVkJwKiJeL0I=",
+    "NEXTAUTH_URL": "https://renthing.vercel.app"
   }
 }
