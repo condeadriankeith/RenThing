@@ -17,7 +17,7 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json()
-    const { bookingId, paymentMethod = 'stripe' } = body
+    const { bookingId, paymentMethod = 'mock' } = body
 
     if (!bookingId) {
       return NextResponse.json(
@@ -26,7 +26,7 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    const booking = await prisma.booking.findUnique({
+    const booking = await prisma!.booking.findUnique({
       where: { id: bookingId },
       include: {
         listing: true,
@@ -63,30 +63,22 @@ export async function POST(request: NextRequest) {
     // Calculate total amount
     const totalAmount = booking.totalPrice || booking.listing.price
 
-    let paymentData
-
-    if (paymentMethod === 'xendit') {
-      paymentData = await paymentService.createXenditPayment(
-        totalAmount,
-        booking.listing.currency || 'PHP',
-        bookingId,
-        booking.user.email || ''
-      )
-    } else {
-      return NextResponse.json(
-        { error: "Invalid payment method" },
-        { status: 400 }
-      )
+    // Create a mock payment intent
+    const paymentData = {
+      id: `mock_${Date.now()}`,
+      amount: totalAmount,
+      currency: 'PHP',
+      status: 'requires_payment_method',
+      client_secret: `mock_secret_${Date.now()}`,
     }
 
     // Create transaction record
     const transaction = await paymentService.createTransaction({
       bookingId,
       amount: totalAmount,
-      currency: booking.listing.currency || 'PHP',
+      currency: 'PHP',
       paymentMethod,
-
-      xenditInvoiceId: paymentMethod === 'xendit' ? paymentData.id : undefined,
+      userId: session.user.id,
     })
 
     return NextResponse.json({

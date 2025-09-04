@@ -1,50 +1,11 @@
-# RenThing
-
-> The all-in-one rental marketplace for the Philippines
-
-[![MIT License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
-[![Next.js](https://img.shields.io/badge/built%20with-Next.js-blue)](https://nextjs.org/)
-[![TypeScript](https://img.shields.io/badge/language-TypeScript-blue)](https://www.typescriptlang.org/)
-
----
-
-## Table of Contents
-
-- [About](#about)
-- [Features](#features)
-- [Tech Stack](#tech-stack)
-- [Screenshots](#screenshots)
-- [Getting Started](#getting-started)
-- [Environment Variables](#environment-variables)
-- [Usage](#usage)
-- [Contributing](#contributing)
-- [License](#license)
-
----
-
-## About
-
-RenThing is a modern web application for the Philippines, enabling users to list, browse, and book items for rent. Whether you need tools, vehicles, electronics, or event equipment, RenThing makes renting easy, secure, and accessible.
-
-## Features
-
-- **Browse Listings:** Discover a wide range of items for rent.
-- **User Authentication:** Secure registration and login for renters and owners.
-- **Booking System:** Book items for specific dates and manage your bookings.
-- **Chat:** Communicate directly with owners or renters.
-- **Payment Integration:** Pay securely in Philippine Peso (₱) via Stripe and Xendit.
-- **Responsive Design:** Works on desktop and mobile.
-- **Search & Filters:** Quickly find what you need.
-- **Booking History:** View and manage your past and upcoming rentals.
-
 ## Tech Stack
 
 - [Next.js](https://nextjs.org/) (React framework)
 - [TypeScript](https://www.typescriptlang.org/)
 - [Tailwind CSS](https://tailwindcss.com/)
-- [Supabase](https://supabase.com/) (Database for production deployments)
-- [Prisma](https://www.prisma.io/) (Database ORM for local development)
-- [Stripe](https://stripe.com/) & [Xendit](https://www.xendit.co/) for payments
+- [Prisma](https://www.prisma.io/) (Database ORM)
+- [Axios](https://axios-http.com/) (HTTP client)
+- [Cheerio](https://cheerio.js.org/) (Server-side jQuery)
 
 ## Screenshots
 
@@ -85,15 +46,31 @@ Create a `.env.local` file in the root and configure the following:
 # For local development with SQLite
 DATABASE_URL=file:./dev.db
 
-# For production deployments with Supabase
-NEXT_PUBLIC_SUPABASE_URL=your_supabase_project_url
-SUPABASE_KEY=your_supabase_service_key
-
 # Other required variables
-STRIPE_SECRET_KEY=your_stripe_secret
-XENDIT_API_KEY=your_xendit_key
 NEXT_PUBLIC_BASE_URL=http://localhost:3000
 ```
+
+## Supabase Migration
+
+This project currently uses Prisma with PostgreSQL as the default database. However, it can be migrated to use Supabase instead.
+
+### Migration Process
+
+1. **Setup Supabase Tables**: Follow the SQL schema in `SUPABASE_MIGRATION_GUIDE.md` to create equivalent tables in your Supabase project.
+
+2. **Export Data**: Use the export script to extract data from your current Prisma database:
+   ```bash
+   pnpm run export:data
+   ```
+
+3. **Import Data**: Use the import script to transfer data to Supabase:
+   ```bash
+   pnpm run import:data
+   ```
+
+4. **Update Application Code**: Replace Prisma calls with Supabase calls throughout the application.
+
+For detailed instructions, see [SUPABASE_MIGRATION_GUIDE.md](SUPABASE_MIGRATION_GUIDE.md).
 
 ## Usage
 
@@ -101,6 +78,7 @@ NEXT_PUBLIC_BASE_URL=http://localhost:3000
 - Browse and book available items
 - Chat with owners/renters
 - Manage your bookings and payments
+- Scrape rental listings from external websites (see [WEB_SCRAPING.md](WEB_SCRAPING.md))
 
 ## Contributing
 

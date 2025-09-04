@@ -42,7 +42,7 @@ For a production deployment, you would add:
 
 ### Option 1: Use a Managed PostgreSQL Service
 - **Neon** (recommended for Vercel deployments): https://neon.tech
-- **Supabase** (if you want to use it just for database): https://supabase.com
+
 - **Railway**: https://railway.app
 - **Render**: https://render.com
 
@@ -82,12 +82,6 @@ If you still encounter issues:
 1. Go to https://neon.tech and create an account
 2. Create a new project
 3. Copy the connection string (it will look like `postgresql://username:password@host.region.neon.tech/database_name`)
-4. Add this as your `database_url` environment variable in Vercel
-
-### Supabase Database Setup
-1. Go to https://supabase.com and create a project
-2. Navigate to "Project Settings" → "Database"
-3. Copy the connection string under "Connection Info"
 4. Add this as your `database_url` environment variable in Vercel
 
 ## Post-Deployment Steps

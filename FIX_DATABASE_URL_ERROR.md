@@ -23,12 +23,6 @@ First, you need a PostgreSQL database. Here are some recommended options:
 3. Create a new project
 4. Copy the connection string (it will look like `postgresql://username:password@host.region.neon.tech/database_name`)
 
-#### Option 2: Supabase (Database Only)
-1. Go to https://supabase.com
-2. Create a new project
-3. Navigate to "Settings" → "Database"
-4. Copy the connection string under "Connection Info"
-
 ### Step 2: Add the Secret to Vercel
 
 1. Go to your Vercel project dashboard

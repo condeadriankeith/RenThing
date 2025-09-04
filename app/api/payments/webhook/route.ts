@@ -1,17 +1,9 @@
 import { NextRequest, NextResponse } from "next/server"
 import { paymentService } from "@/lib/payment-service"
 
-// POST /api/payments/webhook - Handle Xendit webhooks
+// POST /api/payments/webhook - Handle payment webhooks
 export async function POST(request: NextRequest) {
   const body = await request.text()
-  const xCallbackToken = request.headers.get("x-callback-token")
-
-  if (xCallbackToken !== process.env.XENDIT_WEBHOOK_TOKEN) {
-    return NextResponse.json(
-      { error: "Unauthorized" },
-      { status: 401 }
-    )
-  }
 
   let event
   try {
@@ -23,15 +15,8 @@ export async function POST(request: NextRequest) {
     )
   }
 
-  if (event.event === "invoice.paid") {
-    const invoice = event.data
-    if (!invoice?.external_id) {
-      return NextResponse.json(
-        { error: "External ID (bookingId) missing" },
-        { status: 400 }
-      )
-    }
-
+  // Handle mock payment events
+  if (event.event === "payment.succeeded") {
     await paymentService.handleWebhook(event)
   }
 

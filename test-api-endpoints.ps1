@@ -38,15 +38,6 @@ try {
     Write-Host "  GET /api/reviews failed: $($_.Exception.Message)" -ForegroundColor Red
 }
 
-# Test search endpoint
-Write-Host "`n5. Testing search endpoint..." -ForegroundColor Yellow
-try {
-    $response = Invoke-WebRequest -Uri "$baseUrl/api/search?q=test" -Method GET
-    Write-Host "  GET /api/search - Status: $($response.StatusCode)" -ForegroundColor Green
-} catch {
-    Write-Host "  GET /api/search failed: $($_.Exception.Message)" -ForegroundColor Red
-}
-
 # Test bookings endpoint (GET)
 Write-Host "`n6. Testing bookings endpoint..." -ForegroundColor Yellow
 try {

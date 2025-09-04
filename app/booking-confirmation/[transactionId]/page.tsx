@@ -129,7 +129,7 @@ export default function BookingConfirmationPage() {
       total: 315,
     },
     payment: {
-      method: "Stripe",
+      method: "Mock Payment",
       last4: "4242",
       status: "succeeded",
     },

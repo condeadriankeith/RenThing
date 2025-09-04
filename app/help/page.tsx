@@ -77,7 +77,7 @@ export default function HelpCenterPage() {
     },
     {
       question: "What payment methods do you accept?",
-      answer: "We accept all major credit and debit cards, as well as popular digital wallets like GCash and GrabPay. All payments are processed securely through our trusted payment partners Stripe and Xendit."
+      answer: "We accept all major credit and debit cards, as well as popular digital wallets like GCash and GrabPay. All payments are processed securely through our trusted payment system."
     },
     {
       question: "Can I cancel a booking?",

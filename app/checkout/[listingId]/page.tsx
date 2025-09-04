@@ -11,7 +11,7 @@ import { Separator } from "@/components/ui/separator"
 import { Badge } from "@/components/ui/badge"
 import { ShoppingBag, CreditCard, Shield, ArrowLeft, Calendar, MapPin } from "lucide-react"
 import { PaymentMethodSelector } from "@/components/payment-method-selector"
-import { XenditCheckout } from "@/components/xendit-checkout"
+import { MockCheckout } from "@/components/mock-checkout"
 import { useToast } from "@/hooks/use-toast"
 import { SpinnerLoader } from "@/components/ui/spinner-loader"
 
@@ -36,7 +36,7 @@ export default function CheckoutPage() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const { toast } = useToast()
-  const [selectedPaymentMethod, setSelectedPaymentMethod] = useState<"xendit">("xendit")
+  const [selectedPaymentMethod, setSelectedPaymentMethod] = useState<"mock">("mock")
   const [listing, setListing] = useState<Listing | null>(null)
   const [isLoading, setIsLoading] = useState(true)
   const [bookingDetails, setBookingDetails] = useState({
@@ -186,8 +186,6 @@ export default function CheckoutPage() {
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
-
-
       <div className="container mx-auto px-4 py-8 max-w-6xl">
         {/* Back Button */}
         <Button variant="ghost" asChild className="mb-6">
@@ -290,7 +288,7 @@ export default function CheckoutPage() {
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                <XenditCheckout
+                <MockCheckout
                   amount={totalAmount}
                   currency="PHP"
                   onSuccess={handlePaymentSuccess}
@@ -312,18 +310,15 @@ export default function CheckoutPage() {
                     ₱{listing.price} × {bookingDetails.duration} {bookingDetails.duration === 1 ? "day" : "days"}
                   </span>
                   <span>₱{bookingDetails.totalPrice}</span>
-
                 </div>
                 <div className="flex justify-between text-sm text-gray-600 dark:text-gray-400">
                   <span>Service fee</span>
                   <span>₱{serviceFee}</span>
-
                 </div>
                 <Separator />
                 <div className="flex justify-between font-semibold text-lg">
                   <span>Total</span>
                   <span>₱{totalAmount}</span>
-
                 </div>
 
                 <div className="bg-gray-50 dark:bg-gray-800 p-4 rounded-lg space-y-2">

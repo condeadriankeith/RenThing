@@ -1,18 +1,8 @@
 import React, { useState } from 'react';
-import { View, ScrollView, StyleSheet, Alert, Platform } from 'react-native';
-import { Text, Button, Card, TextInput, ActivityIndicator } from 'react-native-paper';
+import { View, ScrollView, StyleSheet, Alert } from 'react-native';
+import { Text, Button, Card, TextInput } from 'react-native-paper';
 import { RouteProp } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
-
-let CardField: any;
-let useStripe: any;
-
-if (Platform.OS !== 'web') {
-  ({
-    CardField,
-    useStripe
-  } = require('@stripe/stripe-react-native'));
-}
 
 import { apiClient } from '../services/api/client';
 
@@ -31,14 +21,15 @@ interface Props {
 
 export default function PaymentScreen({ route, navigation }: Props) {
   const { bookingId, amount } = route.params;
-  const { confirmPayment } = Platform.OS !== 'web' ? useStripe() : { confirmPayment: () => {} };
   const [loading, setLoading] = useState(false);
-  const [cardDetails, setCardDetails] = useState<any>(null);
   const [email, setEmail] = useState('');
   const [name, setName] = useState('');
+  const [cardNumber, setCardNumber] = useState('');
+  const [expiry, setExpiry] = useState('');
+  const [cvv, setCvv] = useState('');
 
   const handlePayment = async () => {
-    if (Platform.OS !== 'web' && (!cardDetails?.complete || !email || !name)) {
+    if (!email || !name || !cardNumber || !expiry || !cvv) {
       Alert.alert('Validation Error', 'Please fill in all payment details');
       return;
     }
@@ -46,33 +37,24 @@ export default function PaymentScreen({ route, navigation }: Props) {
     setLoading(true);
 
     try {
-      // Create payment intent
-      const { data: { clientSecret } } = await apiClient.post('/payments/create-intent', {
+      // Create payment intent with mock payment method
+      const { data } = await apiClient.post('/payments/create-intent', {
         bookingId,
         amount,
+        paymentMethod: 'mock'
       });
 
-      // Confirm payment
-      const { error, paymentIntent } = await confirmPayment(clientSecret, {
-        paymentMethodType: 'Card',
-        paymentMethodData: {
-          billingDetails: {
-            email,
-            name,
-          },
-        },
-      });
-
-      if (error) {
-        Alert.alert('Payment Failed', error.message || 'Payment could not be processed');
-      } else if (paymentIntent) {
-        // Update booking status
-        await apiClient.patch(`/bookings/${bookingId}/confirm-payment`, {
-          paymentIntentId: paymentIntent.id,
-        });
-
-        navigation.navigate('Success' as any, { bookingId });
-      }
+      // For mock payment, we'll just show a success message
+      Alert.alert(
+        'Payment Successful', 
+        'Your payment has been processed successfully.',
+        [
+          {
+            text: 'OK',
+            onPress: () => navigation.navigate('Success' as any, { bookingId })
+          }
+        ]
+      );
     } catch (error: any) {
       Alert.alert(
         'Payment Error',
@@ -112,27 +94,42 @@ export default function PaymentScreen({ route, navigation }: Props) {
             />
             
             <TextInput
-              label="Name on Card"
+              label="Full Name"
               value={name}
               onChangeText={setName}
               style={styles.input}
             />
             
-            {Platform.OS !== 'web' ? (
-              <View style={styles.cardFieldContainer}>
-                <CardField
-                  postalCodeEnabled={true}
-                  placeholder={{
-                    number: '4242 4242 4242 4242',
-                  }}
-                  cardStyle={styles.cardField}
-                  style={styles.cardFieldStyle}
-                  onCardChange={(cardDetails: any) => setCardDetails(cardDetails)}
-                />
-              </View>
-            ) : (
-              <Text style={styles.webPaymentMessage}>Payment via Stripe is not available on web. Please use the mobile app.</Text>
-            )}
+            <TextInput
+              label="Card Number"
+              value={cardNumber}
+              onChangeText={setCardNumber}
+              placeholder="1234 5678 9012 3456"
+              style={styles.input}
+            />
+            
+            <View style={styles.row}>
+              <TextInput
+                label="Expiry Date"
+                value={expiry}
+                onChangeText={setExpiry}
+                placeholder="MM/YY"
+                style={[styles.input, styles.halfInput]}
+              />
+              
+              <TextInput
+                label="CVV"
+                value={cvv}
+                onChangeText={setCvv}
+                placeholder="123"
+                secureTextEntry
+                style={[styles.input, styles.halfInput, styles.cvvInput]}
+              />
+            </View>
+            
+            <Text style={styles.infoText}>
+              This is a mock payment interface for testing purposes.
+            </Text>
           </Card.Content>
         </Card>
 
@@ -195,25 +192,23 @@ const styles = StyleSheet.create({
   input: {
     marginBottom: 12,
   },
-  cardFieldContainer: {
-    marginTop: 12,
+  row: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
   },
-  cardField: {
-    backgroundColor: '#ffffff',
-    borderRadius: 8,
-    borderWidth: 1,
-    borderColor: '#ddd',
+  halfInput: {
+    flex: 1,
+    marginRight: 8,
   },
-  webPaymentMessage: {
+  cvvInput: {
+    marginLeft: 8,
+    marginRight: 0,
+  },
+  infoText: {
     textAlign: 'center',
     marginTop: 20,
     fontSize: 16,
-    color: '#e74c3c',
-  },
-  cardFieldStyle: {
-    width: '100%',
-    height: 50,
-    marginVertical: 8,
+    color: '#666',
   },
   actionContainer: {
     marginTop: 24,

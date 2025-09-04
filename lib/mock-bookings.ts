@@ -48,7 +48,7 @@ export const mockBookings: Booking[] = [
     status: "confirmed",
     totalAmount: 315,
     paymentStatus: "paid",
-    transactionId: "txn_stripe_001",
+    transactionId: "txn_mock_001",
     owner: {
       id: "owner1",
       name: "Sarah Chen",
@@ -77,7 +77,7 @@ export const mockBookings: Booking[] = [
     status: "pending",
     totalAmount: 158,
     paymentStatus: "paid",
-    transactionId: "txn_stripe_002",
+    transactionId: "txn_mock_002",
     owner: {
       id: "owner2",
       name: "Tom Rodriguez",
@@ -105,7 +105,7 @@ export const mockBookings: Booking[] = [
     status: "completed",
     totalAmount: 252,
     paymentStatus: "paid",
-    transactionId: "txn_stripe_003",
+    transactionId: "txn_mock_003",
     owner: {
       id: "owner3",
       name: "Alex Kim",
@@ -134,7 +134,7 @@ export const mockBookings: Booking[] = [
     status: "cancelled",
     totalAmount: 95,
     paymentStatus: "refunded",
-    transactionId: "txn_stripe_004",
+    transactionId: "txn_mock_004",
     owner: {
       id: "owner5",
       name: "Jake Wilson",
@@ -163,7 +163,7 @@ export const mockBookings: Booking[] = [
     status: "confirmed",
     totalAmount: 2625,
     paymentStatus: "paid",
-    transactionId: "txn_stripe_005",
+    transactionId: "txn_mock_005",
     owner: {
       id: "owner4",
       name: "Maria Santos",
