@@ -138,7 +138,7 @@
   
   /* Button responsive sizing */
   .btn-responsive {
-    @apply h-10 sm:h-12 px-4 sm:px-6 text-sm sm:text-base;
+    @apply h-10 sm:h-12 px-4 sm:px-6 text-sm sm:text-base rounded-xl;
   }
   
   /* Grid responsive spacing */
@@ -148,11 +148,11 @@
   
   /* Form improvements for mobile */
   .form-input-mobile {
-    @apply w-full px-3 sm:px-4 py-2.5 sm:py-3 rounded-lg border border-gray-200 dark:border-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white text-sm sm:text-base;
+    @apply w-full px-3 sm:px-4 py-2.5 sm:py-3 rounded-xl border border-gray-200 dark:border-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white text-sm sm:text-base;
   }
   
   .form-button-mobile {
-    @apply w-full sm:w-auto px-4 sm:px-6 py-2.5 sm:py-3 bg-blue-600 text-white font-bold rounded-lg hover:bg-blue-700 transition-colors text-sm sm:text-base;
+    @apply w-full sm:w-auto px-4 sm:px-6 py-2.5 sm:py-3 bg-blue-600 text-white font-bold rounded-xl hover:bg-blue-700 transition-colors text-sm sm:text-base;
   }
   
   /* Mobile navigation improvements */
@@ -165,7 +165,7 @@
   }
   
   .mobile-nav-panel {
-    @apply fixed top-0 right-0 h-full w-80 max-w-[85vw] bg-white dark:bg-gray-900 shadow-xl transform transition-transform duration-300 ease-in-out;
+    @apply fixed top-0 right-0 h-full w-80 max-w-[85vw] bg-white dark:bg-gray-900 shadow-2xl transform transition-transform duration-300 ease-in-out rounded-l-2xl;
   }
   
   .mobile-nav-header {
@@ -173,14 +173,14 @@
   }
   
   .mobile-nav-link {
-    @apply flex items-center px-3 py-3 rounded-lg text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors;
+    @apply flex items-center px-3 py-3 rounded-xl text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors;
   }
 }
 
 /* Card Layout Improvements */
 @layer components {
   .listing-card {
-    @apply bg-white dark:bg-gray-800 border-0 shadow-sm hover:shadow-xl transition-all duration-300 overflow-hidden rounded-xl;
+    @apply bg-white dark:bg-gray-800 border-0 shadow-lg hover:shadow-2xl transition-all duration-300 overflow-hidden rounded-2xl;
   }
   
   .listing-card:hover {
@@ -188,50 +188,66 @@
   }
   
   .listing-image-container {
-    @apply relative overflow-hidden bg-gray-100 dark:bg-gray-700;
+    @apply relative overflow-hidden bg-gray-100 dark:bg-gray-700 rounded-t-2xl;
   }
   
   .listing-image {
-    @apply w-full h-full object-cover transition-transform duration-500 group-hover:scale-110;
+    @apply w-full h-full object-cover transition-transform duration-500 group-hover:scale-105 rounded-t-2xl;
   }
   
   .listing-overlay-buttons {
-    @apply absolute top-2 right-2 sm:top-3 sm:right-3 flex space-x-1 sm:space-x-2 opacity-0 group-hover:opacity-100 transition-all duration-200 transform translate-y-1 group-hover:translate-y-0;
+    @apply absolute top-3 right-3 flex space-x-2 opacity-0 group-hover:opacity-100 transition-all duration-200 transform translate-y-1 group-hover:translate-y-0;
   }
   
   .listing-badge {
-    @apply bg-white/95 text-gray-800 hover:bg-white shadow-sm font-medium px-2 py-1 sm:px-3 sm:py-1.5 rounded-full border-0 backdrop-blur-sm text-xs;
+    @apply bg-white/95 text-gray-800 hover:bg-white shadow-lg font-medium px-3 py-1.5 rounded-full border-0 backdrop-blur-sm text-xs;
   }
   
   .listing-content {
-    @apply p-3 sm:p-4 lg:p-5 space-y-2 sm:space-y-3 lg:space-y-4;
+    @apply p-4 sm:p-5 space-y-3;
   }
   
   .listing-title {
-    @apply text-sm sm:text-base lg:text-lg font-semibold text-gray-900 dark:text-white group-hover:text-blue-600 transition-colors duration-200;
+    @apply text-base sm:text-lg font-bold text-gray-900 dark:text-white group-hover:text-blue-600 transition-colors duration-200;
   }
   
   .listing-description {
-    @apply text-xs sm:text-sm text-gray-600 dark:text-gray-400 leading-relaxed;
+    @apply text-sm text-gray-600 dark:text-gray-400 leading-relaxed;
   }
   
   .listing-meta {
-    @apply flex items-center justify-between text-xs sm:text-sm;
+    @apply flex items-center justify-between text-sm;
   }
   
-  /* Mobile-specific overrides */
-  @media (max-width: 640px) {
-    .listing-card {
-      @apply rounded-lg;
-    }
-    
-    .listing-overlay-buttons {
-      @apply hidden;
-    }
-    
-    .listing-content {
-      @apply space-y-2;
-    }
+  /* Modal improvements */
+  .modal-container {
+    @apply fixed inset-0 z-50 flex items-center justify-center p-4;
+  }
+  
+  .modal-backdrop {
+    @apply fixed inset-0 bg-black/70 backdrop-blur-md;
+  }
+  
+  .modal-content {
+    @apply relative bg-white dark:bg-gray-800 rounded-2xl shadow-2xl max-w-md w-full mx-4 max-h-[90vh] overflow-hidden flex flex-col;
+  }
+  
+  .modal-close-button {
+    @apply absolute top-4 right-4 text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 z-10 rounded-full p-1 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors;
+  }
+  
+  /* Button improvements */
+  .rounded-button {
+    @apply rounded-full shadow-lg hover:scale-105 transition-all duration-200;
+  }
+  
+  /* Dropdown improvements */
+  .rounded-dropdown {
+    @apply rounded-2xl shadow-lg;
+  }
+  
+  .rounded-dropdown-item {
+    @apply rounded-lg;
   }
 }
 

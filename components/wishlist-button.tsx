@@ -30,9 +30,9 @@ export function WishlistButton({
   }
 
   const sizeClasses = {
-    sm: "h-8 w-8 p-0",
-    md: "h-10 w-10 p-0", 
-    lg: "h-12 w-12 p-0"
+    sm: "h-9 w-9 p-0 rounded-full",
+    md: "h-11 w-11 p-0 rounded-full", 
+    lg: "h-13 w-13 p-0 rounded-full"
   }
 
   const iconSizes = {
@@ -48,7 +48,7 @@ export function WishlistButton({
         size={size}
         onClick={handleClick}
         disabled={isLoading}
-        className={cn("flex items-center space-x-2", className)}
+        className={cn("flex items-center space-x-2 rounded-full", className)}
       >
         <Heart 
           className={cn(
@@ -69,7 +69,8 @@ export function WishlistButton({
       disabled={isLoading}
       className={cn(
         sizeClasses[size],
-        variant === "ghost" && "bg-white/80 hover:bg-white",
+        variant === "ghost" && "bg-white/90 hover:bg-white shadow-lg",
+        "transition-all duration-200 hover:scale-105",
         className
       )}
       title={inWishlist ? "Remove from wishlist" : "Add to wishlist"}

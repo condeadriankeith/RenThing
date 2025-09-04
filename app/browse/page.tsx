@@ -198,10 +198,7 @@ export default function BrowsePage() {
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
-
       {/* Header */}
-
-
       <div className="container mx-auto px-3 sm:px-4 lg:px-6 xl:px-8 py-4 sm:py-6 lg:py-8 max-w-7xl">
         <div className="mb-4 sm:mb-6 lg:mb-8">
           <div className="flex flex-col xl:flex-row gap-4 lg:gap-6">
@@ -218,7 +215,7 @@ export default function BrowsePage() {
                   }}
                   onFocus={() => setShowSuggestions(searchQuery.length > 0)}
                   onBlur={() => setTimeout(() => setShowSuggestions(false), 200)}
-                  className="pl-10 h-10 sm:h-12 text-sm sm:text-lg"
+                  className="pl-10 h-10 sm:h-12 text-sm sm:text-lg rounded-xl border-gray-200 focus:border-blue-500 focus:ring-blue-500"
                 />
                 {showSuggestions && (
                   <SearchSuggestions
@@ -239,14 +236,14 @@ export default function BrowsePage() {
                   placeholder="Filter by location..."
                   value={locationFilter}
                   onChange={(e) => setLocationFilter(e.target.value)}
-                  className="pl-10 h-10 sm:h-12 text-sm sm:text-base"
+                  className="pl-10 h-10 sm:h-12 text-sm sm:text-base rounded-xl border-gray-200 focus:border-blue-500 focus:ring-blue-500"
                 />
               </div>
 
               {/* Quick Filters - Mobile Optimized */}
               <div className="flex flex-col sm:flex-row flex-wrap gap-2 sm:gap-2 mb-3 sm:mb-4">
                 <Select value={selectedCategory} onValueChange={setSelectedCategory}>
-                  <SelectTrigger className="w-full sm:w-48 h-10 text-sm">
+                  <SelectTrigger className="w-full sm:w-48 h-10 text-sm rounded-xl">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
@@ -258,7 +255,7 @@ export default function BrowsePage() {
                   </SelectContent>
                 </Select>
                 <Select value={sortBy} onValueChange={setSortBy}>
-                  <SelectTrigger className="w-full sm:w-48 h-10 text-sm">
+                  <SelectTrigger className="w-full sm:w-48 h-10 text-sm rounded-xl">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
@@ -268,7 +265,7 @@ export default function BrowsePage() {
                     <SelectItem value="rating">Highest Rated</SelectItem>
                   </SelectContent>
                 </Select>
-                <Button variant="outline" onClick={() => setShowFilters(!showFilters)} className="bg-transparent h-10 text-sm">
+                <Button variant="outline" onClick={() => setShowFilters(!showFilters)} className="bg-transparent h-10 text-sm rounded-xl">
                   <Filter className="h-4 w-4 mr-2" />
                   More Filters
                 </Button>
@@ -278,7 +275,7 @@ export default function BrowsePage() {
             {/* Trending & Popular - Hide on smaller screens */}
             {!searchQuery && (
               <div className="hidden xl:block xl:w-80 space-y-4">
-                <Card>
+                <Card className="rounded-2xl shadow-lg">
                   <CardHeader className="pb-3">
                     <CardTitle className="text-lg flex items-center">
                       <TrendingUp className="h-5 w-5 mr-2 text-orange-500" />
@@ -295,7 +292,7 @@ export default function BrowsePage() {
                         <img
                           src={item.images[0] || "/placeholder.svg"}
                           alt={item.title}
-                          className="w-12 h-12 rounded-lg object-cover"
+                          className="w-12 h-12 rounded-xl object-cover"
                         />
                         <div className="flex-1 min-w-0">
                           <p className="font-medium text-sm truncate">{item.title}</p>
@@ -308,7 +305,7 @@ export default function BrowsePage() {
                   </CardContent>
                 </Card>
 
-                <Card>
+                <Card className="rounded-2xl shadow-lg">
                   <CardHeader className="pb-3">
                     <CardTitle className="text-lg">Popular Searches</CardTitle>
                   </CardHeader>
@@ -320,7 +317,7 @@ export default function BrowsePage() {
                           variant="outline"
                           size="sm"
                           onClick={() => setSearchQuery(search)}
-                          className="text-xs bg-transparent"
+                          className="text-xs bg-transparent rounded-full"
                         >
                           {search}
                         </Button>
@@ -333,11 +330,11 @@ export default function BrowsePage() {
           </div>
 
           {showFilters && (
-            <Card className="mb-4 sm:mb-6">
+            <Card className="mb-4 sm:mb-6 rounded-2xl shadow-lg">
               <CardHeader className="pb-3">
                 <div className="flex items-center justify-between">
                   <CardTitle className="text-base sm:text-lg">Advanced Filters</CardTitle>
-                  <Button variant="ghost" size="sm" onClick={clearFilters} className="text-sm">
+                  <Button variant="ghost" size="sm" onClick={clearFilters} className="text-sm rounded-lg">
                     Clear All
                   </Button>
                 </div>
@@ -415,19 +412,19 @@ export default function BrowsePage() {
             <div className="flex flex-wrap gap-2 mb-4 sm:mb-4">
               <span className="text-xs sm:text-sm text-gray-600 dark:text-gray-400 mr-2">Active filters:</span>
               {selectedCategory !== "all" && (
-                <Badge variant="secondary" className="flex items-center gap-1">
+                <Badge variant="secondary" className="flex items-center gap-1 rounded-full px-3 py-1">
                   {categories.find((c) => c.value === selectedCategory)?.label}
                   <X className="h-3 w-3 cursor-pointer" onClick={() => setSelectedCategory("all")} />
                 </Badge>
               )}
               {locationFilter && (
-                <Badge variant="secondary" className="flex items-center gap-1">
+                <Badge variant="secondary" className="flex items-center gap-1 rounded-full px-3 py-1">
                   Location: {locationFilter}
                   <X className="h-3 w-3 cursor-pointer" onClick={() => setLocationFilter("")} />
                 </Badge>
               )}
               {selectedFeatures.map((feature) => (
-                <Badge key={feature} variant="secondary" className="flex items-center gap-1">
+                <Badge key={feature} variant="secondary" className="flex items-center gap-1 rounded-full px-3 py-1">
                   {feature}
                   <X
                     className="h-3 w-3 cursor-pointer"
@@ -436,13 +433,13 @@ export default function BrowsePage() {
                 </Badge>
               ))}
               {availableOnly && (
-                <Badge variant="secondary" className="flex items-center gap-1">
+                <Badge variant="secondary" className="flex items-center gap-1 rounded-full px-3 py-1">
                   Available Now
                   <X className="h-3 w-3 cursor-pointer" onClick={() => setAvailableOnly(false)} />
                 </Badge>
               )}
               {(priceRange[0] > 0 || priceRange[1] < 1000) && (
-                <Badge variant="secondary" className="flex items-center gap-1">
+                <Badge variant="secondary" className="flex items-center gap-1 rounded-full px-3 py-1">
                   ₱{priceRange[0].toLocaleString()} - ₱{priceRange[1].toLocaleString()}
                   <X className="h-3 w-3 cursor-pointer" onClick={() => setPriceRange([0, 1000])} />
                 </Badge>
@@ -458,20 +455,20 @@ export default function BrowsePage() {
           </div>
         </div>
 
-        {/* Listings Grid - Optimized for Mobile */}
-        <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6 gap-3 sm:gap-4 md:gap-6">
+        {/* Listings Grid - Enhanced with curved edges and better layout */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-5 sm:gap-6">
           {filteredListings.map((listing) => (
-            <Card key={listing.id} className="group hover:shadow-xl transition-all duration-300 cursor-pointer overflow-hidden border-0 shadow-sm bg-white dark:bg-gray-800 rounded-xl">
+            <Card key={listing.id} className="group hover:shadow-2xl transition-all duration-300 cursor-pointer overflow-hidden border-0 shadow-lg bg-white dark:bg-gray-800 rounded-2xl">
               <Link href={`/listing/${listing.id}`}>
-                <div className="relative overflow-hidden">
+                <div className="relative overflow-hidden rounded-t-2xl">
                   <div className="aspect-[4/3] overflow-hidden bg-gray-100 dark:bg-gray-700">
                     <img
                       src={listing.images[0] || "/placeholder.svg"}
                       alt={listing.title}
-                      className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
+                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500 rounded-t-2xl"
                     />
                     {/* Overlay gradient */}
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/30 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 rounded-t-2xl" />
                   </div>
                   
                   {/* Top overlay buttons - Hide on small screens */}
@@ -480,7 +477,7 @@ export default function BrowsePage() {
                       listingId={listing.id} 
                       variant="ghost" 
                       size="sm"
-                      className="bg-white/95 hover:bg-white shadow-lg h-8 w-8 backdrop-blur-sm border-0 rounded-full"
+                      className="bg-white/95 hover:bg-white shadow-lg h-9 w-9 backdrop-blur-sm border-0 rounded-full"
                     />
                     <ShareButton 
                       listingId={listing.id}
@@ -489,34 +486,34 @@ export default function BrowsePage() {
                       listingImage={listing.images[0]}
                       variant="ghost" 
                       size="sm"
-                      className="bg-white/95 hover:bg-white shadow-lg h-8 w-8 backdrop-blur-sm border-0 rounded-full"
+                      className="bg-white/95 hover:bg-white shadow-lg h-9 w-9 backdrop-blur-sm border-0 rounded-full"
                     />
                   </div>
                   
                   {/* Category badge - Smaller on mobile */}
-                  <div className="absolute bottom-2 left-2 sm:bottom-3 sm:left-3">
-                    <Badge className="bg-white/95 text-gray-800 hover:bg-white shadow-sm font-medium px-2 py-1 sm:px-3 sm:py-1.5 rounded-full border-0 backdrop-blur-sm text-xs">
+                  <div className="absolute bottom-3 left-3">
+                    <Badge className="bg-white/95 text-gray-800 hover:bg-white shadow-lg font-medium px-3 py-1.5 rounded-full border-0 backdrop-blur-sm text-xs">
                       {listing.category}
                     </Badge>
                   </div>
                   
                   {/* Availability indicator - Smaller on mobile */}
                   {listing.available && (
-                    <div className="absolute top-2 left-2 sm:top-3 sm:left-3">
-                      <div className="bg-green-500 text-white text-xs font-medium px-1.5 py-0.5 sm:px-2 sm:py-1 rounded-full shadow-sm">
+                    <div className="absolute top-3 left-3">
+                      <div className="bg-green-500 text-white text-xs font-medium px-2.5 py-1 rounded-full shadow-lg">
                         Available
                       </div>
                     </div>
                   )}
                 </div>
                 
-                <div className="p-3 sm:p-4 lg:p-5 space-y-2 sm:space-y-3 lg:space-y-4">
+                <div className="p-4 sm:p-5 space-y-3">
                   {/* Title and description */}
-                  <div className="space-y-1 sm:space-y-2">
-                    <h3 className="text-sm sm:text-base lg:text-lg font-semibold line-clamp-1 group-hover:text-blue-600 transition-colors duration-200 text-gray-900 dark:text-white">
+                  <div className="space-y-2">
+                    <h3 className="text-base sm:text-lg font-bold line-clamp-1 group-hover:text-blue-600 transition-colors duration-200 text-gray-900 dark:text-white">
                       {listing.title}
                     </h3>
-                    <p className="line-clamp-2 text-xs sm:text-sm text-gray-600 dark:text-gray-400 leading-relaxed hidden sm:block">
+                    <p className="line-clamp-2 text-sm text-gray-600 dark:text-gray-400 leading-relaxed">
                       {listing.description}
                     </p>
                   </div>
@@ -524,46 +521,30 @@ export default function BrowsePage() {
                   {/* Rating and location - Simplified on mobile */}
                   <div className="flex items-center justify-between">
                     <div className="flex items-center space-x-1">
-                      <Star className="h-3 w-3 sm:h-4 sm:w-4 fill-yellow-400 text-yellow-400" />
-                      <span className="text-xs sm:text-sm font-medium text-gray-900 dark:text-white">{listing.rating}</span>
-                      <span className="text-xs sm:text-sm text-gray-500 hidden sm:inline">({listing.reviewCount})</span>
+                      <Star className="h-4 w-4 fill-yellow-400 text-yellow-400" />
+                      <span className="text-sm font-medium text-gray-900 dark:text-white">{listing.rating}</span>
+                      <span className="text-sm text-gray-500">({listing.reviewCount})</span>
                     </div>
-                    <div className="flex items-center text-xs sm:text-sm text-gray-500">
-                      <MapPin className="h-3 w-3 sm:h-3.5 sm:w-3.5 mr-1 flex-shrink-0" />
-                      <span className="truncate max-w-[60px] sm:max-w-[100px]">{listing.location}</span>
+                    <div className="flex items-center text-sm text-gray-500">
+                      <MapPin className="h-4 w-4 mr-1 flex-shrink-0" />
+                      <span className="truncate max-w-[80px]">{listing.location}</span>
                     </div>
                   </div>
                   
                   {/* Pricing section */}
-                  <div className="pt-2 sm:pt-3 border-t border-gray-100 dark:border-gray-700">
+                  <div className="pt-3 border-t border-gray-100 dark:border-gray-700">
                     <div className="flex items-center justify-between">
                       <div className="flex items-baseline space-x-1">
-                        <span className="text-lg sm:text-xl font-bold text-gray-900 dark:text-white">
+                        <span className="text-xl font-bold text-gray-900 dark:text-white">
                           ₱{listing.price.toLocaleString()}
                         </span>
-                        <span className="text-xs sm:text-sm text-gray-500">/{listing.priceUnit}</span>
+                        <span className="text-sm text-gray-500">/{listing.priceUnit}</span>
                       </div>
-                      <div className="text-right hidden sm:block">
-                        <div className="text-xs text-gray-500 mb-1">Total reviews</div>
+                      <div className="text-right">
+                        <div className="text-xs text-gray-500">Total reviews</div>
                         <div className="text-sm font-medium text-gray-900 dark:text-white">{listing.reviewCount}</div>
                       </div>
                     </div>
-                  </div>
-                  
-                  {/* Quick action button - Hide on very small screens */}
-                  <div className="pt-2 hidden sm:block">
-                    <Button 
-                      variant="outline" 
-                      size="sm" 
-                      className="w-full bg-transparent border-gray-200 hover:bg-blue-50 hover:border-blue-300 hover:text-blue-700 transition-all duration-200 group-hover:border-blue-400 group-hover:bg-blue-50/50 text-xs lg:text-sm"
-                      onClick={(e) => {
-                        e.preventDefault()
-                        e.stopPropagation()
-                        // Handle quick booking or contact owner
-                      }}
-                    >
-                      Quick View
-                    </Button>
                   </div>
                 </div>
               </Link>
@@ -578,10 +559,10 @@ export default function BrowsePage() {
             <p className="text-gray-600 dark:text-gray-400 mb-4">
               Try adjusting your search or filters to find what you're looking for.
             </p>
-            <Button onClick={clearFilters} variant="outline" className="mr-3 bg-transparent">
+            <Button onClick={clearFilters} variant="outline" className="mr-3 bg-transparent rounded-xl">
               Clear Filters
             </Button>
-            <Button asChild>
+            <Button asChild className="rounded-xl">
               <Link href="/list-item">List Your Item</Link>
             </Button>
           </div>

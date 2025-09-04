@@ -109,40 +109,40 @@ export function ShareButton({
         <Button
           variant={variant}
           size={size}
-          className={cn("flex items-center justify-center", className)}
+          className={cn("flex items-center justify-center rounded-full shadow-lg hover:scale-105 transition-all duration-200", className)}
         >
           <Share className="h-4 w-4" />
         </Button>
       </DropdownMenuTrigger>
-      <DropdownMenuContent align="end" className="w-48">
+      <DropdownMenuContent align="end" className="w-48 rounded-xl shadow-lg">
         {hasNativeShare && (
-          <DropdownMenuItem onClick={handleNativeShare}>
+          <DropdownMenuItem onClick={handleNativeShare} className="rounded-lg">
             <Share className="h-4 w-4 mr-2" />
             Share
           </DropdownMenuItem>
         )}
         
-        <DropdownMenuItem onClick={handleCopyLink}>
+        <DropdownMenuItem onClick={handleCopyLink} className="rounded-lg">
           <Copy className="h-4 w-4 mr-2" />
           Copy Link
         </DropdownMenuItem>
         
-        <DropdownMenuItem onClick={handleFacebookShare}>
+        <DropdownMenuItem onClick={handleFacebookShare} className="rounded-lg">
           <Facebook className="h-4 w-4 mr-2" />
           Share on Facebook
         </DropdownMenuItem>
         
-        <DropdownMenuItem onClick={handleTwitterShare}>
+        <DropdownMenuItem onClick={handleTwitterShare} className="rounded-lg">
           <Twitter className="h-4 w-4 mr-2" />
           Share on Twitter
         </DropdownMenuItem>
         
-        <DropdownMenuItem onClick={handleWhatsAppShare}>
+        <DropdownMenuItem onClick={handleWhatsAppShare} className="rounded-lg">
           <MessageCircle className="h-4 w-4 mr-2" />
           Share on WhatsApp
         </DropdownMenuItem>
         
-        <DropdownMenuItem onClick={handleEmailShare}>
+        <DropdownMenuItem onClick={handleEmailShare} className="rounded-lg">
           <Mail className="h-4 w-4 mr-2" />
           Share via Email
         </DropdownMenuItem>
