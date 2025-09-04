@@ -6,6 +6,8 @@
 - [Prisma](https://www.prisma.io/) (Database ORM)
 - [Axios](https://axios-http.com/) (HTTP client)
 - [Cheerio](https://cheerio.js.org/) (Server-side jQuery)
+- [Framer Motion](https://www.framer.com/motion/) (Animations)
+- [Lucide React](https://lucide.dev/) (Icons)
 
 ## Screenshots
 
@@ -81,6 +83,10 @@ For detailed instructions, see [SUPABASE_MIGRATION_GUIDE.md](SUPABASE_MIGRATION_
 - Scrape rental listings from external websites:
   - Technical documentation: [WEB_SCRAPING.md](WEB_SCRAPING.md)
   - Usage guide: [HOW_TO_USE_WEB_SCRAPING.md](HOW_TO_USE_WEB_SCRAPING.md)
+- Interact with REN, the AI assistant:
+  - AI demo: Visit `/ai-demo` after starting the development server
+  - Integration guide: [REN_INTEGRATION_GUIDE.md](REN_INTEGRATION_GUIDE.md)
+  - AI requirements: [REN_AI_PERSONALITY_PRD.md](REN_AI_PERSONALITY_PRD.md)
 
 ## Contributing
 

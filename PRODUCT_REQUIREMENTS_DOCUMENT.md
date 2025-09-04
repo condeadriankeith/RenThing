@@ -1,5 +1,7 @@
 # Product Requirements Document (PRD) - RenThing
 
+**Note**: This document covers the core platform requirements. For detailed requirements on the AI personality (REN), see [REN_AI_PERSONALITY_PRD.md](REN_AI_PERSONALITY_PRD.md).
+
 ## 1. Product Overview
 
 ### 1.1 Purpose
@@ -231,12 +233,15 @@ The platform will support various rental categories including electronics, tools
 - Advanced search filters
 - Recommendation engine
 - Loyalty program
+- AI Assistant (REN) integration
 
 ### 10.2 Phase 3 Features
 - Multi-vendor marketplace
 - Subscription services
 - Delivery/pickup coordination
 - Insurance integration
+- Voice-enabled AI assistant
+- AR mascot integration
 
 ## 11. Risks and Mitigations
 
@@ -254,3 +259,8 @@ The platform will support various rental categories including electronics, tools
 - **Payment Failures**: Implement robust error handling and retry mechanisms
 - **Service Downtime**: Multi-region deployment and monitoring
 - **Content Moderation**: Automated and manual review processes
+
+### 11.4 AI Risks
+- **AI Misinterpretation**: Clear disclaimers and user confirmation for AI actions
+- **Overreliance on AI**: Maintain fallback to human/manual workflows
+- **Cultural Mismatch**: Continuous user feedback loops to refine AI persona
