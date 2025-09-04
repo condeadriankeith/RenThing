@@ -78,7 +78,9 @@ For detailed instructions, see [SUPABASE_MIGRATION_GUIDE.md](SUPABASE_MIGRATION_
 - Browse and book available items
 - Chat with owners/renters
 - Manage your bookings and payments
-- Scrape rental listings from external websites (see [WEB_SCRAPING.md](WEB_SCRAPING.md))
+- Scrape rental listings from external websites:
+  - Technical documentation: [WEB_SCRAPING.md](WEB_SCRAPING.md)
+  - Usage guide: [HOW_TO_USE_WEB_SCRAPING.md](HOW_TO_USE_WEB_SCRAPING.md)
 
 ## Contributing
 
