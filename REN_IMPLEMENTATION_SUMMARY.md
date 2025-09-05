@@ -66,6 +66,9 @@ This document summarizes all the files and components created for implementing R
 - Browse page chat assistance
 - Dashboard recommendations
 - API endpoints for external integration
+- Contextual suggestions based on user activity
+- Conversation history awareness
+- Enhanced error handling and fallbacks
 
 ## Architecture
 
@@ -95,6 +98,10 @@ To fully implement REN's capabilities, the following enhancements could be made:
 4. **AR Integration**: Implement augmented reality features for the mascot
 5. **Advanced System Monitoring**: Implement actual GitHub integration for code scanning
 6. **Multilingual Support**: Expand beyond English and Filipino
+
+## Recent Enhancements
+
+1. **DeepSeek-R1 Integration**: Added support for the powerful DeepSeek-R1 model through OpenRouter API for enhanced conversational capabilities. See [REN_DEEPSEEK_INTEGRATION.md](REN_DEEPSEEK_INTEGRATION.md) for details.
 
 ## Usage
 

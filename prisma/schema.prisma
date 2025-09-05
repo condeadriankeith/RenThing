@@ -1,3 +1,13 @@
+// Add datasource configuration
+datasource db {
+  provider = "sqlite"
+  url      = "file:./dev.db"
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
 // BUSINESS LOGIC: Chat rooms represent PERMANENT transaction history
 // - Created when customer first messages owner about a listing
 // - Cannot be deleted as they serve as evidence of customer-owner interactions
@@ -31,18 +41,6 @@ model Message {
   receiver    User      @relation("ReceivedMessages", fields: [receiverId], references: [id])
 }
 
-// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
-// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
-
-generator client {
-  provider = "prisma-client-js"
-}
-
-datasource db {
-  provider = "sqlite"
-  url      = env("DATABASE_URL")
-}
-
 model User {
   id            String    @id @default(uuid())
   email         String    @unique
@@ -62,6 +60,8 @@ model User {
   wishlist      Wishlist[]
   sentMessages     Message[] @relation("SentMessages")
   receivedMessages Message[] @relation("ReceivedMessages")
+  aiFeedback    AIFeedback[]
+  aiInteractions AIInteraction[]
 }
 
 model Listing {
@@ -166,4 +166,103 @@ model VerificationToken {
   expires    DateTime
 
   @@unique([identifier, token])
+}
+
+// AI Feedback and Interaction Models for REN Self-Improvement
+model AIFeedback {
+  id        String   @id @default(uuid())
+  userId    String?
+  messageId String
+  rating    Int
+  comment   String?
+  createdAt DateTime @default(now())
+  
+  user      User? @relation(fields: [userId], references: [id])
+}
+
+model AIInteraction {
+  id           String   @id @default(uuid())
+  userId       String?
+  userInput    String
+  aiResponse   String
+  actionTaken  String?
+  createdAt    DateTime @default(now())
+  
+  user         User? @relation(fields: [userId], references: [id])
+}
+
+// A/B Testing Model for Response Strategies
+model ABTest {
+  id          String    @id @default(uuid())
+  testName    String    @unique
+  variants    String    // JSON array of test variants
+  durationDays Int
+  metrics     String    // JSON array of metrics to track
+  startDate   DateTime  @default(now())
+  endDate     DateTime?
+  status      String    @default("active") // active, completed, paused
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+}
+
+model ABTestResult {
+  id          String    @id @default(uuid())
+  testId      String
+  variantName String
+  metricName  String
+  value       Float
+  createdAt   DateTime  @default(now())
+  
+  test        ABTest    @relation(fields: [testId], references: [id])
+}
+
+// Reinforcement Learning Model
+model ReinforcementLearningRecord {
+  id        String   @id @default(uuid())
+  updates   String   // JSON array of updates applied
+  timestamp DateTime @default(now())
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+// Active Learning Model
+model ActiveLearningRecord {
+  id        String   @id @default(uuid())
+  userId    String?
+  results   String   // JSON results of active learning analysis
+  timestamp DateTime @default(now())
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  
+  user      User? @relation(fields: [userId], references: [id])
+}
+
+// User Behavior Analytics Model
+model UserBehaviorAnalytics {
+  id           String   @id @default(uuid())
+  userId       String?
+  analyticsData String   // JSON analytics data
+  timestamp    DateTime @default(now())
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+  
+  user         User? @relation(fields: [userId], references: [id])
+}
+
+// User Preferences Model for Explicit Preference Settings
+model UserPreferences {
+  id                     String   @id @default(uuid())
+  userId                 String   @unique
+  preferredCategories    String?  // JSON array of preferred categories
+  preferredPriceRangeMin Float?
+  preferredPriceRangeMax Float?
+  preferredLocations     String?  // JSON array of preferred locations
+  engagementLevel        String?  // low, medium, high
+  // Add time-based preference fields
+  preferredBookingDays   String?  // JSON array of preferred days (Monday, Tuesday, etc.)
+  preferredBookingHours  String?  // JSON array of preferred hours (0-23)
+  createdAt              DateTime @default(now())
+  updatedAt              DateTime @updatedAt
+  
+  user                   User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 }

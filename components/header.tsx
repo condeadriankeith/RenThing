@@ -5,7 +5,7 @@ import Link from "next/link"
 import Image from "next/image"
 import { useSession, signOut } from "next-auth/react"
 import { Button } from "@/components/ui/button"
-import { Menu, User, LogOut, X, Search, Calendar, MessageCircle, Heart, Plus } from "lucide-react"
+import { Menu, User, LogOut, X, Search, Calendar, MessageCircle, Heart, Plus, List } from "lucide-react"
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -39,69 +39,92 @@ export default function Header() {
           </Link>
         </div>
 
-        {/* Desktop Navigation - Centered */}
-        <nav className="hidden lg:flex flex-1 items-center justify-center space-x-6 xl:space-x-8">
-          <Link href="/browse" className="text-gray-600 hover:text-blue-600 dark:text-gray-300 text-sm xl:text-base font-medium transition-colors">
-            Browse
-          </Link>
-          {isAuthenticated && (
-            <>
-              <Link href="/my-bookings" className="text-gray-600 hover:text-blue-600 dark:text-gray-300 text-sm xl:text-base font-medium transition-colors">
-                My Bookings
-              </Link>
-              <Link href="/inbox" className="text-gray-600 hover:text-blue-600 dark:text-gray-300 text-sm xl:text-base font-medium transition-colors">
-                Inbox
-              </Link>
-              <Link href="/list-item" className="text-gray-600 hover:text-blue-600 dark:text-gray-300 text-sm xl:text-base font-medium transition-colors">
-                List Item
-              </Link>
-            </>
-          )}
+        {/* Desktop Navigation - Simplified with Menu Button */}
+        <nav className="hidden lg:flex flex-1 items-center justify-center">
+          {/* Navigation items are now in a dropdown menu */}
         </nav>
 
         {/* Desktop Auth Buttons */}
-        <div className="hidden lg:flex flex-shrink-0 items-center">
+        <div className="hidden lg:flex flex-shrink-0 items-center space-x-2">
           {isLoading ? (
             <div className="h-8 w-20 bg-gray-200 rounded animate-pulse" />
           ) : isAuthenticated ? (
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button variant="ghost" className="relative h-8 w-8 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800">
-                  <User className="h-4 w-4" />
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent className="w-56" align="end" forceMount>
-                <div className="flex items-center justify-start gap-2 p-2">
-                  <div className="flex flex-col space-y-1 leading-none">
-                    <p className="font-medium">{session.user?.email}</p>
-                    <p className="w-[200px] truncate text-sm text-muted-foreground">
-                      {session.user?.name || "User"}
-                    </p>
+            <>
+              {/* Navigation Menu Button */}
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="outline" size="icon" className="h-8 w-8 rounded-full">
+                    <List className="h-4 w-4" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="w-48">
+                  <DropdownMenuItem asChild>
+                    <Link href="/browse" className="flex items-center">
+                      <Search className="h-4 w-4 mr-2" />
+                      Browse
+                    </Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem asChild>
+                    <Link href="/my-bookings" className="flex items-center">
+                      <Calendar className="h-4 w-4 mr-2" />
+                      My Bookings
+                    </Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem asChild>
+                    <Link href="/inbox" className="flex items-center">
+                      <MessageCircle className="h-4 w-4 mr-2" />
+                      Inbox
+                    </Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem asChild>
+                    <Link href="/list-item" className="flex items-center">
+                      <Plus className="h-4 w-4 mr-2" />
+                      List Item
+                    </Link>
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+              
+              {/* User Profile Menu */}
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="ghost" className="relative h-8 w-8 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800">
+                    <User className="h-4 w-4" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent className="w-56" align="end" forceMount>
+                  <div className="flex items-center justify-start gap-2 p-2">
+                    <div className="flex flex-col space-y-1 leading-none">
+                      <p className="font-medium">{session.user?.email}</p>
+                      <p className="w-[200px] truncate text-sm text-muted-foreground">
+                        {session.user?.name || "User"}
+                      </p>
+                    </div>
                   </div>
-                </div>
-                <DropdownMenuSeparator />
-                <DropdownMenuItem asChild>
-                  <Link href="/profile">My Profile</Link>
-                </DropdownMenuItem>
-                <DropdownMenuItem asChild>
-                  <Link href="/my-bookings">My Bookings</Link>
-                </DropdownMenuItem>
-                <DropdownMenuItem asChild>
-                  <Link href="/wishlist">Wishlist</Link>
-                </DropdownMenuItem>
-                <DropdownMenuItem asChild>
-                  <Link href="/inbox">Inbox</Link>
-                </DropdownMenuItem>
-                <DropdownMenuItem asChild>
-                  <Link href="/list-item">List Item</Link>
-                </DropdownMenuItem>
-                <DropdownMenuSeparator />
-                <DropdownMenuItem onClick={() => signOut()}>
-                  <LogOut className="mr-2 h-4 w-4" />
-                  <span>Sign out</span>
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem asChild>
+                    <Link href="/profile">My Profile</Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem asChild>
+                    <Link href="/my-bookings">My Bookings</Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem asChild>
+                    <Link href="/wishlist">Wishlist</Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem asChild>
+                    <Link href="/inbox">Inbox</Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem asChild>
+                    <Link href="/list-item">List Item</Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem onClick={() => signOut()}>
+                    <LogOut className="mr-2 h-4 w-4" />
+                    <span>Sign out</span>
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            </>
           ) : (
             <div className="flex items-center space-x-2">
               <Button variant="outline" asChild size="sm" className="text-sm px-3">

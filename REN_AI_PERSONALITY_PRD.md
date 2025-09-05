@@ -1,5 +1,7 @@
 # Product Requirements Document (PRD) - RenThing AI Personality ("REN")
 
+**Note**: This document covers detailed requirements for the REN AI personality. For comprehensive platform requirements, see [PRODUCT_REQUIREMENTS_DOCUMENT.md](PRODUCT_REQUIREMENTS_DOCUMENT.md). For an even more detailed platform overview, see [PRODUCT_REQUIREMENTS_DOCUMENT_UPDATED.md](PRODUCT_REQUIREMENTS_DOCUMENT_UPDATED.md).
+
 ## 1. Product Overview
 
 ### 1.1 Purpose

@@ -28,6 +28,9 @@ The main service that handles AI logic, including:
 - Context management
 - Recommendation engine
 - System monitoring capabilities
+- Contextual suggestions generation
+- Conversation history management
+- Platform feature awareness
 
 ### 2. RenChat (`components/ai/ren-chat.tsx`)
 A chat interface component that can be embedded anywhere in the platform.
@@ -139,6 +142,37 @@ Send a message to REN and receive a response.
 
 Get personalized recommendations for the current user.
 
+### 3. Suggestions Endpoint
+`POST /api/ai/suggestions`
+
+Get contextual suggestions based on user activity and platform state.
+
+**Request Body:**
+```json
+{
+  "context": {
+    "userId": "user123",
+    "conversationHistory": [
+      {"role": "user", "content": "Find camera rentals"},
+      {"role": "assistant", "content": "I found several camera options..."}
+    ]
+  }
+}
+```
+
+**Response:**
+```json
+{
+  "success": true,
+  "suggestions": [
+    "View my wishlist",
+    "Check messages (2 unread)",
+    "Find popular rentals",
+    "Import listings from web"
+  ]
+}
+```
+
 **Response:**
 ```json
 {
@@ -190,6 +224,10 @@ Customize the mascot appearance:
   variant="static"    // floating or static
 />
 ```
+
+## Advanced AI Integration
+
+REN now supports the DeepSeek-R1 model through the Hugging Face Inference API for enhanced conversational capabilities. For implementation details, see [REN_DEEPSEEK_INTEGRATION.md](REN_DEEPSEEK_INTEGRATION.md).
 
 ## Best Practices
 

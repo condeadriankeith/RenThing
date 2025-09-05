@@ -22,7 +22,8 @@ import {
   User,
   ArrowLeft,
   Heart,
-  Clock
+  Clock,
+  Settings
 } from "lucide-react"
 
 interface UserProfile {
@@ -172,8 +173,8 @@ export default function UserProfilePage() {
                     </div>
                   </div>
                   
-                  {!isOwnProfile && (
-                    <div className="flex items-center space-x-2">
+                  <div className="flex items-center space-x-2">
+                    {!isOwnProfile && (
                       <ContactOwnerChat
                         ownerId={profile.id}
                         ownerName={profile.name}
@@ -181,8 +182,16 @@ export default function UserProfilePage() {
                         variant="outline"
                         size="sm"
                       />
-                    </div>
-                  )}
+                    )}
+                    {isOwnProfile && (
+                      <Button asChild variant="outline" size="sm">
+                        <Link href="/profile/settings">
+                          <Settings className="h-4 w-4 mr-2" />
+                          Settings
+                        </Link>
+                      </Button>
+                    )}
+                  </div>
                 </div>
 
                 {/* Stats */}

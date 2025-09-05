@@ -66,3 +66,37 @@ export async function POST(req: Request) {
     );
   }
 }
+
+/**
+ * GET /api/ai/listing/[id]
+ * 
+ * Get information about a specific listing for AI recommendations
+ */
+export async function GET(req: Request, { params }: { params: { id: string } }) {
+  try {
+    const listingInfo = await renAIService.getListingInfo(params.id);
+    
+    if (!listingInfo) {
+      return NextResponse.json(
+        { success: false, error: 'Listing not found' },
+        { status: 404 }
+      );
+    }
+    
+    return NextResponse.json({
+      success: true,
+      listing: listingInfo
+    });
+    
+  } catch (error) {
+    console.error('AI Listing Info API Error:', error);
+    
+    return NextResponse.json(
+      { 
+        success: false, 
+        error: 'Failed to fetch listing information' 
+      },
+      { status: 500 }
+    );
+  }
+}

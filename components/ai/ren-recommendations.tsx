@@ -4,7 +4,7 @@ import React, { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
-import { renAIService } from "@/lib/ai/ren-ai-service";
+import { renAIClientService } from "@/lib/ai/ren-ai-service-client";
 import { useSession } from "next-auth/react";
 
 interface Listing {
@@ -33,39 +33,8 @@ export function RenRecommendations() {
       setLoading(true);
       setError(null);
       
-      // In a real implementation, this would call the API endpoint
-      // For now, we'll simulate with a timeout
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
-      // Mock recommendations
-      const mockRecommendations: Listing[] = [
-        {
-          id: "1",
-          title: "Canon EOS R5 Camera",
-          description: "Professional mirrorless camera with 45MP sensor",
-          price: 1200,
-          location: "Makati City",
-          images: ["/placeholder-camera.jpg"]
-        },
-        {
-          id: "2",
-          title: "Bosch Drill Set",
-          description: "18V cordless drill with accessories",
-          price: 350,
-          location: "Quezon City",
-          images: ["/placeholder-drill.jpg"]
-        },
-        {
-          id: "3",
-          title: "Mountain Bike",
-          description: "Full suspension mountain bike, 29 inch wheels",
-          price: 800,
-          location: "Taguig City",
-          images: ["/placeholder-bike.jpg"]
-        }
-      ];
-      
-      setRecommendations(mockRecommendations);
+      const recommendations = await renAIClientService.getRecommendations(session.user.id);
+      setRecommendations(recommendations);
     } catch (err) {
       console.error("Error fetching recommendations:", err);
       setError("Failed to load recommendations");
