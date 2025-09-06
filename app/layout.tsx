@@ -44,7 +44,7 @@ export default function RootLayout({
           }}
         />
       </head>
-      <body suppressHydrationWarning>
+      <body suppressHydrationWarning className="bg-background text-foreground">
         <ClientLayout>{children}</ClientLayout>
       </body>
     </html>
