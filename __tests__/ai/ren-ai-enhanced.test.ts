@@ -1,4 +1,4 @@
-import { renAIService, type AIContext } from '@/lib/ai/ren-ai-service';
+import { renAIService, type AIContext } from '@/ren-ai/services/ren-ai-service';
 
 describe('Enhanced REN AI Service', () => {
   describe('processMessage', () => {

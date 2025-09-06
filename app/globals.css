@@ -2,6 +2,10 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Import Font Awesome and Inter font */
+@import url('https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;700;800;900&display=swap');
+
 :root {
   --background: oklch(1 0 0);
   --foreground: oklch(0.145 0 0);
@@ -36,6 +40,11 @@
   --sidebar-accent-foreground: oklch(0.205 0 0);
   --sidebar-border: oklch(0.922 0 0);
   --sidebar-ring: oklch(0.708 0 0);
+  /* Light mode aurora colors */
+  --aurora-clr-1: #3b82f6;
+  --aurora-clr-2: #10b981;
+  --aurora-clr-3: #f59e0b;
+  --aurora-clr-4: #8b5cf6;
 }
 
 .dark {
@@ -71,14 +80,20 @@
   --sidebar-accent-foreground: oklch(0.985 0 0);
   --sidebar-border: oklch(0.269 0 0);
   --sidebar-ring: oklch(0.439 0 0);
+  /* Dark mode aurora colors */
+  --aurora-clr-1: #60a5fa;
+  --aurora-clr-2: #34d399;
+  --aurora-clr-3: #fbbf24;
+  --aurora-clr-4: #a78bfa;
 }
 
 @layer base {
   * {
-    @apply border-border outline-ring;
+    /* Fixed: Use border instead of border-border which doesn't exist */
+    @apply border-[var(--border)] outline-[var(--ring)];
   }
   body {
-    @apply bg-background text-foreground;
+    @apply bg-[var(--background)] text-[var(--foreground)];
     font-family: "SF Pro Display", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
     font-weight: 400;
     line-height: 1.5;
@@ -300,22 +315,6 @@
   filter: blur(1.5rem);
 }
 
-/* Light mode aurora colors */
-:root {
-  --aurora-clr-1: #3b82f6;
-  --aurora-clr-2: #10b981;
-  --aurora-clr-3: #f59e0b;
-  --aurora-clr-4: #8b5cf6;
-}
-
-/* Dark mode aurora colors */
-.dark {
-  --aurora-clr-1: #60a5fa;
-  --aurora-clr-2: #34d399;
-  --aurora-clr-3: #fbbf24;
-  --aurora-clr-4: #a78bfa;
-}
-
 .aurora-mask__item:nth-of-type(1) {
   background: linear-gradient(45deg, var(--aurora-clr-1), var(--aurora-clr-2));
   top: -50%;
@@ -373,9 +372,6 @@
   50% { background-position: 100% 50%; }
   100% { background-position: 0% 50%; }
 }
-
-/* Import Inter font */
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;700;800;900&display=swap');
 
 body {
   font-family: 'Inter', system-ui, -apple-system, sans-serif;

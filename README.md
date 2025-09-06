@@ -52,6 +52,44 @@ DATABASE_URL=file:./dev.db
 NEXT_PUBLIC_BASE_URL=http://localhost:3000
 ```
 
+### Ollama Integration (Optional)
+
+To use a locally hosted AI model with Ollama:
+
+1. Install [Ollama](https://ollama.com/) on your machine
+2. Pull the DeepSeek-v3 model: `ollama run deepseek-v3`
+3. Set the following environment variables in your `.env.local` file:
+
+```env
+# Ollama Configuration for local AI model
+OLLAMA_ENABLED=true
+OLLAMA_HOST=http://localhost:11434
+OLLAMA_MODEL=deepseek-v3
+```
+
+When Ollama is enabled, the AI assistant will use your local model instead of the OpenRouter API, providing:
+- Complete privacy (no data sent to external services)
+- No API costs
+- Full control over the AI model
+- Offline capability
+
+### Local AI with Ollama (Optional)
+
+For even greater privacy and control, you can run a local AI model using Ollama:
+
+1. Install [Ollama](https://ollama.com/) on your machine
+2. Pull the Llama 3.1 8B model: `ollama pull llama3.1:8b`
+3. Set the following environment variables in your `.env.local` file:
+
+```env
+# Ollama Configuration for local AI model
+OLLAMA_ENABLED=true
+OLLAMA_HOST=http://localhost:11434
+OLLAMA_MODEL=llama3.1:8b
+```
+
+When Ollama is enabled, the AI assistant will use your local model instead of the OpenRouter API. See [OLLAMA_INTEGRATION.md](OLLAMA_INTEGRATION.md) for detailed setup instructions.
+
 ## Supabase Migration
 
 This project currently uses Prisma with PostgreSQL as the default database. However, it can be migrated to use Supabase instead.
@@ -98,7 +136,21 @@ For detailed instructions, see [SUPABASE_MIGRATION_GUIDE.md](SUPABASE_MIGRATION_
 - [WEB_SCRAPING.md](WEB_SCRAPING.md) - Documentation for web scraping functionality
 - [HOW_TO_USE_WEB_SCRAPING.md](HOW_TO_USE_WEB_SCRAPING.md) - User guide for web scraping
 - [ENVIRONMENT_VARIABLES.md](ENVIRONMENT_VARIABLES.md) - Configuration guide for environment variables
+- [OLLAMA_INTEGRATION.md](OLLAMA_INTEGRATION.md) - Local AI model integration with Ollama
 - [RECENT_CHANGES_SUMMARY.md](RECENT_CHANGES_SUMMARY.md) - Summary of recent development changes
+- [REN_AI_ISOLATION_SUMMARY.md](REN_AI_ISOLATION_SUMMARY.md) - Summary of isolated REN AI files
+
+## REN AI Isolation
+
+The REN AI files have been temporarily isolated into a dedicated directory structure for development purposes. 
+This isolation allows for focused work on AI features without affecting other parts of the application.
+
+To work with the isolated REN AI files:
+1. Navigate to the `ren-ai` directory
+2. All REN AI components, services, APIs, and hooks are organized within this directory
+3. Use the provided scripts for reintegration or removal when needed:
+   - `reintegrate-ren-ai.ps1` - Reintegrate files back to their original locations
+   - `remove-ren-ai-isolation.ps1` - Remove the isolated directory structure
 
 ## Contributing
 

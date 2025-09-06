@@ -1,4 +1,4 @@
-import { renFeedbackService } from '@/lib/ai/ren-feedback-service';
+import { renFeedbackService } from '@/ren-ai/services/ren-feedback-service';
 
 export class RenSelfImprovement {
   /**

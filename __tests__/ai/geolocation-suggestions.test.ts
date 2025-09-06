@@ -1,4 +1,4 @@
-import { renAIService } from '@/lib/ai/ren-ai-service';
+import { renAIService } from '@/ren-ai/services/ren-ai-service';
 
 describe('Geolocation-based Suggestions', () => {
   it('should return nearby locations based on geolocation data', async () => {

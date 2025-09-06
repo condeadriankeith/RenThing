@@ -62,6 +62,10 @@ model User {
   receivedMessages Message[] @relation("ReceivedMessages")
   aiFeedback    AIFeedback[]
   aiInteractions AIInteraction[]
+  abTestResults ABTestResult[] // Add reverse relation
+  activeLearningRecords ActiveLearningRecord[] // Add reverse relation
+  userBehaviorAnalytics UserBehaviorAnalytics[] // Add reverse relation
+  preferences UserPreferences? // Add reverse relation
 }
 
 model Listing {
@@ -203,6 +207,7 @@ model ABTest {
   status      String    @default("active") // active, completed, paused
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @updatedAt
+  results     ABTestResult[] // Add reverse relation
 }
 
 model ABTestResult {
@@ -212,8 +217,10 @@ model ABTestResult {
   metricName  String
   value       Float
   createdAt   DateTime  @default(now())
+  userId      String?   // Add foreign key field
   
   test        ABTest    @relation(fields: [testId], references: [id])
+  user        User?     @relation(fields: [userId], references: [id]) // Add proper relation
 }
 
 // Reinforcement Learning Model

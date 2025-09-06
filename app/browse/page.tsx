@@ -458,7 +458,7 @@ export default function BrowsePage() {
         {/* Listings Grid - Enhanced with curved edges and better layout */}
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-5 sm:gap-6">
           {filteredListings.map((listing) => (
-            <Card key={listing.id} className="group hover:shadow-2xl transition-all duration-300 cursor-pointer overflow-hidden border-0 shadow-lg bg-white dark:bg-gray-800 rounded-2xl">
+            <div key={listing.id} className="listing-card group">
               <Link href={`/listing/${listing.id}`}>
                 <div className="relative overflow-hidden rounded-t-2xl">
                   <div className="aspect-[4/3] overflow-hidden bg-gray-100 dark:bg-gray-700">
@@ -507,13 +507,13 @@ export default function BrowsePage() {
                   )}
                 </div>
                 
-                <div className="p-4 sm:p-5 space-y-3">
+                <div className="listing-content">
                   {/* Title and description */}
                   <div className="space-y-2">
-                    <h3 className="text-base sm:text-lg font-bold line-clamp-1 group-hover:text-blue-600 transition-colors duration-200 text-gray-900 dark:text-white">
+                    <h3 className="listing-title">
                       {listing.title}
                     </h3>
-                    <p className="line-clamp-2 text-sm text-gray-600 dark:text-gray-400 leading-relaxed">
+                    <p className="listing-description">
                       {listing.description}
                     </p>
                   </div>
@@ -548,7 +548,7 @@ export default function BrowsePage() {
                   </div>
                 </div>
               </Link>
-            </Card>
+            </div>
           ))}
         </div>
 

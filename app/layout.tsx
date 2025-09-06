@@ -6,6 +6,7 @@ export const metadata: Metadata = {
   title: 'RenThing',
   description: 'RenThing - Rent and Book in the Philippines',
   generator: 'RenThing',
+  viewport: 'width=device-width, initial-scale=1.0',
 }
 
 export default function RootLayout({
@@ -16,7 +17,7 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <head>
-        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+        {/* Removed duplicate font-awesome CDN link as it's already imported in globals.css */}
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="" />
         <style>{`

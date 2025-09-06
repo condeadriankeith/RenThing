@@ -4706,19 +4706,6 @@ export class RenAIService {
     return seasons;
   }
 
-      winter: 0   // December-February
-    };
-
-    months.forEach(month => {
-      if (month >= 2 && month <= 4) seasons.spring++;
-      else if (month >= 5 && month <= 7) seasons.summer++;
-      else if (month >= 8 && month <= 10) seasons.autumn++;
-      else seasons.winter++;
-    });
-
-    return seasons;
-  }
-
   /**
    * Identify behavioral patterns from user data
    * @param user User data with all activities

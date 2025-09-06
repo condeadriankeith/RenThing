@@ -7,7 +7,7 @@
  * 3. Managing client-side AI state
  */
 
-import { PROJECT_MAP, getPageRoutes, findRouteByPath } from '@/lib/ai/project-map';
+import { PROJECT_MAP, getPageRoutes, findRouteByPath } from '@/ren-ai/services/project-map';
 
 export interface AIContext {
   userId?: string;

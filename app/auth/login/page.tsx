@@ -49,6 +49,13 @@ export default function LoginPage() {
       console.log("SignIn result:", result) // Debug log
 
       if (result?.error) {
+        // Log more detailed error information
+        console.error("SignIn error details:", {
+          error: result.error,
+          status: result.status,
+          ok: result.ok,
+          url: result.url
+        })
         throw new Error(result.error)
       }
 
@@ -62,9 +69,16 @@ export default function LoginPage() {
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : "Login failed"
       console.error("Login error:", error) // Debug log
+      
+      // Provide more specific error messages
+      let displayMessage = errorMessage
+      if (errorMessage.includes("CredentialsSignin")) {
+        displayMessage = "Invalid email or password. Please check your credentials and try again."
+      }
+      
       toast({
         title: "Login Failed",
-        description: errorMessage,
+        description: displayMessage,
         variant: "destructive",
       })
     } finally {
