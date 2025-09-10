@@ -9,6 +9,15 @@ export async function GET(request: NextRequest) {
     // Add more detailed error logging
     console.log('Fetching listings from database...')
     
+    // Check if prisma is available
+    if (!prisma) {
+      console.error("Prisma client is not available for fetching listings")
+      return NextResponse.json(
+        { error: "Database connection error", details: "Prisma client is not available" },
+        { status: 500 }
+      )
+    }
+    
     const { searchParams } = new URL(request.url)
     const pageParam = searchParams.get("page")
     const limitParam = searchParams.get("limit")
@@ -148,6 +157,15 @@ export async function GET(request: NextRequest) {
 // POST /api/listings - Create new listing
 export async function POST(request: NextRequest) {
   try {
+    // Check if prisma is available
+    if (!prisma) {
+      console.error("Prisma client is not available for creating listings")
+      return NextResponse.json(
+        { error: "Database connection error", details: "Prisma client is not available" },
+        { status: 500 }
+      )
+    }
+
     const session = await getServerSession(authOptions)
 
     if (!session?.user) {

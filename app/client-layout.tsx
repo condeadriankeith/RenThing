@@ -276,15 +276,15 @@ export default function ClientLayout({
             <AnimatePresence>
               {isChatOpen && !isChatMinimized && (
                 <motion.div 
-                  className="fixed inset-0 z-[100] p-4 pointer-events-none"
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  exit={{ opacity: 0 }}
+                  className="fixed bottom-24 right-4 z-[100] pointer-events-none"
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: 20 }}
                   transition={{ duration: 0.2 }}
                 >
                   {/* Updated modal container to use dynamic height */}
                   <motion.div 
-                    className="bg-white rounded-2xl shadow-lg w-full max-w-md flex flex-col h-auto max-h-[80vh] overflow-hidden border border-gray-200 fixed inset-0 m-auto pointer-events-auto"
+                    className="bg-white rounded-2xl shadow-lg w-80 flex flex-col h-[500px] overflow-hidden border border-gray-200 pointer-events-auto"
                     initial={{ scale: 0.8, opacity: 0 }}
                     animate={{ scale: 1, opacity: 1 }}
                     exit={{ scale: 0.8, opacity: 0 }}

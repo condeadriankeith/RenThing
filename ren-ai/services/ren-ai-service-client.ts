@@ -83,8 +83,18 @@ export class RenAIClientService {
       return data.response;
     } catch (error) {
       console.error('Error processing AI message:', error);
+      
+      // Provide more specific error messages based on the type of error
+      let errorMessage = "I'm having trouble connecting to my intelligence center right now.";
+      
+      if (error instanceof TypeError && error.message.includes('fetch')) {
+        errorMessage = "I'm having trouble connecting to my intelligence center. Please check your internet connection.";
+      } else if (error instanceof Error) {
+        errorMessage = `I encountered an issue: ${error.message}`;
+      }
+      
       return {
-        text: "I'm having trouble connecting to my intelligence center right now. Let me help you with some common tasks:",
+        text: `${errorMessage} Let me help you with some common tasks:`,
         suggestions: ["Find popular rentals", "List my items", "Check my bookings", "View wishlist"],
         action: undefined // Use undefined instead of null
       };

@@ -88,12 +88,11 @@ export default function RegisterPage() {
         <CardHeader className="text-center">
           <div className="flex items-center justify-center space-x-2 mb-3 sm:mb-4">
             <Image 
-              src="/RenThing_LOGO.svg" 
+              src="/RenThing_Logo.png" 
               alt="RenThing" 
               width={36} 
               height={36} 
               className="h-9 w-auto"
-              style={{ filter: 'brightness(0) saturate(100%) invert(21%) sepia(99%) saturate(5000%) hue-rotate(215deg) brightness(1.1)' }}
               priority
             />
             <span className="text-2xl sm:text-3xl font-bold text-black dark:text-black">RenThing</span>

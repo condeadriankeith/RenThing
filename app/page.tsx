@@ -284,12 +284,11 @@ export default function HomePage() {
               <div>
                 <div className="flex items-center space-x-2 mb-4">
                   <Image 
-                    src="/RenThing_LOGO.svg" 
+                    src="/RenThing_Logo.png" 
                     alt="RenThing" 
                     width={32} 
                     height={32} 
                     className="h-8 w-auto"
-                    style={{ filter: 'brightness(0) invert(1)' }}
                   />
                   <span className="text-xl font-bold text-white">RenThing</span>
                 </div>

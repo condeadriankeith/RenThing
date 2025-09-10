@@ -23,19 +23,12 @@ export function RenMascot({
 }: RenMascotProps) {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isVisible, setIsVisible] = useState(true);
-  const [isWaving, setIsWaving] = useState(false);
   const [isEnergized, setIsEnergized] = useState(false);
 
-  // Handle wave animation periodically
+  // Handle subtle floating animation
   useEffect(() => {
-    const waveInterval = setInterval(() => {
-      if (Math.random() > 0.7) { // 30% chance to wave
-        setIsWaving(true);
-        setTimeout(() => setIsWaving(false), 1000);
-      }
-    }, 10000);
-
-    return () => clearInterval(waveInterval);
+    // Clear any existing intervals
+    return () => {};
   }, []);
 
   // Handle energized state periodically to show REN's enhanced capabilities
@@ -103,8 +96,12 @@ export function RenMascot({
                   onClick={onChatOpen}
                 >
                   <motion.div
-                    animate={isWaving ? { rotate: [0, 10, -10, 0] } : {}}
-                    transition={{ duration: 0.5 }}
+                    animate={{ y: [0, -5, 0] }}
+                    transition={{ 
+                      duration: 2, 
+                      repeat: Infinity, 
+                      ease: "easeInOut" 
+                    }}
                   >
                     <Avatar className={`${sizeClasses[size]} rounded-full shadow-lg border-2 border-white`}>
                       <AvatarFallback className={`bg-gradient-to-br ${isEnergized ? 'from-purple-600 to-pink-600' : 'from-blue-500 to-purple-600'} text-white font-bold`}>

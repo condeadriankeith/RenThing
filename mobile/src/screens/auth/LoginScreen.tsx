@@ -29,7 +29,7 @@ export default function LoginScreen({ navigation }: any) {
     <View style={styles.container}>
       <View style={styles.header}>
         <Image
-          source={require('../../../assets/icon.png')}
+          source={require('../../../assets/RenThing_Logo.png')}
           style={styles.logo}
           resizeMode="contain"
         />

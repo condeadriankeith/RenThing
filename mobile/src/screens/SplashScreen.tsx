@@ -7,7 +7,7 @@ export default function SplashScreen() {
     <View style={styles.container}>
       <View style={styles.logoContainer}>
         <Image
-          source={require('../../assets/icon.png')}
+          source={require('../../assets/RenThing_Logo.png')}
           style={styles.logo}
           resizeMode="contain"
         />

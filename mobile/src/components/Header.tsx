@@ -27,7 +27,7 @@ export default function Header({ title, showBack = false, showLogo = false, righ
         {showLogo && (
           <View style={styles.logoContainer}>
             <Image
-              source={require('../../assets/icon.png')}
+              source={require('../../assets/RenThing_Logo.png')}
               style={styles.logo}
               resizeMode="contain"
             />

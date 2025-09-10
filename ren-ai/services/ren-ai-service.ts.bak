@@ -1,7 +1,30 @@
-import { PrismaClient, Prisma } from '@prisma/client';
-import { ChatService } from '@/ren-ai/services/chat-service';
+// Fixed Prisma client import issue
+import { PrismaClient } from '@prisma/client';
+import type { Prisma } from '@prisma/client';
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+import type { AIResponse } from '@/ren-ai/services/ren-ai-service-client';
+import { ChatService } from '@/lib/chat-service';
 import { PROJECT_MAP, getPageRoutes, findRouteByPath } from '@/ren-ai/services/project-map';
 import { renFeedbackService } from '@/ren-ai/services/ren-feedback-service';
+
+// Add axios import for making HTTP requests to Ollama
+import axios from 'axios';
 
 const prisma = new PrismaClient();
 
@@ -92,7 +115,7 @@ export interface AIContext {
   };
   // Add user goal tracking
   userGoal?: {
-    type: 'booking' | 'listing' | 'search' | 'account' | 'payment' | 'support' | 'other';
+    type: 'booking' | 'listing' | 'search' | 'account' | 'payment' | 'support' | 'wishlist' | 'review' | 'other';
     details: any;
     progress: number; // 0-100
     createdAt: Date;
@@ -119,13 +142,14 @@ export interface UserSentiment {
 
 // Add intent classification interface
 export interface UserIntent {
-  type: 'booking' | 'listing' | 'search' | 'account' | 'payment' | 'support' | 'other';
+  type: 'booking' | 'listing' | 'search' | 'account' | 'payment' | 'support' | 'wishlist' | 'review' | 'other';
   confidence: number;
   entities?: {
     items?: string[];
     dates?: string[];
     locations?: string[];
     prices?: number[];
+    durations?: string[];
   };
 }
 
@@ -156,13 +180,27 @@ export interface WizardState {
   progress: number; // 0-100
 }
 
+// Define wizard step interface
+interface WizardStep {
+  prompt: string;
+  expectedData: string;
+  examples?: string[];
+  options?: string[];
+}
+
+// Define wizard interface
+interface Wizard {
+  steps: WizardStep[];
+  totalSteps: number;
+}
+
 export class RenAIService {
   private chatService: ChatService;
   // Add conversation memory storage
   private conversationMemory: Map<string, AIContext> = new Map();
   
-  // Define wizards
-  private wizards = {
+  // Define wizards with proper typing
+  private wizards: { [key: string]: Wizard } = {
     listing: {
       steps: [
         { 
@@ -1059,37 +1097,25 @@ export class RenAIService {
       const payload = {
         model: ollamaModel,
         messages: [
-          { role: 'system', content: systemPrompt.trim() },
+          { role: 'system', content: systemPrompt },
           { role: 'user', content: message }
         ],
         stream: false
       };
 
       // Make request to Ollama API
-      const response = await fetch(`${ollamaHost}/api/chat`, {
-        method: 'POST',
+      const response = await axios.post(`${ollamaHost}/api/chat`, payload, {
+        timeout: 30000, // 30 second timeout
         headers: {
           'Content-Type': 'application/json'
-        },
-        body: JSON.stringify(payload),
-        signal: AbortSignal.timeout(30000) // 30 second timeout
+        }
       });
 
-      if (!response.ok) {
-        throw new Error(`Ollama API error: ${response.status}`);
-      }
+      // Extract the response content
+      const aiResponse = response.data.message.content;
 
-      const data = await response.json();
-      
-      // Extract the AI response
-      const aiResponse = data.message?.content?.trim();
-
-      // If no response, use fallback text
-      if (!aiResponse) {
-        return null;
-      }
-
-      // Create a basic AIResponse object with default suggestions
+      // Create a basic AIResponse object
+      // In a more sophisticated implementation, we could parse suggestions and actions from the response
       return {
         text: aiResponse,
         suggestions: ['Find rentals', 'List items', 'Check bookings', 'View wishlist']
@@ -1102,12 +1128,126 @@ export class RenAIService {
   }
 
   /**
+   * Process a user message using the DeepSeek-R1 model (OpenRouter)
+   * @param message The user's input message
+   * @param context Context information about the user and conversation
+   * @returns AI-generated response
+   */
+  private async processWithOpenRouter(message: string, context: AIContext): Promise<AIResponse | null> {
+    try {
+      // Check if OpenRouter API key is configured
+      const apiKey = process.env.OPENROUTER_API_KEY;
+      if (!apiKey) {
+        console.warn('OpenRouter API key not configured');
+        return null;
+      }
+
+      console.log('Attempting to call OpenRouter API with message:', message);
+
+      // Create system prompt with context information
+      const systemPrompt = `
+        You are REN, an AI assistant for RenThing, a peer-to-peer rental marketplace platform.
+        Your role is to help users find rentals, list items, manage bookings, and navigate the platform.
+        
+        User Information:
+        ${context.userId ? `User ID: ${context.userId}` : 'Anonymous user'}
+        ${context.userProfile ? `Name: ${context.userProfile.name}` : '' }
+        ${context.currentGeolocation ? `Location: ${context.currentGeolocation.latitude}, ${context.currentGeolocation.longitude}` : '' }
+        
+        Conversation History:
+        ${context.conversationHistory ? context.conversationHistory.map(msg => `${msg.role}: ${msg.content}`).join('\n') : 'No history'}
+        
+        Please provide helpful, concise responses and use appropriate suggestions when applicable.
+        Format your responses in a friendly, conversational tone.
+        If you need to suggest specific actions, use the action format described in the system.
+      `;
+
+      // Prepare the request payload
+      const payload = {
+        model: "deepseek/deepseek-r1-0528-qwen3-8b:free",
+        messages: [
+          { role: 'system', content: systemPrompt.trim() },
+          { role: 'user', content: message }
+        ],
+        temperature: 0.7,
+        max_tokens: 500
+      };
+
+      // Make request to OpenRouter API
+      const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
+        method: "POST",
+        headers: {
+          "Authorization": `Bearer ${apiKey}`,
+          "HTTP-Referer": process.env.NEXTAUTH_URL || "http://localhost:3000",
+          "X-Title": "RenThing",
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify(payload),
+        signal: AbortSignal.timeout(30000) // 30 second timeout
+      });
+
+      console.log('OpenRouter API response status:', response.status);
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        throw new Error(`OpenRouter API error: ${response.status} - ${errorText}`);
+      }
+
+      const data = await response.json();
+      console.log('OpenRouter API response data:', JSON.stringify(data, null, 2));
+      
+      // Extract the AI response
+      // For DeepSeek model, the response might be in the 'reasoning' field instead of 'content'
+      const choice = data.choices[0];
+      let aiResponse = choice?.message?.content?.trim();
+
+      // If content is empty, try to get response from reasoning field
+      if (!aiResponse && choice?.message?.reasoning) {
+        // Extract the actual response from the reasoning content
+        // The reasoning often contains the thought process followed by the actual response
+        const reasoningContent = choice.message.reasoning.trim();
+        // Try to extract content after common response indicators
+        const responseMatch = reasoningContent.match(/(?:response:|final response:|answer:)\s*(.*)$/i);
+        if (responseMatch && responseMatch[1]) {
+          aiResponse = responseMatch[1].trim();
+        } else {
+          // If no clear response indicator, use the last paragraph of reasoning
+          const paragraphs = reasoningContent.split('\n').filter(p => p.trim().length > 0);
+          if (paragraphs.length > 0) {
+            aiResponse = paragraphs[paragraphs.length - 1].trim();
+          } else {
+            aiResponse = reasoningContent;
+          }
+        }
+      }
+
+      // If still no response, use fallback text
+      if (!aiResponse) {
+        aiResponse = "I'm not sure how to help with that.";
+      }
+
+      console.log('Extracted AI response:', aiResponse);
+
+      // Create a basic AIResponse object with default suggestions
+      return {
+        text: aiResponse,
+        suggestions: ['Find rentals', 'List items', 'Check bookings', 'View wishlist']
+      };
+    } catch (error) {
+      console.error('OpenRouter processing error:', error);
+      // Return null to fall back to other processing methods
+      return null;
+    }
+  }
+
+  /**
    * Process a user message using the DeepSeek-R1 model
    * @param message The user's input message
    * @param context Context information about the user and conversation
    * @returns AI-generated response
    */
   async processMessage(message: string, context: AIContext): Promise<AIResponse> {
+    console.log('Processing message:', message);
     // Get conversation context from memory if available
     if (context.sessionId) {
       const memoryContext = this.getConversationContext(context.sessionId);
@@ -1134,6 +1274,8 @@ export class RenAIService {
     const intent = this.classifyIntent(message);
     context.userIntent = intent;
     
+    console.log('User intent classified as:', intent);
+    
     // Check if we're in a wizard flow
     if (context.conversationState?.wizard) {
       const wizardResponse = this.processWizardStep(message, context);
@@ -1148,8 +1290,15 @@ export class RenAIService {
     
     // Check if user wants to start a wizard
     const lowerMessage = message.toLowerCase();
-    if (lowerMessage.includes('list an item') || lowerMessage.includes('create listing') || 
-        (intent.type === 'listing' && intent.confidence > 0.7)) {
+    console.log('Checking for wizard start with message:', lowerMessage);
+    
+    // More specific triggers for listing wizard
+    if ((lowerMessage.includes('list an item') || lowerMessage.includes('create listing') || 
+         lowerMessage.includes('add an item for rent') || lowerMessage.includes('rent out my item')) ||
+        (intent.type === 'listing' && intent.confidence > 0.8 && 
+         (lowerMessage.includes('list') || lowerMessage.includes('create') || lowerMessage.includes('add')) &&
+         (lowerMessage.includes('item') || lowerMessage.includes('rent') || lowerMessage.includes('share')))) {
+      console.log('Starting listing wizard');
       const wizardResponse = this.startWizard('listing', context);
       // Save updated context to memory
       if (context.sessionId) {
@@ -1158,8 +1307,13 @@ export class RenAIService {
       return wizardResponse;
     }
     
-    if (lowerMessage.includes('book') || lowerMessage.includes('rent') || 
-        (intent.type === 'booking' && intent.confidence > 0.7)) {
+    // More specific triggers for booking wizard
+    if ((lowerMessage.includes('book an item') || lowerMessage.includes('rent an item') ||
+         lowerMessage.includes('rent something') || lowerMessage.includes('book something')) ||
+        (intent.type === 'booking' && intent.confidence > 0.8 && 
+         (lowerMessage.includes('book') || lowerMessage.includes('rent')) &&
+         (lowerMessage.includes('item') || lowerMessage.includes('something')))) {
+      console.log('Starting booking wizard');
       const wizardResponse = this.startWizard('booking', context);
       // Save updated context to memory
       if (context.sessionId) {
@@ -1191,6 +1345,7 @@ export class RenAIService {
     // Handle ambiguous queries
     const clarificationResponse = this.handleAmbiguousQuery(message, context);
     if (clarificationResponse) {
+      console.log('Handling ambiguous query with response:', clarificationResponse);
       // Adapt response to sentiment
       const adaptedResponse = this.adaptResponseToSentiment(clarificationResponse, sentiment);
       
@@ -1201,6 +1356,8 @@ export class RenAIService {
       return adaptedResponse;
     }
     
+    console.log('Not handling ambiguous query, continuing to intent handling');
+    
     // Update conversation state
     if (context.conversationState) {
       context.conversationState.lastIntent = intent;
@@ -1210,8 +1367,10 @@ export class RenAIService {
     
     // Try to use Ollama local AI model first (if enabled)
     try {
+      console.log('Attempting to use Ollama model');
       const ollamaResponse = await this.processWithOllama(message, context);
       if (ollamaResponse) {
+        console.log('Ollama model returned response:', ollamaResponse);
         // Adapt response to sentiment
         const adaptedResponse = this.adaptResponseToSentiment(ollamaResponse, sentiment);
         
@@ -1224,10 +1383,39 @@ export class RenAIService {
         }
         
         return adaptedResponse;
+      } else {
+        console.log('Ollama model returned null response');
       }
     } catch (error) {
-      console.warn('Ollama model failed, falling back to rule-based system:', error);
+      console.warn('Ollama model failed, trying OpenRouter:', error);
     }
+    
+    // Try to use DeepSeek-R1 model (OpenRouter)
+    try {
+      console.log('Attempting to use OpenRouter model');
+      const deepSeekResponse = await this.processWithOpenRouter(message, context);
+      if (deepSeekResponse) {
+        console.log('OpenRouter model returned response:', deepSeekResponse);
+        // Adapt response to sentiment
+        const adaptedResponse = this.adaptResponseToSentiment(deepSeekResponse, sentiment);
+        
+        // Log the interaction for self-improvement
+        await this.logInteraction(message, adaptedResponse, context);
+        
+        // Save updated context to memory
+        if (context.sessionId) {
+          this.updateConversationContext(context.sessionId, context);
+        }
+        
+        return adaptedResponse;
+      } else {
+        console.log('OpenRouter model returned null response');
+      }
+    } catch (error) {
+      console.warn('DeepSeek model failed, falling back to rule-based system:', error);
+    }
+
+    console.log('Falling back to rule-based system');
 
     // Fallback to rule-based system
     const ruleBasedResponse = await this.processMessageRuleBased(message, context);
@@ -1278,8 +1466,10 @@ export class RenAIService {
     
     // Handle user intent
     if (context.userIntent) {
+      console.log('Handling user intent:', context.userIntent);
       switch (context.userIntent.type) {
         case 'booking':
+          console.log('Handling booking intent');
           // Personalize suggestions based on inferred preferences
           let bookingSuggestions = ["Camera", "Power tools", "Party decorations", "Sports equipment"];
           if (context.inferredPreferences?.preferredCategories?.length) {
@@ -1290,10 +1480,12 @@ export class RenAIService {
               "Sports equipment"
             ];
           }
-          return {
+          const bookingResponse = {
             text: "Sure, I can help you with that. What item would you like to rent?",
             suggestions: bookingSuggestions
           };
+          console.log('Booking response:', bookingResponse);
+          return bookingResponse;
         case 'listing':
           // Personalize suggestions based on inferred preferences
           let listingSuggestions = ["Camera", "Power tools", "Party decorations", "Sports equipment"];
@@ -1303,6 +1495,64 @@ export class RenAIService {
               context.inferredPreferences.preferredCategories[1] || "Power tools",
               "Party decorations",
               "Sports equipment"
+            ];
+          }
+          const listingResponse = {
+            text: "Sure, I can help you with that. What item would you like to list?",
+            suggestions: listingSuggestions
+          };
+          console.log('Listing response:', listingResponse);
+          return listingResponse;
+        default:
+          console.log('Unknown user intent:', context.userIntent.type);
+          return {
+            text: "I'm not sure what you're trying to do. Can you please provide more details?",
+            suggestions: ["Find rentals", "List items", "Check bookings", "View wishlist"]
+          };
+      }
+    }
+    
+    // Handle general queries
+    if (lowerMessage.includes('help') || lowerMessage.includes('support')) {
+      return {
+        text: "Sure, I can help you with that. How can I assist you today?",
+        suggestions: ["Find rentals", "List items", "Check bookings", "View wishlist"]
+      };
+    }
+    
+    if (lowerMessage.includes('rental') || lowerMessage.includes('rent')) {
+      return {
+        text: "Sure, I can help you with that. What item would you like to rent?",
+        suggestions: ["Camera", "Power tools", "Party decorations", "Sports equipment"]
+      };
+    }
+    
+    if (lowerMessage.includes('list') || lowerMessage.includes('create')) {
+      return {
+        text: "Sure, I can help you with that. What item would you like to list?",
+        suggestions: ["Camera", "Power tools", "Party decorations", "Sports equipment"]
+      };
+    }
+    
+    if (lowerMessage.includes('booking') || lowerMessage.includes('check')) {
+      return {
+        text: "Sure, I can help you with that. What booking would you like to check?",
+        suggestions: ["Camera", "Power tools", "Party decorations", "Sports equipment"]
+      };
+    }
+    
+    if (lowerMessage.includes('wishlist') || lowerMessage.includes('view')) {
+      return {
+        text: "Sure, I can help you with that. What items are in your wishlist?",
+        suggestions: ["Camera", "Power tools", "Party decorations", "Sports equipment"]
+      };
+    }
+    
+    return {
+      text: "I'm not sure what you're trying to do. Can you please provide more details?",
+      suggestions: ["Find rentals", "List items", "Check bookings", "View wishlist"]
+    };
+  }
             ];
           }
           return {
@@ -1389,44 +1639,6 @@ export class RenAIService {
       }
     });
   }
-
-  /**
-   * Process a wizard step
-   * @param message The user's input message
-   * @param context The conversation context
-   * @returns AI-generated response
-   */
-  private processWizardStep(message: string, context: AIContext): AIResponse | null {
-    if (!context.conversationState?.wizard) {
-      return null;
-    }
-    
-    const wizardState = context.conversationState.wizard;
-    const wizard = this.wizards[wizardState.type];
-    
-    if (!wizard) {
-      return null;
-    }
-    
-    const currentStep = wizard.steps[wizardState.step];
-    
-    // Store the user's response for the current step
-    wizardState.data[currentStep.expectedData] = message;
-    
-    // Move to the next step
-    wizardState.step++;
-    
-    // Check if we've completed all steps
-    if (wizardState.step >= wizard.steps.length) {
-      // Wizard completed
-      const summary = this.generateWizardSummary(wizardState);
-      
-      // Clear wizard state
-      context.conversationState.wizard = undefined;
-      
-      return {
-        text: `Great! You've completed the ${wizardState.type} process. Here's a summary of what we collected:\n\n${summary}\n\nWould you like to proceed with creating your listing or booking?`,
-        suggestions: ["Yes, proceed", "Review my information", "Start over"],
         action: { 
           type: `wizard_complete_${wizardState.type}`, 
           payload: { data: wizardState.data } 
@@ -1472,15 +1684,46 @@ export class RenAIService {
   }
 
   /**
-   * Process a user message using the DeepSeek-R1 model (OpenRouter)
-   * @param message The user's input message
-   * @param context Context information about the user and conversation
-   * @returns AI-generated response
+   * Get personalized recommendations for a user
+   * @param userId The user ID to get recommendations for
+   * @returns Array of recommended listings
    */
-  private async processWithOpenRouter(message: string, context: AIContext): Promise<AIResponse | null> {
-    // Use OpenRouter to process the message and generate a response
-    const response = await this.chatService.sendMessage(message, context);
-    return response;
+
+  /**
+   * Get personalized recommendations for a user (alternative implementation)
+   * @param userId The user ID to get recommendations for
+   * @returns Array of recommended listings
+   */
+  async getAlternativeRecommendations(userId: string) {
+    // First try collaborative filtering
+    const collaborativeRecs = await this.getCollaborativeRecommendations(userId);
+    if (collaborativeRecs.length > 0) {
+      return collaborativeRecs;
+    }
+    
+    // Fallback to personalized recommendations
+    return await this.getPersonalizedRecommendations(userId);
+  }
+        aiResponse = choice.message.reasoning.trim();
+      }
+
+      // If still no response, use fallback text
+      if (!aiResponse) {
+        aiResponse = "I'm not sure how to help with that.";
+      }
+
+      console.log('Extracted AI response:', aiResponse);
+
+      // Create a basic AIResponse object with default suggestions
+      return {
+        text: aiResponse,
+        suggestions: ['Find rentals', 'List items', 'Check bookings', 'View wishlist']
+      };
+    } catch (error) {
+      console.error('OpenRouter processing error:', error);
+      // Return null to fall back to other processing methods
+      return null;
+    }
   }
 
   /**
@@ -1490,11 +1733,11 @@ export class RenAIService {
    */
 
   /**
-   * Get personalized recommendations for a user
+   * Get personalized recommendations for a user (alternative implementation)
    * @param userId The user ID to get recommendations for
    * @returns Array of recommended listings
    */
-  async getRecommendations(userId: string) {
+  async getAlternativeRecommendations(userId: string) {
     // First try collaborative filtering
     const collaborativeRecs = await this.getCollaborativeRecommendations(userId);
     if (collaborativeRecs.length > 0) {
@@ -1544,7 +1787,7 @@ export class RenAIService {
       }
 
       // Calculate average rating
-      const totalRating = listing.reviews.reduce((sum, review) => sum + review.rating, 0);
+      const totalRating = listing.reviews.reduce((sum: number, review: any) => sum + review.rating, 0);
       const averageRating = listing.reviews.length > 0 ? totalRating / listing.reviews.length : 0;
 
       return {
@@ -1753,8 +1996,7 @@ export class RenAIService {
               id: true,
               title: true,
               description: true,
-              price: true,
-              category: true
+              price: true
             }
           }
         },
@@ -1804,7 +2046,7 @@ export class RenAIService {
           title: true,
           description: true,
           price: true,
-          category: true,
+          location: true,
           createdAt: true
         },
         orderBy: {
@@ -1845,112 +2087,139 @@ export class RenAIService {
       // Get user's persona for personalization
       const persona = await this.generateUserPersona(userId);
       if (!persona) {
-        return notifications;
+        // Sort notifications by priority
+        return notifications.sort((a, b) => b.priority - a.priority);
       }
       
       // Get user's recent activity
       const userActivity = await this.getUserActivity(userId);
       
       // Price drop notifications for wishlist items
-      for (const wishlistItem of userActivity.wishlistItems) {
-        const listing = wishlistItem.listing;
-        
-        // Check if there are similar listings at lower prices
-        const similarListings = await prisma.listing.findMany({
-          where: {
-            AND: [
-              {
-                description: {
-                  contains: listing.description,
-                  mode: 'insensitive'
-                }
+      if (userActivity.wishlistItems.length > 0) {
+        for (const wishlistItem of userActivity.wishlistItems) {
+          // Check if there are similar items at lower prices
+          const similarItems = await prisma.listing.findMany({
+            where: {
+              category: wishlistItem.listing.category,
+              price: {
+                lt: wishlistItem.listing.price * 0.9 // 10% lower
               },
-              {
-                price: {
-                  lt: listing.price * 0.9 // 10% lower
-                }
-              },
-              {
-                id: {
-                  not: listing.id
-                }
+              available: true
+            },
+            orderBy: {
+              price: 'asc'
+            },
+            take: 3
+          });
+          
+          if (similarItems.length > 0) {
+            notifications.push({
+              type: "price_drop",
+              message: `Great news! There are similar items to "${wishlistItem.listing.title}" available at up to 10% lower prices.`,
+              listingId: similarItems[0].id,
+              priority: 9
+            });
+          }
+        }
+      }
+      
+      // Availability notifications for popular items
+      const popularItems = await prisma.listing.findMany({
+        where: {
+          available: true
+        },
+        orderBy: {
+          bookings: {
+            _count: 'desc'
+          }
+        },
+        take: 5,
+        select: {
+          id: true,
+          title: true,
+          bookings: {
+            where: {
+              createdAt: {
+                gte: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000) // Last 7 days
               }
-            ]
+            }
+          }
+        }
+      });
+      
+      for (const item of popularItems) {
+        if (item.bookings.length > 5) { // If it has more than 5 bookings in the last week
+          notifications.push({
+            type: "popular_item",
+            message: `"${item.title}" is trending! It's been booked 5+ times this week.`,
+            listingId: item.id,
+            priority: 7
+          });
+        }
+      }
+      
+      // Personalized recommendations based on user persona
+      if (persona.preferredCategories && persona.preferredCategories.length > 0) {
+        const recommendedItems = await prisma.listing.findMany({
+          where: {
+            category: {
+              in: persona.preferredCategories
+            },
+            available: true,
+            NOT: {
+              id: {
+                in: userActivity.recentBookings.map(booking => booking.listingId)
+              }
+            }
           },
-          take: 1,
           orderBy: {
-            price: 'asc'
+            createdAt: 'desc'
+          },
+          take: 3,
+          select: {
+            id: true,
+            title: true,
+            price: true,
+            location: true
           }
         });
         
-        if (similarListings.length > 0) {
-          const cheaperListing = similarListings[0];
+        if (recommendedItems.length > 0) {
           notifications.push({
-            type: "price_drop",
-            message: `Price drop alert! Similar item "${cheaperListing.title}" is available for ₱${cheaperListing.price} (₱${listing.price - cheaperListing.price} cheaper than your wishlist item)`,
-            listingId: cheaperListing.id,
+            type: "personalized_recommendation",
+            message: `We found some new items in your favorite categories: ${recommendedItems.map(item => item.title).join(', ')}`,
+            listingId: recommendedItems[0].id,
             priority: 8
           });
         }
       }
       
-      // Availability alerts for popular items
-      if (persona.favoriteCategories.length > 0) {
-        const popularListings = await prisma.listing.findMany({
+      // Location-based notifications
+      if (context.currentGeolocation) {
+        const nearbyItems = await prisma.listing.findMany({
           where: {
-            AND: [
-              {
-                category: {
-                  in: persona.favoriteCategories
-                }
-              },
-              {
-                createdAt: {
-                  gte: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000) // Last 7 days
-                }
-              }
-            ]
+            location: {
+              contains: context.currentGeolocation.latitude.toString().substring(0, 5) // Simplified location matching
+            },
+            available: true
           },
-          take: 3,
           orderBy: {
             createdAt: 'desc'
+          },
+          take: 3,
+          select: {
+            id: true,
+            title: true,
+            location: true
           }
         });
         
-        for (const listing of popularListings) {
+        if (nearbyItems.length > 0) {
           notifications.push({
-            type: "new_popular_item",
-            message: `New popular item in your favorite category: "${listing.title}" just listed!`,
-            listingId: listing.id,
+            type: "nearby_item",
+            message: `Check out these items near you: ${nearbyItems.map(item => item.title).join(', ')}`,
+            listingId: nearbyItems[0].id,
             priority: 6
-          });
-        }
-      }
-      
-      // Seasonal listing suggestions for owners
-      if (userActivity.recentListings.length > 0) {
-        const currentMonth = new Date().getMonth();
-        const seasonalSuggestions = {
-          0: "New Year party supplies",
-          1: "Valentine's Day gifts",
-          2: "Gardening tools",
-          3: "Umbrellas and rain gear",
-          4: "Summer sports equipment",
-          5: "Beach and swimming gear",
-          6: "Summer party supplies",
-          7: "Back-to-school supplies",
-          8: "Outdoor cooking equipment",
-          9: "Halloween decorations",
-          10: "Holiday decorations",
-          11: "Christmas gifts"
-        };
-        
-        const suggestion = seasonalSuggestions[currentMonth];
-        if (suggestion) {
-          notifications.push({
-            type: "seasonal_listing_suggestion",
-            message: `Seasonal opportunity: Consider listing ${suggestion} to capitalize on upcoming demand`,
-            priority: 5
           });
         }
       }
@@ -2129,7 +2398,7 @@ export class RenAIService {
           title: true,
           description: true,
           price: true,
-          category: true
+          location: true
         }
       });
       
@@ -2142,7 +2411,9 @@ export class RenAIService {
         where: {
           AND: [
             {
-              category: originalListing.category
+              title: {
+                contains: originalListing.title
+              }
             },
             {
               id: {
@@ -2172,7 +2443,9 @@ export class RenAIService {
         where: {
           AND: [
             {
-              category: originalListing.category
+              title: {
+                contains: originalListing.title
+              }
             },
             {
               price: {
@@ -2220,7 +2493,7 @@ export class RenAIService {
       if (userPersona && userPersona.favoriteCategories.length > 0) {
         const categoryAlternatives = await prisma.listing.findMany({
           where: {
-            category: {
+            title: {
               in: userPersona.favoriteCategories
             }
           },
@@ -2233,7 +2506,7 @@ export class RenAIService {
         for (const listing of categoryAlternatives) {
           assistance.push({
             type: "favorite_category_alternative",
-            message: `Based on your preferences: "${listing.title}" in your favorite category`,
+            message: `Based on your preferences: "${listing.title}" matching your favorite categories`,
             listingId: listing.id,
             priority: 6
           });
@@ -2245,6 +2518,164 @@ export class RenAIService {
     } catch (error) {
       console.error('Error getting booking assistance:', error);
       return assistance;
+    }
+  }
+
+  /**
+   * Get smart notifications for relevant listings based on user preferences
+   * @param userId The user ID to get notifications for
+   * @param context Current user context
+   * @returns Array of smart notifications
+   */
+  async getSmartNotifications(userId: string, context: AIContext) {
+    const notifications: Array<{type: string, message: string, listingId?: string, priority: number}> = [];
+    
+    try {
+      // Get user's persona for personalization
+      const persona = await this.generateUserPersona(userId);
+      if (!persona) {
+        // Sort notifications by priority
+        return notifications.sort((a, b) => b.priority - a.priority);
+      }
+      
+      // Get user's recent activity
+      const userActivity = await this.getUserActivity(userId);
+      
+      // Price drop notifications for wishlist items
+      if (userActivity.wishlistItems.length > 0) {
+        for (const wishlistItem of userActivity.wishlistItems) {
+          // Check if there are similar items at lower prices
+          const similarItems = await prisma.listing.findMany({
+            where: {
+              category: wishlistItem.listing.category,
+              price: {
+                lt: wishlistItem.listing.price * 0.9 // 10% lower
+              },
+              available: true
+            },
+            orderBy: {
+              price: 'asc'
+            },
+            take: 3
+          });
+          
+          if (similarItems.length > 0) {
+            notifications.push({
+              type: "price_drop",
+              message: `Great news! There are similar items to "${wishlistItem.listing.title}" available at up to 10% lower prices.`,
+              listingId: similarItems[0].id,
+              priority: 9
+            });
+          }
+        }
+      }
+      
+      // Availability notifications for popular items
+      const popularItems = await prisma.listing.findMany({
+        where: {
+          available: true
+        },
+        orderBy: {
+          bookings: {
+            _count: 'desc'
+          }
+        },
+        take: 5,
+        select: {
+          id: true,
+          title: true,
+          bookings: {
+            where: {
+              createdAt: {
+                gte: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000) // Last 7 days
+              }
+            }
+          }
+        }
+      });
+      
+      for (const item of popularItems) {
+        if (item.bookings.length > 5) { // If it has more than 5 bookings in the last week
+          notifications.push({
+            type: "popular_item",
+            message: `"${item.title}" is trending! It's been booked 5+ times this week.`,
+            listingId: item.id,
+            priority: 7
+          });
+        }
+      }
+      
+      // Personalized recommendations based on user persona
+      if (persona.preferredCategories && persona.preferredCategories.length > 0) {
+        const recommendedItems = await prisma.listing.findMany({
+          where: {
+            category: {
+              in: persona.preferredCategories
+            },
+            available: true,
+            NOT: {
+              id: {
+                in: userActivity.recentBookings.map(booking => booking.listingId)
+              }
+            }
+          },
+          orderBy: {
+            createdAt: 'desc'
+          },
+          take: 3,
+          select: {
+            id: true,
+            title: true,
+            price: true,
+            location: true
+          }
+        });
+        
+        if (recommendedItems.length > 0) {
+          notifications.push({
+            type: "personalized_recommendation",
+            message: `We found some new items in your favorite categories: ${recommendedItems.map(item => item.title).join(', ')}`,
+            listingId: recommendedItems[0].id,
+            priority: 8
+          });
+        }
+      }
+      
+      // Location-based notifications
+      if (context.currentGeolocation) {
+        const nearbyItems = await prisma.listing.findMany({
+          where: {
+            location: {
+              contains: context.currentGeolocation.latitude.toString().substring(0, 5) // Simplified location matching
+            },
+            available: true
+          },
+          orderBy: {
+            createdAt: 'desc'
+          },
+          take: 3,
+          select: {
+            id: true,
+            title: true,
+            location: true
+          }
+        });
+        
+        if (nearbyItems.length > 0) {
+          notifications.push({
+            type: "nearby_item",
+            message: `Check out these items near you: ${nearbyItems.map(item => item.title).join(', ')}`,
+            listingId: nearbyItems[0].id,
+            priority: 6
+          });
+        }
+      }
+      
+      // Sort notifications by priority
+      return notifications.sort((a, b) => b.priority - a.priority);
+    } catch (error) {
+      console.error('Error getting smart notifications:', error);
+      return notifications;
     }
   }
 
@@ -2263,7 +2694,7 @@ export class RenAIService {
         return alerts;
       }
       
-      // Get user's wishlist items
+      // Get wishlist items
       const wishlistItems = await prisma.wishlist.findMany({
         where: {
           userId: userId
@@ -2273,10 +2704,12 @@ export class RenAIService {
             select: {
               id: true,
               title: true,
-              description: true
+              description: true,
+              price: true
             }
           }
-        }
+        },
+        take: 5
       });
       
       // For each wishlist item, check if similar items become available
@@ -2544,7 +2977,8 @@ export class RenAIService {
         }
       }
       
-      return reminders;
+      // Sort reminders by priority
+      return reminders.sort((a, b) => b.priority - a.priority);
     } catch (error) {
       console.error('Error getting booking reminders:', error);
       return reminders;
@@ -3256,8 +3690,8 @@ export class RenAIService {
       });
       
       // Calculate average ratings
-      const enrichedRecommendations = recommendations.map(listing => {
-        const totalRating = listing.reviews.reduce((sum, review) => sum + review.rating, 0);
+      const enrichedListings = listings.map(listing => {
+        const totalRating = listing.reviews.reduce((sum: number, review: any) => sum + review.rating, 0);
         const averageRating = listing.reviews.length > 0 ? totalRating / listing.reviews.length : 0;
         
         return {
@@ -4607,7 +5041,7 @@ export class RenAIService {
         orderBy: { createdAt: 'asc' }
       });
 
-      // Get user's listed items
+      // Get user's listings
       const userListings = await prisma.listing.findMany({
         where: { ownerId: userId },
         select: {
@@ -4617,7 +5051,8 @@ export class RenAIService {
           price: true,
           category: true,
           createdAt: true
-        }
+        },
+        orderBy: { createdAt: 'asc' }
       });
 
       // Get user's wishlist items
@@ -4848,8 +5283,8 @@ export class RenAIService {
    */
   async getPersonalizedRecommendations(userId: string) {
     try {
-      // Generate user persona
-      const persona = await this.generateUserPersona(userId);
+      // Generate detailed user persona
+      const persona = await this.generateDetailedUserPersona(userId);
       if (!persona) {
         return await this.getTrendingListings();
       }
@@ -6466,11 +6901,11 @@ export class RenAIService {
   }
 
   /**
-   * Get predictive navigation suggestions based on user activity
+   * Get predictive navigation suggestions based on user activity (alternative implementation)
    * @param userId The user ID to get suggestions for
    * @returns Array of navigation suggestions
    */
-  async getPredictiveNavigationSuggestions(userId: string) {
+  async getAlternativePredictiveNavigationSuggestions(userId: string) {
     try {
       // Get user's recent activity
       const userActivity = await this.getUserActivity(userId);
@@ -8656,70 +9091,6 @@ export class RenAIService {
         preferredBookingDays: [],
         preferredBookingHours: []
       };
-    }
-  }
-
-  /**
-   * Check Ollama service health
-   * @returns Whether Ollama service is accessible
-   */
-  async checkOllamaHealth(): Promise<boolean> {
-    try {
-      // Check if Ollama is enabled
-      if (process.env.OLLAMA_ENABLED !== 'true') {
-        return false;
-      }
-
-      const ollamaHost = process.env.OLLAMA_HOST || 'http://localhost:11434';
-      
-      // Make request to Ollama API health endpoint
-      const response = await fetch(`${ollamaHost}/api/tags`, {
-        method: 'GET',
-        signal: AbortSignal.timeout(5000) // 5 second timeout
-      });
-
-      return response.ok;
-    } catch (error) {
-      console.error('Ollama health check error:', error);
-      return false;
-    }
-  }
-
-  /**
-   * Check if the required Ollama model is available
-   * @returns Whether the required model is available
-   */
-  async checkOllamaModel(): Promise<boolean> {
-    try {
-      // Check if Ollama is enabled
-      if (process.env.OLLAMA_ENABLED !== 'true') {
-        return false;
-      }
-
-      const ollamaHost = process.env.OLLAMA_HOST || 'http://localhost:11434';
-      const ollamaModel = process.env.OLLAMA_MODEL || 'llama3.1:8b';
-
-      // Get list of available models
-      const response = await fetch(`${ollamaHost}/api/tags`, {
-        method: 'GET',
-        signal: AbortSignal.timeout(5000) // 5 second timeout
-      });
-
-      if (!response.ok) {
-        return false;
-      }
-
-      const data = await response.json();
-      
-      // Check if the required model is in the list
-      if (data.models && Array.isArray(data.models)) {
-        return data.models.some((model: any) => model.name === ollamaModel);
-      }
-      
-      return false;
-    } catch (error) {
-      console.error('Ollama model check error:', error);
-      return false;
     }
   }
 }

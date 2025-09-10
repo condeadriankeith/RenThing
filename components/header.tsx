@@ -27,12 +27,11 @@ export default function Header() {
         <div className="flex-shrink-0">
           <Link href="/" className="flex items-center space-x-2">
             <Image 
-              src="/RenThing_LOGO.svg" 
+              src="/RenThing_Logo.png" 
               alt="RenThing" 
               width={32} 
               height={32} 
               className="h-7 sm:h-8 w-auto"
-              style={{ filter: 'brightness(0) saturate(100%) invert(21%) sepia(99%) saturate(5000%) hue-rotate(215deg) brightness(1.1)' }}
               priority
             />
             <h1 className="text-lg sm:text-xl md:text-2xl font-bold text-black dark:text-black">RenThing</h1>

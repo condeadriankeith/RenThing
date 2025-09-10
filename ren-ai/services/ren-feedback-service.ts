@@ -26,7 +26,7 @@ export class RenFeedbackService {
    */
   async logFeedback(feedback: UserFeedback) {
     try {
-      const savedFeedback = await prisma.AIFeedback.create({
+      const savedFeedback = await prisma.aIFeedback.create({
         data: {
           userId: feedback.userId,
           messageId: feedback.messageId,
@@ -47,7 +47,7 @@ export class RenFeedbackService {
    */
   async logInteraction(interaction: InteractionLog) {
     try {
-      const savedInteraction = await prisma.AIInteraction.create({
+      const savedInteraction = await prisma.aIInteraction.create({
         data: {
           userId: interaction.userId,
           userInput: interaction.userInput,
@@ -68,14 +68,14 @@ export class RenFeedbackService {
    */
   async getFeedbackStats() {
     try {
-      const totalFeedback = await prisma.AIFeedback.count();
-      const averageRating = await prisma.AIFeedback.aggregate({
+      const totalFeedback = await prisma.aIFeedback.count();
+      const averageRating = await prisma.aIFeedback.aggregate({
         _avg: {
           rating: true
         }
       });
       
-      const feedbackByRating = await prisma.AIFeedback.groupBy({
+      const feedbackByRating = await prisma.aIFeedback.groupBy({
         by: ['rating'],
         _count: {
           rating: true
@@ -113,7 +113,7 @@ export class RenFeedbackService {
   async analyzeNavigationFailures() {
     try {
       // Find interactions where navigation was attempted but may have failed
-      const navigationInteractions = await prisma.AIInteraction.findMany({
+      const navigationInteractions = await prisma.aIInteraction.findMany({
         where: {
           actionTaken: {
             startsWith: 'navigate'

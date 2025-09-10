@@ -27,7 +27,7 @@ declare module "next-auth/jwt" {
 
 // NextAuth configuration
 export const authOptions: NextAuthOptions = {
-  adapter: PrismaAdapter(prisma),
+  adapter: prisma ? PrismaAdapter(prisma) : undefined,
   providers: [
     CredentialsProvider({
       name: "credentials",
@@ -37,6 +37,12 @@ export const authOptions: NextAuthOptions = {
       },
       async authorize(credentials) {
         if (!credentials?.email || !credentials?.password) {
+          return null
+        }
+
+        // Check if prisma is available
+        if (!prisma) {
+          console.error("Prisma client is not available for authentication")
           return null
         }
 

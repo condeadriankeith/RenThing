@@ -1,4 +1,4 @@
-const { renAIService } = require('./lib/ai/ren-ai-service');
+const { renAIService } = require('./ren-ai/services/ren-ai-service.ts');
 
 async function testOllama() {
   console.log('Testing Ollama integration...');
