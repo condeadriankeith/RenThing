@@ -13,6 +13,10 @@ import { SpinnerLoader } from "@/components/ui/spinner-loader"
 import { WishlistButton } from "@/components/wishlist-button"
 import { ShareButton } from "@/components/share-button"
 import { ContactOwnerChat } from "@/components/contact-owner-chat-fixed"
+import { UserBadgesDisplay } from "@/components/user-badges-display"
+import { AchievementsDisplay } from "@/components/achievements-display"
+import { ThemeSelector } from "@/components/theme-selector"
+import { BackgroundSelector } from "@/components/background-selector"
 import { 
   Star, 
   MapPin, 
@@ -23,7 +27,12 @@ import {
   ArrowLeft,
   Heart,
   Clock,
-  Settings
+  Settings,
+  Edit3,
+  Link as LinkIcon,
+  CheckCircle,
+  Award,
+  Zap
 } from "lucide-react"
 
 interface UserProfile {
@@ -31,6 +40,13 @@ interface UserProfile {
   name: string
   email?: string
   avatar: string | null
+  bio: string | null
+  location: string | null
+  socialLinks: any | null
+  responseTime: number | null
+  isVerified: boolean
+  theme: string | null
+  background: string | null
   joinedAt: string
   stats: {
     totalListings: number
@@ -69,6 +85,30 @@ interface UserProfile {
     }
     createdAt: string
   }>
+  achievements: Array<{
+    id: string
+    type: string
+    title: string
+    description: string
+    icon: string | null
+    earnedAt: string
+    expiresAt?: string
+  }>
+  badges?: Array<{
+    id: string
+    badgeType: string
+    createdAt: string
+    expiresAt?: string
+  }>
+  purchases?: Array<{
+    id: string
+    itemType: string
+    itemId?: string
+    amount: number
+    currency: string
+    createdAt: string
+    status: string
+  }>
 }
 
 export default function UserProfilePage() {
@@ -102,6 +142,52 @@ export default function UserProfilePage() {
     }
   }, [userId])
 
+  const handleThemeChange = async (theme: string) => {
+    if (!isOwnProfile) return
+    
+    try {
+      const response = await fetch(`/api/users/${userId}/update`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ theme }),
+      })
+      
+      if (!response.ok) {
+        throw new Error('Failed to update theme')
+      }
+      
+      const updatedProfile = await response.json()
+      setProfile(prev => prev ? { ...prev, theme: updatedProfile.theme } : null)
+    } catch (error) {
+      console.error('Error updating theme:', error)
+    }
+  }
+
+  const handleBackgroundChange = async (background: string | null) => {
+    if (!isOwnProfile) return
+    
+    try {
+      const response = await fetch(`/api/users/${userId}/update`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ background }),
+      })
+      
+      if (!response.ok) {
+        throw new Error('Failed to update background')
+      }
+      
+      const updatedProfile = await response.json()
+      setProfile(prev => prev ? { ...prev, background: updatedProfile.background } : null)
+    } catch (error) {
+      console.error('Error updating background:', error)
+    }
+  }
+
   if (isLoading) {
     return (
       <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex items-center justify-center">
@@ -128,15 +214,23 @@ export default function UserProfilePage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
+    <div 
+      className="min-h-screen bg-gray-50 dark:bg-gray-900"
+      style={{ 
+        background: profile.background || undefined,
+        backgroundColor: profile.theme ? undefined : undefined
+      }}
+    >
       <div className="container mx-auto px-4 py-8 max-w-6xl">
-        {/* Back Button */}
-        <Button variant="ghost" asChild className="mb-6">
-          <Link href="/browse">
-            <ArrowLeft className="h-4 w-4 mr-2" />
-            Back to Browse
-          </Link>
-        </Button>
+        {/* Back Button - Hidden on mobile for better space usage */}
+        <div className="hidden md:block">
+          <Button variant="ghost" asChild className="mb-6">
+            <Link href="/browse">
+              <ArrowLeft className="h-4 w-4 mr-2" />
+              Back to Browse
+            </Link>
+          </Button>
+        </div>
 
         {/* Profile Header */}
         <Card className="mb-8">
@@ -149,17 +243,33 @@ export default function UserProfilePage() {
                 </AvatarFallback>
               </Avatar>
               
-              <div className="flex-1">
-                <div className="flex items-start justify-between mb-4">
-                  <div>
-                    <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">
-                      {profile.name}
-                    </h1>
-                    <div className="flex items-center space-x-4 text-sm text-gray-600 dark:text-gray-400">
+              <div className="flex-1 w-full">
+                <div className="flex flex-col sm:flex-row sm:items-start justify-between mb-4 gap-4">
+                  <div className="flex-1">
+                    <div className="flex items-center mb-2">
+                      <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white mr-2">
+                        {profile.name}
+                      </h1>
+                      {profile.isVerified && (
+                        <CheckCircle className="h-5 w-5 sm:h-6 sm:w-6 text-blue-500" />
+                      )}
+                    </div>
+                    {profile.bio && (
+                      <p className="text-gray-700 dark:text-gray-300 mb-3">
+                        {profile.bio}
+                      </p>
+                    )}
+                    <div className="flex flex-wrap items-center gap-3 text-sm text-gray-600 dark:text-gray-400">
+                      {profile.location && (
+                        <div className="flex items-center space-x-1">
+                          <MapPin className="h-4 w-4" />
+                          <span>{profile.location}</span>
+                        </div>
+                      )}
                       <div className="flex items-center space-x-1">
                         <Calendar className="h-4 w-4" />
                         <span>Joined {new Date(profile.joinedAt).toLocaleDateString('en-US', { 
-                          month: 'long', 
+                          month: 'short', 
                           year: 'numeric' 
                         })}</span>
                       </div>
@@ -167,13 +277,19 @@ export default function UserProfilePage() {
                         <div className="flex items-center space-x-1">
                           <Star className="h-4 w-4 fill-yellow-400 text-yellow-400" />
                           <span className="font-medium">{profile.stats.averageRating}</span>
-                          <span>({profile.stats.totalReviews} reviews)</span>
+                          <span>({profile.stats.totalReviews})</span>
+                        </div>
+                      )}
+                      {profile.responseTime && (
+                        <div className="flex items-center space-x-1">
+                          <Zap className="h-4 w-4" />
+                          <span>{profile.responseTime}h</span>
                         </div>
                       )}
                     </div>
                   </div>
                   
-                  <div className="flex items-center space-x-2">
+                  <div className="flex flex-wrap gap-2">
                     {!isOwnProfile && (
                       <ContactOwnerChat
                         ownerId={profile.id}
@@ -184,37 +300,65 @@ export default function UserProfilePage() {
                       />
                     )}
                     {isOwnProfile && (
-                      <Button asChild variant="outline" size="sm">
-                        <Link href="/profile/settings">
-                          <Settings className="h-4 w-4 mr-2" />
-                          Settings
-                        </Link>
-                      </Button>
+                      <>
+                        <ThemeSelector 
+                          currentTheme={profile.theme} 
+                          onThemeChange={handleThemeChange} 
+                        />
+                        <BackgroundSelector 
+                          currentBackground={profile.background} 
+                          onBackgroundChange={handleBackgroundChange} 
+                        />
+                        <Button asChild variant="outline" size="sm" className="hidden sm:flex">
+                          <Link href="/shop">
+                            <ShoppingBag className="h-4 w-4 mr-2" />
+                            Shop
+                          </Link>
+                        </Button>
+                        <Button asChild variant="outline" size="sm">
+                          <Link href="/profile/settings">
+                            <Settings className="h-4 w-4" />
+                            <span className="sr-only sm:not-sr-only sm:ml-2">Settings</span>
+                          </Link>
+                        </Button>
+                      </>
                     )}
                   </div>
                 </div>
 
-                {/* Stats */}
-                <div className="grid grid-cols-3 gap-4">
-                  <div className="text-center">
-                    <div className="text-2xl font-bold text-blue-600">{profile.stats.totalListings}</div>
-                    <div className="text-sm text-gray-600 dark:text-gray-400">
+                {/* Stats - Responsive grid */}
+                <div className="grid grid-cols-3 gap-4 mt-4">
+                  <div className="text-center p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
+                    <div className="text-xl sm:text-2xl font-bold text-blue-600 dark:text-blue-400">{profile.stats.totalListings}</div>
+                    <div className="text-xs sm:text-sm text-gray-600 dark:text-gray-400">
                       {profile.stats.totalListings === 1 ? 'Listing' : 'Listings'}
                     </div>
                   </div>
-                  <div className="text-center">
-                    <div className="text-2xl font-bold text-green-600">{profile.stats.totalCompletedBookings}</div>
-                    <div className="text-sm text-gray-600 dark:text-gray-400">
+                  <div className="text-center p-3 bg-green-50 dark:bg-green-900/20 rounded-lg">
+                    <div className="text-xl sm:text-2xl font-bold text-green-600 dark:text-green-400">{profile.stats.totalCompletedBookings}</div>
+                    <div className="text-xs sm:text-sm text-gray-600 dark:text-gray-400">
                       {profile.stats.totalCompletedBookings === 1 ? 'Booking' : 'Bookings'}
                     </div>
                   </div>
-                  <div className="text-center">
-                    <div className="text-2xl font-bold text-yellow-600">
+                  <div className="text-center p-3 bg-yellow-50 dark:bg-yellow-900/20 rounded-lg">
+                    <div className="text-xl sm:text-2xl font-bold text-yellow-600 dark:text-yellow-400">
                       {profile.stats.averageRating > 0 ? profile.stats.averageRating : '—'}
                     </div>
-                    <div className="text-sm text-gray-600 dark:text-gray-400">Rating</div>
+                    <div className="text-xs sm:text-sm text-gray-600 dark:text-gray-400">Rating</div>
                   </div>
                 </div>
+
+                {/* Badges and Achievements - Collapsed on mobile */}
+                {(profile.badges && profile.badges.length > 0) || (profile.achievements && profile.achievements.length > 0) ? (
+                  <div className="mt-4 space-y-4">
+                    {isOwnProfile && profile.badges && profile.badges.length > 0 && (
+                      <UserBadgesDisplay badges={profile.badges} />
+                    )}
+                    {profile.achievements && profile.achievements.length > 0 && (
+                      <AchievementsDisplay achievements={profile.achievements} />
+                    )}
+                  </div>
+                ) : null}
               </div>
             </div>
           </CardContent>
@@ -222,15 +366,27 @@ export default function UserProfilePage() {
 
         {/* Profile Content */}
         <Tabs defaultValue="listings" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-2">
-            <TabsTrigger value="listings">
+          <TabsList className="grid w-full grid-cols-5 sm:grid-cols-5">
+            <TabsTrigger value="listings" className="text-xs sm:text-sm">
               Listings ({profile.stats.totalListings})
             </TabsTrigger>
-            <TabsTrigger value="reviews">
+            <TabsTrigger value="reviews" className="text-xs sm:text-sm">
               Reviews ({profile.stats.totalReviews})
+            </TabsTrigger>
+            {isOwnProfile && (
+              <TabsTrigger value="purchases" className="text-xs sm:text-sm">
+                Purchases ({profile.purchases?.length || 0})
+              </TabsTrigger>
+            )}
+            <TabsTrigger value="activity" className="text-xs sm:text-sm">
+              Activity
+            </TabsTrigger>
+            <TabsTrigger value="about" className="text-xs sm:text-sm">
+              About
             </TabsTrigger>
           </TabsList>
 
+          {/* Listings Tab */}
           <TabsContent value="listings" className="space-y-6">
             {profile.listings.length === 0 ? (
               <Card>
@@ -250,7 +406,7 @@ export default function UserProfilePage() {
                 </CardContent>
               </Card>
             ) : (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
                 {profile.listings.map((listing) => (
                   <Card key={listing.id} className="group hover:shadow-lg transition-shadow">
                     <Link href={`/listing/${listing.id}`}>
@@ -273,34 +429,27 @@ export default function UserProfilePage() {
                             listingImage={listing.images[0]}
                             variant="ghost"
                             size="sm"
-                            className="bg-white/80 hover:bg-white h-8 w-8 p-0"
                           />
                         </div>
                       </div>
-                      <CardHeader className="pb-2">
-                        <CardTitle className="text-lg line-clamp-1">{listing.title}</CardTitle>
-                      </CardHeader>
-                      <CardContent>
-                        <div className="flex items-center justify-between mb-2">
+                      <div className="p-4">
+                        <h3 className="font-semibold text-lg mb-1 group-hover:text-blue-600 transition-colors">
+                          {listing.title}
+                        </h3>
+                        <p className="text-gray-600 dark:text-gray-400 text-sm mb-2 line-clamp-2">
+                          {listing.description}
+                        </p>
+                        <div className="flex items-center justify-between">
+                          <span className="font-bold text-lg">₱{listing.price.toFixed(2)}</span>
                           <div className="flex items-center space-x-1">
                             <Star className="h-4 w-4 fill-yellow-400 text-yellow-400" />
-                            <span className="text-sm font-medium">{listing.averageRating.toFixed(1)}</span>
-                            <span className="text-sm text-gray-500">({listing.reviewCount})</span>
-                          </div>
-                          <div className="flex items-center text-sm text-gray-500">
-                            <MapPin className="h-3 w-3 mr-1" />
-                            {listing.location}
-                          </div>
-                        </div>
-                        <div className="flex items-center justify-between">
-                          <div>
-                            <span className="text-2xl font-bold text-blue-600">
-                              ₱{listing.price.toLocaleString()}
+                            <span className="text-sm">
+                              {listing.averageRating > 0 ? listing.averageRating.toFixed(1) : '—'}
+                              <span className="text-gray-500"> ({listing.reviewCount})</span>
                             </span>
-                            <span className="text-sm text-gray-500">/day</span>
                           </div>
                         </div>
-                      </CardContent>
+                      </div>
                     </Link>
                   </Card>
                 ))}
@@ -308,6 +457,7 @@ export default function UserProfilePage() {
             )}
           </TabsContent>
 
+          {/* Reviews Tab */}
           <TabsContent value="reviews" className="space-y-6">
             {profile.reviews.length === 0 ? (
               <Card>
@@ -317,7 +467,7 @@ export default function UserProfilePage() {
                     No reviews yet
                   </h3>
                   <p className="text-gray-600 dark:text-gray-400">
-                    {isOwnProfile ? "Reviews from your bookings will appear here." : "This user hasn't left any reviews yet."}
+                    {isOwnProfile ? "Your reviews will appear here." : "This user hasn't received any reviews yet."}
                   </p>
                 </CardContent>
               </Card>
@@ -357,6 +507,114 @@ export default function UserProfilePage() {
                 ))}
               </div>
             )}
+          </TabsContent>
+
+          {/* Purchases Tab - Only for own profile */}
+          {isOwnProfile && (
+            <TabsContent value="purchases" className="space-y-6">
+              <Card>
+                <CardContent className="text-center py-12">
+                  <ShoppingBag className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+                  <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-2">
+                    Purchase History
+                  </h3>
+                  <p className="text-gray-600 dark:text-gray-400 mb-6">
+                    View your purchase history and manage your items
+                  </p>
+                  <Button asChild>
+                    <Link href={`/profile/${userId}/purchases`}>View Purchases</Link>
+                  </Button>
+                </CardContent>
+              </Card>
+            </TabsContent>
+          )}
+
+          {/* Activity Tab */}
+          <TabsContent value="activity" className="space-y-6">
+            <Card>
+              <CardContent className="text-center py-12">
+                <Award className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+                <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-2">
+                  Activity Timeline
+                </h3>
+                <p className="text-gray-600 dark:text-gray-400">
+                  Your rental activity and milestones will appear here.
+                </p>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          {/* About Tab */}
+          <TabsContent value="about" className="space-y-6">
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center">
+                  <User className="h-5 w-5 mr-2" />
+                  About {profile.name}
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-6">
+                {profile.bio && (
+                  <div>
+                    <h3 className="font-medium text-gray-900 dark:text-white mb-2">Bio</h3>
+                    <p className="text-gray-600 dark:text-gray-400">{profile.bio}</p>
+                  </div>
+                )}
+                
+                {profile.location && (
+                  <div>
+                    <h3 className="font-medium text-gray-900 dark:text-white mb-2">Location</h3>
+                    <div className="flex items-center text-gray-600 dark:text-gray-400">
+                      <MapPin className="h-4 w-4 mr-2" />
+                      <span>{profile.location}</span>
+                    </div>
+                  </div>
+                )}
+                
+                {profile.socialLinks && (
+                  <div>
+                    <h3 className="font-medium text-gray-900 dark:text-white mb-2">Social Links</h3>
+                    <div className="flex flex-wrap gap-2">
+                      {Object.entries(profile.socialLinks).map(([platform, url]) => (
+                        <a
+                          key={platform}
+                          href={url as string}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="flex items-center px-3 py-1 bg-gray-100 dark:bg-gray-800 rounded-full text-sm hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors"
+                        >
+                          <LinkIcon className="h-3 w-3 mr-1" />
+                          {platform}
+                        </a>
+                      ))}
+                    </div>
+                  </div>
+                )}
+                
+                <div>
+                  <h3 className="font-medium text-gray-900 dark:text-white mb-2">Member Since</h3>
+                  <div className="flex items-center text-gray-600 dark:text-gray-400">
+                    <Calendar className="h-4 w-4 mr-2" />
+                    <span>{new Date(profile.joinedAt).toLocaleDateString('en-US', { 
+                      month: 'long', 
+                      day: 'numeric',
+                      year: 'numeric'
+                    })}</span>
+                  </div>
+                </div>
+                
+                {isOwnProfile && (
+                  <div className="pt-4 border-t border-gray-200 dark:border-gray-800">
+                    <Button asChild variant="outline" size="sm">
+                      <Link href="/profile/settings">
+                        <Edit3 className="h-4 w-4 mr-2" />
+                        Edit Profile
+                      </Link>
+                    </Button>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
           </TabsContent>
         </Tabs>
       </div>

@@ -66,6 +66,12 @@ model User {
   activeLearningRecords ActiveLearningRecord[] // Add reverse relation
   userBehaviorAnalytics UserBehaviorAnalytics[] // Add reverse relation
   preferences UserPreferences? // Add reverse relation
+  
+  // New reverse relations for feature enhancements
+  userTiers     UserTier[]      // Reverse relation for UserTier
+  userBadges    UserBadge[]     // Reverse relation for UserBadge
+  vouchers      Voucher[]       // Reverse relation for Voucher
+  purchases     Purchase[]      // Reverse relation for Purchase
 }
 
 model Listing {
@@ -272,4 +278,67 @@ model UserPreferences {
   updatedAt              DateTime @updatedAt
   
   user                   User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+// New models for feature enhancements
+
+// User Tier System
+model UserTier {
+  id           String    @id @default(uuid())
+  userId       String    @unique
+  tier         String    // new, bronze, silver, gold
+  points       Int       @default(0)
+  totalListingsRented Int @default(0) // For renters
+  totalListingsOwned Int @default(0)  // For owners
+  totalSuccessfulRentals Int @default(0) // For renters
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+  user         User      @relation(fields: [userId], references: [id])
+}
+
+// User Badges for In-App Purchases
+model UserBadge {
+  id           String    @id @default(uuid())
+  userId       String
+  badgeType    String    // verified, gold_owner, gold_renter
+  purchaseId   String?
+  expiresAt    DateTime?
+  createdAt    DateTime  @default(now())
+  user         User      @relation(fields: [userId], references: [id])
+}
+
+// Vouchers for In-App Purchases
+model Voucher {
+  id           String    @id @default(uuid())
+  userId       String
+  voucherType  String    // item, owner, seasonal
+  code         String    @unique
+  discount     Float
+  expiresAt    DateTime?
+  used         Boolean   @default(false)
+  usedAt       DateTime?
+  createdAt    DateTime  @default(now())
+  user         User      @relation(fields: [userId], references: [id])
+}
+
+// Purchase Records for In-App Purchases
+model Purchase {
+  id           String    @id @default(uuid())
+  userId       String
+  itemType     String    // badge, voucher
+  itemId       String?
+  amount       Float
+  currency     String    @default("PHP")
+  status       String    @default("completed")
+  createdAt    DateTime  @default(now())
+  user         User      @relation(fields: [userId], references: [id])
+}
+
+// Commission Rates for Tiered Commission Structure
+model CommissionRate {
+  id           String    @id @default(uuid())
+  durationType String    // daily, weekly, monthly
+  rate         Float     // percentage (e.g., 7.0 for 7%)
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
 }

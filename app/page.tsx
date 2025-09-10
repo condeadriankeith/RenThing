@@ -44,6 +44,9 @@ export default function HomePage() {
             <Button size="lg" variant="outline" className="text-base sm:text-lg px-6 sm:px-8 h-12 sm:h-14 bg-white dark:bg-gray-800" asChild>
               <Link href="/list-item">List Your Item</Link>
             </Button>
+            <Button size="lg" variant="outline" className="text-base sm:text-lg px-6 sm:px-8 h-12 sm:h-14 bg-white dark:bg-gray-800" asChild>
+              <Link href="/shop">Visit Shop</Link>
+            </Button>
           </div>
         </div>
 
@@ -270,6 +273,9 @@ export default function HomePage() {
               </Button>
               <Button size="lg" variant="outline" className="text-lg px-8 bg-transparent border-2 border-white text-white hover:bg-blue-700 hover:text-white" asChild>
                 <Link href="/list-item">List Your Items</Link>
+              </Button>
+              <Button size="lg" variant="outline" className="text-lg px-8 bg-transparent border-2 border-white text-white hover:bg-blue-700 hover:text-white" asChild>
+                <Link href="/shop">Visit Shop</Link>
               </Button>
             </div>
           </div>

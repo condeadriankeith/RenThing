@@ -1,0 +1,8 @@
+-- AlterTable
+ALTER TABLE "User" ADD COLUMN "bio" TEXT;
+ALTER TABLE "User" ADD COLUMN "location" TEXT;
+ALTER TABLE "User" ADD COLUMN "socialLinks" TEXT;
+ALTER TABLE "User" ADD COLUMN "responseTime" INTEGER;
+ALTER TABLE "User" ADD COLUMN "isVerified" BOOLEAN NOT NULL DEFAULT false;
+ALTER TABLE "User" ADD COLUMN "theme" TEXT;
+ALTER TABLE "User" ADD COLUMN "background" TEXT;

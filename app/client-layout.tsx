@@ -9,6 +9,7 @@ import PageTransitionLoader from "@/components/PageTransitionLoader"
 import Header from "@/components/header"
 import HydrationErrorBoundary from "@/components/hydration-error-boundary"
 import BrowserExtensionCleanup from "@/components/browser-extension-cleanup"
+<<<<<<< HEAD
 import { RenMascot } from "@/components/ai/ren-mascot"
 import { RenChat } from "@/components/ai/ren-chat"
 import { useState, useEffect } from "react"
@@ -17,6 +18,10 @@ import { X, Minimize, Trash2 } from "lucide-react"
 import { motion, AnimatePresence } from "framer-motion"
 import { GeolocationProvider } from "@/contexts/geolocation-context"
 import { getPageRoutes, findRouteByPath } from "@/ren-ai/services/project-map"
+=======
+import { useState, useEffect } from "react"
+import { GeolocationProvider } from "@/contexts/geolocation-context"
+>>>>>>> 8668939 (2025-09-10: Temporary disabling of REN AI)
 
 export default function ClientLayout({
   children,
@@ -25,6 +30,7 @@ export default function ClientLayout({
 }) {
   const pathname = usePathname()
   const router = useRouter()
+<<<<<<< HEAD
   const [isChatOpen, setIsChatOpen] = useState(false)
   const [isChatMinimized, setIsChatMinimized] = useState(false)
   const [chatMessages, setChatMessages] = useState<any[]>([])
@@ -147,11 +153,20 @@ export default function ClientLayout({
     }
   }, [chatMessages, serverRestartChecked])
   
+=======
+  const [serverRestartChecked, setServerRestartChecked] = useState(false)
+
+  useEffect(() => {
+    setServerRestartChecked(true);
+  }, [])
+
+>>>>>>> 8668939 (2025-09-10: Temporary disabling of REN AI)
   const shouldShowNav = ![
     "/auth/login",
     "/auth/register",
   ].includes(pathname)
 
+<<<<<<< HEAD
   // Don't show REN mascot on AI demo page since it already has one
   const shouldShowRenMascot = pathname !== "/ai-demo"
 
@@ -250,6 +265,8 @@ export default function ClientLayout({
     }
   }
 
+=======
+>>>>>>> 8668939 (2025-09-10: Temporary disabling of REN AI)
   return (
     <HydrationErrorBoundary>
       <BrowserExtensionCleanup />
@@ -261,6 +278,7 @@ export default function ClientLayout({
             <main className={shouldShowNav ? "flex-grow" : ""}>{children}</main>
             <Toaster />
             <SpeedInsights />
+<<<<<<< HEAD
             {shouldShowRenMascot && (
               <RenMascot 
                 variant="floating" 
@@ -329,6 +347,8 @@ export default function ClientLayout({
                 </motion.div>
               )}
             </AnimatePresence>
+=======
+>>>>>>> 8668939 (2025-09-10: Temporary disabling of REN AI)
           </ThemeProvider>
         </GeolocationProvider>
       </SessionProvider>

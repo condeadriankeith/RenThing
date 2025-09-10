@@ -52,6 +52,7 @@ DATABASE_URL=file:./dev.db
 NEXT_PUBLIC_BASE_URL=http://localhost:3000
 ```
 
+<<<<<<< HEAD
 ### Ollama Integration (Optional)
 
 To use a locally hosted AI model with Ollama:
@@ -90,6 +91,8 @@ OLLAMA_MODEL=llama3.1:8b
 
 When Ollama is enabled, the AI assistant will use your local model instead of the OpenRouter API. See [OLLAMA_INTEGRATION.md](OLLAMA_INTEGRATION.md) for detailed setup instructions.
 
+=======
+>>>>>>> 8668939 (2025-09-10: Temporary disabling of REN AI)
 ## Supabase Migration
 
 This project currently uses Prisma with PostgreSQL as the default database. However, it can be migrated to use Supabase instead.
@@ -121,16 +124,20 @@ For detailed instructions, see [SUPABASE_MIGRATION_GUIDE.md](SUPABASE_MIGRATION_
 - Scrape rental listings from external websites:
   - Technical documentation: [WEB_SCRAPING.md](WEB_SCRAPING.md)
   - Usage guide: [HOW_TO_USE_WEB_SCRAPING.md](HOW_TO_USE_WEB_SCRAPING.md)
+<<<<<<< HEAD
 - Interact with REN, the AI assistant:
   - AI demo: Visit `/ai-demo` after starting the development server
   - Integration guide: [REN_INTEGRATION_GUIDE.md](REN_INTEGRATION_GUIDE.md)
   - AI requirements: [REN_AI_PERSONALITY_PRD.md](REN_AI_PERSONALITY_PRD.md)
   - DeepSeek-R1 integration: [REN_DEEPSEEK_INTEGRATION.md](REN_DEEPSEEK_INTEGRATION.md)
+=======
+>>>>>>> 8668939 (2025-09-10: Temporary disabling of REN AI)
 
 ## Documentation
 
 - [PRODUCT_REQUIREMENTS_DOCUMENT.md](PRODUCT_REQUIREMENTS_DOCUMENT.md) - Core platform requirements
 - [PRODUCT_REQUIREMENTS_DOCUMENT_UPDATED.md](PRODUCT_REQUIREMENTS_DOCUMENT_UPDATED.md) - Comprehensive PRD with enhanced details
+<<<<<<< HEAD
 - [REN_AI_PERSONALITY_PRD.md](REN_AI_PERSONALITY_PRD.md) - Detailed requirements for REN AI personality
 - [REN_DEEPSEEK_INTEGRATION.md](REN_DEEPSEEK_INTEGRATION.md) - Technical details for AI model integration
 - [WEB_SCRAPING.md](WEB_SCRAPING.md) - Documentation for web scraping functionality
@@ -151,6 +158,12 @@ To work with the isolated REN AI files:
 3. Use the provided scripts for reintegration or removal when needed:
    - `reintegrate-ren-ai.ps1` - Reintegrate files back to their original locations
    - `remove-ren-ai-isolation.ps1` - Remove the isolated directory structure
+=======
+- [WEB_SCRAPING.md](WEB_SCRAPING.md) - Documentation for web scraping functionality
+- [HOW_TO_USE_WEB_SCRAPING.md](HOW_TO_USE_WEB_SCRAPING.md) - User guide for web scraping
+- [ENVIRONMENT_VARIABLES.md](ENVIRONMENT_VARIABLES.md) - Configuration guide for environment variables
+- [RECENT_CHANGES_SUMMARY.md](RECENT_CHANGES_SUMMARY.md) - Summary of recent development changes
+>>>>>>> 8668939 (2025-09-10: Temporary disabling of REN AI)
 
 ## Contributing
 

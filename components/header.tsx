@@ -5,7 +5,7 @@ import Link from "next/link"
 import Image from "next/image"
 import { useSession, signOut } from "next-auth/react"
 import { Button } from "@/components/ui/button"
-import { Menu, User, LogOut, X, Search, Calendar, MessageCircle, Heart, Plus, List } from "lucide-react"
+import { Menu, User, LogOut, X, Search, Calendar, MessageCircle, Heart, Plus, List, ShoppingBag } from "lucide-react"
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -81,6 +81,12 @@ export default function Header() {
                       List Item
                     </Link>
                   </DropdownMenuItem>
+                  <DropdownMenuItem asChild>
+                    <Link href="/shop" className="flex items-center">
+                      <ShoppingBag className="h-4 w-4 mr-2" />
+                      Shop
+                    </Link>
+                  </DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
               
@@ -115,6 +121,9 @@ export default function Header() {
                   </DropdownMenuItem>
                   <DropdownMenuItem asChild>
                     <Link href="/list-item">List Item</Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem asChild>
+                    <Link href="/shop">Shop</Link>
                   </DropdownMenuItem>
                   <DropdownMenuSeparator />
                   <DropdownMenuItem onClick={() => signOut()}>
@@ -215,6 +224,14 @@ export default function Header() {
                         >
                           <Plus className="h-5 w-5 mr-3 text-gray-500" />
                           List Item
+                        </Link>
+                        <Link 
+                          href="/shop" 
+                          className="flex items-center px-3 py-3 rounded-lg text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors" 
+                          onClick={() => setMobileNavOpen(false)}
+                        >
+                          <ShoppingBag className="h-5 w-5 mr-3 text-gray-500" />
+                          Shop
                         </Link>
                         <Link 
                           href="/profile" 

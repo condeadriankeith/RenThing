@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server"
 import { getServerSession } from "next-auth"
 import { authOptions } from "@/lib/auth"
 import { PrismaClient } from "@prisma/client"
+import { purchaseService } from "@/lib/purchase-service"
 
 const prisma = new PrismaClient()
 
@@ -29,6 +30,13 @@ export async function GET(
         name: true,
         email: true,
         avatar: true,
+        bio: true,
+        location: true,
+        socialLinks: true,
+        responseTime: true,
+        isVerified: true,
+        theme: true,
+        background: true,
         createdAt: true,
         listings: {
           include: {
@@ -87,6 +95,18 @@ export async function GET(
             createdAt: 'desc'
           },
           take: 10
+        },
+        achievements: {
+          where: {
+            OR: [
+              { expiresAt: null },
+              { expiresAt: { gte: new Date() } }
+            ]
+          },
+          orderBy: {
+            earnedAt: 'desc'
+          },
+          take: 10
         }
       }
     })
@@ -129,11 +149,30 @@ export async function GET(
     // Check if this is the user's own profile
     const isOwnProfile = session?.user?.id === userId
 
+    // Get user badges and purchases if this is the user's own profile
+    let userBadges = [];
+    let userPurchases = [];
+    if (isOwnProfile) {
+      try {
+        userBadges = await purchaseService.getUserBadges(userId);
+        userPurchases = await purchaseService.getUserPurchases(userId);
+      } catch (error) {
+        console.error("Error fetching user badges/purchases:", error);
+      }
+    }
+
     // Return public profile info (or full info if own profile)
     const profileData = {
       id: user.id,
       name: user.name,
       avatar: user.avatar,
+      bio: user.bio,
+      location: user.location,
+      socialLinks: user.socialLinks ? JSON.parse(user.socialLinks) : null,
+      responseTime: user.responseTime,
+      isVerified: user.isVerified,
+      theme: user.theme,
+      background: user.background,
       joinedAt: user.createdAt,
       stats: {
         totalListings,
@@ -143,8 +182,12 @@ export async function GET(
       },
       listings: formattedListings,
       reviews: user.reviews,
+      achievements: user.achievements,
       // Only include email for own profile
-      ...(isOwnProfile && { email: user.email })
+      ...(isOwnProfile && { email: user.email }),
+      // Include badges and purchases for own profile
+      ...(isOwnProfile && { badges: userBadges }),
+      ...(isOwnProfile && { purchases: userPurchases })
     }
 
     return NextResponse.json(profileData)

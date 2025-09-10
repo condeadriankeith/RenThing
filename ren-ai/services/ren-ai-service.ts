@@ -1,7 +1,7 @@
 import { PrismaClient, Prisma } from '@prisma/client';
-import { ChatService } from '@/ren-ai/services/chat-service';
-import { PROJECT_MAP, getPageRoutes, findRouteByPath } from '@/ren-ai/services/project-map';
-import { renFeedbackService } from '@/ren-ai/services/ren-feedback-service';
+import { ChatService } from '@/lib/chat-service';
+import { PROJECT_MAP, getPageRoutes, findRouteByPath } from '@/lib/ai/project-map';
+import { renFeedbackService } from '@/lib/ai/ren-feedback-service';
 
 const prisma = new PrismaClient();
 
@@ -542,6 +542,22 @@ export class RenAIService {
   private classifyIntent(message: string): UserIntent {
     const lowerMessage = message.toLowerCase();
     
+    // Add greeting detection
+    const greetingPatterns = [
+      'hello', 'hi', 'hey', 'good morning', 'good afternoon', 'good evening',
+      'greetings', 'howdy', 'what\'s up', 'how are you'
+    ];
+    
+    const isGreeting = greetingPatterns.some(pattern => lowerMessage.includes(pattern));
+    
+    if (isGreeting) {
+      return {
+        type: 'greeting',
+        confidence: 0.9,
+        entities: undefined
+      };
+    }
+    
     // Enhanced intent patterns with more sophisticated matching
     const bookingPatterns = [
       'book', 'rent', 'reserve', 'availability', 'dates', 'calendar',
@@ -1021,87 +1037,6 @@ export class RenAIService {
   }
 
   /**
-   * Process a user message using the Ollama local AI model
-   * @param message The user's input message
-   * @param context Context information about the user and conversation
-   * @returns AI-generated response
-   */
-  private async processWithOllama(message: string, context: AIContext): Promise<AIResponse | null> {
-    // Check if Ollama is enabled
-    if (process.env.OLLAMA_ENABLED !== 'true') {
-      return null;
-    }
-
-    try {
-      // Get Ollama configuration from environment variables
-      const ollamaHost = process.env.OLLAMA_HOST || 'http://localhost:11434';
-      const ollamaModel = process.env.OLLAMA_MODEL || 'llama3.1:8b';
-
-      // Create system prompt with context information
-      const systemPrompt = `
-        You are REN, an AI assistant for RenThing, a peer-to-peer rental marketplace platform.
-        Your role is to help users find rentals, list items, manage bookings, and navigate the platform.
-        
-        User Information:
-        ${context.userId ? `User ID: ${context.userId}` : 'Anonymous user'}
-        ${context.userProfile ? `Name: ${context.userProfile.name}` : '' }
-        ${context.currentGeolocation ? `Location: ${context.currentGeolocation.latitude}, ${context.currentGeolocation.longitude}` : '' }
-        
-        Conversation History:
-        ${context.conversationHistory ? context.conversationHistory.map(msg => `${msg.role}: ${msg.content}`).join('\n') : 'No history'}
-        
-        Please provide helpful, concise responses and use appropriate suggestions when applicable.
-        Format your responses in a friendly, conversational tone.
-        If you need to suggest specific actions, use the action format described in the system.
-      `;
-
-      // Prepare the request payload
-      const payload = {
-        model: ollamaModel,
-        messages: [
-          { role: 'system', content: systemPrompt.trim() },
-          { role: 'user', content: message }
-        ],
-        stream: false
-      };
-
-      // Make request to Ollama API
-      const response = await fetch(`${ollamaHost}/api/chat`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify(payload),
-        signal: AbortSignal.timeout(30000) // 30 second timeout
-      });
-
-      if (!response.ok) {
-        throw new Error(`Ollama API error: ${response.status}`);
-      }
-
-      const data = await response.json();
-      
-      // Extract the AI response
-      const aiResponse = data.message?.content?.trim();
-
-      // If no response, use fallback text
-      if (!aiResponse) {
-        return null;
-      }
-
-      // Create a basic AIResponse object with default suggestions
-      return {
-        text: aiResponse,
-        suggestions: ['Find rentals', 'List items', 'Check bookings', 'View wishlist']
-      };
-    } catch (error) {
-      console.error('Ollama processing error:', error);
-      // Return null to fall back to other processing methods
-      return null;
-    }
-  }
-
-  /**
    * Process a user message using the DeepSeek-R1 model
    * @param message The user's input message
    * @param context Context information about the user and conversation
@@ -1208,136 +1143,120 @@ export class RenAIService {
       context.conversationState.clarificationNeeded = false;
     }
     
-    // Try to use Ollama local AI model first (if enabled)
-    try {
-      const ollamaResponse = await this.processWithOllama(message, context);
-      if (ollamaResponse) {
-        // Adapt response to sentiment
-        const adaptedResponse = this.adaptResponseToSentiment(ollamaResponse, sentiment);
+    // Check if Ollama exclusive mode is enabled
+    if (process.env.OLLAMA_ENABLED === 'true') {
+      // Use Ollama model exclusively - no fallbacks in exclusive mode
+      try {
+        const ollamaResponse = await this.processWithOllama(message, context);
+        if (ollamaResponse) {
+          // Adapt response to sentiment
+          const adaptedResponse = this.adaptResponseToSentiment(ollamaResponse, sentiment);
+          
+          // Log the interaction for self-improvement
+          await this.logInteraction(message, adaptedResponse, context);
+          
+          // Save updated context to memory
+          if (context.sessionId) {
+            this.updateConversationContext(context.sessionId, context);
+          }
+          
+          return adaptedResponse;
+        } else {
+          // If Ollama returns null, return an error response in exclusive mode
+          const errorResponse: AIResponse = {
+            text: "I'm currently experiencing technical difficulties with my AI processing. Please try again in a moment or contact support if the issue persists.",
+            suggestions: ["Try again", "Contact support"]
+          };
+          
+          // Log the interaction for self-improvement
+          await this.logInteraction(message, errorResponse, context);
+          
+          // Save updated context to memory
+          if (context.sessionId) {
+            this.updateConversationContext(context.sessionId, context);
+          }
+          
+          return errorResponse;
+        }
+      } catch (error) {
+        console.error('Ollama model failed in exclusive mode:', error);
+        // Return error response in exclusive mode - no fallbacks
+        const errorResponse: AIResponse = {
+          text: "I'm currently experiencing technical difficulties with my AI processing. Please try again in a moment or contact support if the issue persists.",
+          suggestions: ["Try again", "Contact support"]
+        };
         
         // Log the interaction for self-improvement
-        await this.logInteraction(message, adaptedResponse, context);
+        await this.logInteraction(message, errorResponse, context);
         
         // Save updated context to memory
         if (context.sessionId) {
           this.updateConversationContext(context.sessionId, context);
         }
         
-        return adaptedResponse;
+        return errorResponse;
       }
-    } catch (error) {
-      console.warn('Ollama model failed, falling back to rule-based system:', error);
-    }
-
-    // Fallback to rule-based system
-    const ruleBasedResponse = await this.processMessageRuleBased(message, context);
-    
-    // Adapt response to sentiment
-    const adaptedResponse = this.adaptResponseToSentiment(ruleBasedResponse, sentiment);
-    
-    // Log the interaction for self-improvement
-    await this.logInteraction(message, adaptedResponse, context);
-    
-    // Save updated context to memory
-    if (context.sessionId) {
-      this.updateConversationContext(context.sessionId, context);
-    }
-    
-    return adaptedResponse;
-  }
-
-  /**
-   * Process a user message using rule-based responses (fallback)
-   * @param message The user's input message
-   * @param context Context information about the user and conversation
-   * @returns AI-generated response
-   */
-  private async processMessageRuleBased(message: string, context: AIContext): Promise<AIResponse> {
-    // Enhanced rule-based response system with better understanding of platform features
-
-    const lowerMessage = message.toLowerCase();
-    
-    // Handle clarification responses
-    if (context.conversationState?.clarificationNeeded) {
-      // Reset clarification flag
-      context.conversationState.clarificationNeeded = false;
-      
-      // Handle user responses to clarification
-      if (lowerMessage.includes('yes') || lowerMessage.includes('yeah') || lowerMessage.includes('sure')) {
-        // User confirmed, proceed with last intent
-        if (context.conversationState.lastIntent) {
-          context.userIntent = context.conversationState.lastIntent;
+    } else {
+      // Legacy mode - try OpenRouter first, then Ollama, then rule-based
+      // Try to use DeepSeek-R1 model first (OpenRouter)
+      try {
+        const deepSeekResponse = await this.processWithOpenRouter(message, context);
+        if (deepSeekResponse) {
+          // Adapt response to sentiment
+          const adaptedResponse = this.adaptResponseToSentiment(deepSeekResponse, sentiment);
+          
+          // Log the interaction for self-improvement
+          await this.logInteraction(message, adaptedResponse, context);
+          
+          // Save updated context to memory
+          if (context.sessionId) {
+            this.updateConversationContext(context.sessionId, context);
+          }
+          
+          return adaptedResponse;
         }
-      } else if (lowerMessage.includes('no') || lowerMessage.includes('nope') || lowerMessage.includes('never mind')) {
-        return {
-          text: "Okay, let's start over. How can I help you today?",
-          suggestions: ["Find rentals", "List items", "Check bookings", "View wishlist"]
-        };
+      } catch (error) {
+        console.warn('DeepSeek model failed, falling back to Ollama:', error);
       }
+
+      // Try to use Ollama model if OpenRouter fails
+      try {
+        const ollamaResponse = await this.processWithOllama(message, context);
+        if (ollamaResponse) {
+          // Adapt response to sentiment
+          const adaptedResponse = this.adaptResponseToSentiment(ollamaResponse, sentiment);
+          
+          // Log the interaction for self-improvement
+          await this.logInteraction(message, adaptedResponse, context);
+          
+          // Save updated context to memory
+          if (context.sessionId) {
+            this.updateConversationContext(context.sessionId, context);
+          }
+          
+          return adaptedResponse;
+        }
+      } catch (error) {
+        console.warn('Ollama model failed, falling back to rule-based system:', error);
+      }
+
+      // Fallback to rule-based system
+      const ruleBasedResponse = await this.processMessageRuleBased(message, context);
+      
+      // Adapt response to sentiment
+      const adaptedResponse = this.adaptResponseToSentiment(ruleBasedResponse, sentiment);
+      
+      // Log the interaction for self-improvement
+      await this.logInteraction(message, adaptedResponse, context);
+      
+      // Save updated context to memory
+      if (context.sessionId) {
+        this.updateConversationContext(context.sessionId, context);
+      }
+      
+      return adaptedResponse;
     }
-    
-    // Handle user intent
-    if (context.userIntent) {
-      switch (context.userIntent.type) {
-        case 'booking':
-          // Personalize suggestions based on inferred preferences
-          let bookingSuggestions = ["Camera", "Power tools", "Party decorations", "Sports equipment"];
-          if (context.inferredPreferences?.preferredCategories?.length) {
-            bookingSuggestions = [
-              context.inferredPreferences.preferredCategories[0],
-              context.inferredPreferences.preferredCategories[1] || "Power tools",
-              "Party decorations",
-              "Sports equipment"
-            ];
-          }
-          return {
-            text: "Sure, I can help you with that. What item would you like to rent?",
-            suggestions: bookingSuggestions
-          };
-        case 'listing':
-          // Personalize suggestions based on inferred preferences
-          let listingSuggestions = ["Camera", "Power tools", "Party decorations", "Sports equipment"];
-          if (context.inferredPreferences?.preferredCategories?.length) {
-            listingSuggestions = [
-              context.inferredPreferences.preferredCategories[0],
-              context.inferredPreferences.preferredCategories[1] || "Power tools",
-              "Party decorations",
-              "Sports equipment"
-            ];
-          }
-          return {
-            text: "Great! What item would you like to list for rent?",
-            suggestions: listingSuggestions
-          };
-        case 'search':
-          // Personalize suggestions based on inferred preferences
-          let searchSuggestions = ["Camera", "Power tools", "Party decorations", "Sports equipment"];
-          if (context.inferredPreferences?.preferredCategories?.length) {
-            searchSuggestions = [
-              context.inferredPreferences.preferredCategories[0],
-              context.inferredPreferences.preferredCategories[1] || "Power tools",
-              "Party decorations",
-              "Sports equipment"
-            ];
-          }
-          return {
-            text: "Sure, what are you looking for?",
-            suggestions: searchSuggestions
-          };
-        case 'account':
-          return {
-            text: "Sure, what would you like to do with your account?",
-            suggestions: ["Update profile", "Change password", "View rental history"]
-          };
-        case 'payment':
-          return {
-            text: "Sure, what payment-related information do you need?",
-            suggestions: ["View balance", "Add payment method", "Check transaction history"]
-          };
-        case 'support':
-          return {
-            text: "Sure, how can I assist you?",
-            suggestions: ["Report an issue", "Request a feature", "Contact support"]
+  }
           };
         case 'other':
           return {
@@ -8658,71 +8577,417 @@ export class RenAIService {
       };
     }
   }
-
-  /**
-   * Check Ollama service health
-   * @returns Whether Ollama service is accessible
-   */
-  async checkOllamaHealth(): Promise<boolean> {
-    try {
-      // Check if Ollama is enabled
-      if (process.env.OLLAMA_ENABLED !== 'true') {
-        return false;
-      }
-
-      const ollamaHost = process.env.OLLAMA_HOST || 'http://localhost:11434';
-      
-      // Make request to Ollama API health endpoint
-      const response = await fetch(`${ollamaHost}/api/tags`, {
-        method: 'GET',
-        signal: AbortSignal.timeout(5000) // 5 second timeout
-      });
-
-      return response.ok;
-    } catch (error) {
-      console.error('Ollama health check error:', error);
-      return false;
-    }
-  }
-
-  /**
-   * Check if the required Ollama model is available
-   * @returns Whether the required model is available
-   */
-  async checkOllamaModel(): Promise<boolean> {
-    try {
-      // Check if Ollama is enabled
-      if (process.env.OLLAMA_ENABLED !== 'true') {
-        return false;
-      }
-
-      const ollamaHost = process.env.OLLAMA_HOST || 'http://localhost:11434';
-      const ollamaModel = process.env.OLLAMA_MODEL || 'llama3.1:8b';
-
-      // Get list of available models
-      const response = await fetch(`${ollamaHost}/api/tags`, {
-        method: 'GET',
-        signal: AbortSignal.timeout(5000) // 5 second timeout
-      });
-
-      if (!response.ok) {
-        return false;
-      }
-
-      const data = await response.json();
-      
-      // Check if the required model is in the list
-      if (data.models && Array.isArray(data.models)) {
-        return data.models.some((model: any) => model.name === ollamaModel);
-      }
-      
-      return false;
-    } catch (error) {
-      console.error('Ollama model check error:', error);
-      return false;
-    }
-  }
 }
 
 // Export singleton instance
-export const renAIService = new RenAIService();
+export const renAIService = new RenAIService();    / * * 
+ 
+       *   P r o c e s s   a   u s e r   m e s s a g e   u s i n g   t h e   O l l a m a   m o d e l 
+ 
+       *   @ p a r a m   m e s s a g e   T h e   u s e r ' s   i n p u t   m e s s a g e 
+ 
+       *   @ p a r a m   c o n t e x t   C o n t e x t   i n f o r m a t i o n   a b o u t   t h e   u s e r   a n d   c o n v e r s a t i o n 
+ 
+       *   @ r e t u r n s   A I - g e n e r a t e d   r e s p o n s e   o r   n u l l   i f   O l l a m a   i s   n o t   e n a b l e d / a v a i l a b l e 
+ 
+       * / 
+ 
+     p r i v a t e   a s y n c   p r o c e s s W i t h O l l a m a ( m e s s a g e :   s t r i n g ,   c o n t e x t :   A I C o n t e x t ) :   P r o m i s e < A I R e s p o n s e   |   n u l l >   { 
+ 
+         / /   C h e c k   i f   O l l a m a   i s   e n a b l e d 
+ 
+         i f   ( p r o c e s s . e n v . O L L A M A _ E N A B L E D   ! = =   ' t r u e ' )   { 
+ 
+             c o n s o l e . l o g ( ' O l l a m a   i s   n o t   e n a b l e d ,   f a l l i n g   b a c k   t o   o t h e r   p r o c e s s i n g   m e t h o d s ' ) ; 
+ 
+             r e t u r n   n u l l ; 
+ 
+         } 
+ 
+ 
+ 
+         t r y   { 
+ 
+             / /   G e t   O l l a m a   c o n f i g u r a t i o n   f r o m   e n v i r o n m e n t   v a r i a b l e s 
+ 
+             c o n s t   o l l a m a H o s t   =   p r o c e s s . e n v . O L L A M A _ H O S T   | |   ' h t t p : / / l o c a l h o s t : 1 1 4 3 4 ' ; 
+ 
+             c o n s t   o l l a m a M o d e l   =   p r o c e s s . e n v . O L L A M A _ M O D E L   | |   ' l l a m a 3 . 1 : 8 b ' ; 
+ 
+ 
+ 
+             / /   L o g   c o n f i g u r a t i o n   f o r   d e b u g g i n g 
+ 
+             c o n s o l e . l o g ( ` A t t e m p t i n g   t o   c o n n e c t   t o   O l l a m a   a t   $ { o l l a m a H o s t }   w i t h   m o d e l   $ { o l l a m a M o d e l } ` ) ; 
+ 
+ 
+ 
+             / /   C r e a t e   s y s t e m   p r o m p t   w i t h   c o m p r e h e n s i v e   c o n t e x t   i n f o r m a t i o n 
+ 
+             c o n s t   s y s t e m P r o m p t   =   ` 
+ 
+                 Y o u   a r e   R E N ,   a n   A I   a s s i s t a n t   f o r   R e n T h i n g ,   a   p e e r - t o - p e e r   r e n t a l   m a r k e t p l a c e   p l a t f o r m . 
+ 
+                 Y o u r   r o l e   i s   t o   h e l p   u s e r s   f i n d   r e n t a l s ,   l i s t   i t e m s ,   m a n a g e   b o o k i n g s ,   a n d   n a v i g a t e   t h e   p l a t f o r m . 
+ 
+                 
+ 
+                 S p e c i a l   i n s t r u c t i o n s   f o r   g r e e t i n g s : 
+ 
+                 W h e n   t h e   u s e r   g r e e t s   y o u ,   r e s p o n d   w a r m l y   a n d   o f f e r   a s s i s t a n c e   w i t h   t h e   p l a t f o r m ' s   m a i n   f e a t u r e s . 
+ 
+                 E x a m p l e :   " H e l l o !   I ' m   R E N ,   y o u r   r e n t a l   m a r k e t p l a c e   a s s i s t a n t .   I   c a n   h e l p   y o u   f i n d   i t e m s   t o   r e n t ,   l i s t   y o u r   o w n   i t e m s ,   m a n a g e   b o o k i n g s ,   a n d   m o r e .   H o w   c a n   I   a s s i s t   y o u   t o d a y ? " 
+ 
+             ` ; 
+ 
+ 
+ 
+             / /   P r e p a r e   t h e   r e q u e s t   p a y l o a d 
+ 
+             c o n s t   p a y l o a d   =   { 
+ 
+                 m o d e l :   o l l a m a M o d e l , 
+ 
+                 m e s s a g e s :   [ 
+ 
+                     {   r o l e :   ' s y s t e m ' ,   c o n t e n t :   s y s t e m P r o m p t . t r i m ( )   } , 
+ 
+                     . . . ( c o n t e x t . c o n v e r s a t i o n H i s t o r y   | |   [ ] ) . m a p ( m s g   = >   ( {   r o l e :   m s g . r o l e ,   c o n t e n t :   m s g . c o n t e n t   } ) ) , 
+ 
+                     {   r o l e :   ' u s e r ' ,   c o n t e n t :   m e s s a g e   } 
+ 
+                 ] , 
+ 
+                 s t r e a m :   f a l s e 
+ 
+             } ; 
+ 
+ 
+ 
+             / /   M a k e   r e q u e s t   t o   O l l a m a   A P I   w i t h   t i m e o u t 
+ 
+             c o n s t   c o n t r o l l e r   =   n e w   A b o r t C o n t r o l l e r ( ) ; 
+ 
+             c o n s t   t i m e o u t I d   =   s e t T i m e o u t ( ( )   = >   c o n t r o l l e r . a b o r t ( ) ,   3 0 0 0 0 ) ;   / /   3 0   s e c o n d   t i m e o u t 
+ 
+             
+ 
+             c o n s t   r e s p o n s e   =   a w a i t   f e t c h ( ` $ { o l l a m a H o s t } / a p i / c h a t ` ,   { 
+ 
+                 m e t h o d :   ' P O S T ' , 
+ 
+                 h e a d e r s :   { 
+ 
+                     ' C o n t e n t - T y p e ' :   ' a p p l i c a t i o n / j s o n ' 
+ 
+                 } , 
+ 
+                 b o d y :   J S O N . s t r i n g i f y ( p a y l o a d ) , 
+ 
+                 s i g n a l :   c o n t r o l l e r . s i g n a l 
+ 
+             } ) ; 
+ 
+             
+ 
+             c l e a r T i m e o u t ( t i m e o u t I d ) ; 
+ 
+ 
+ 
+             i f   ( ! r e s p o n s e . o k )   { 
+ 
+                 c o n s t   e r r o r T e x t   =   a w a i t   r e s p o n s e . t e x t ( ) ; 
+ 
+                 c o n s o l e . e r r o r ( ` O l l a m a   A P I   e r r o r :   $ { r e s p o n s e . s t a t u s }   -   $ { r e s p o n s e . s t a t u s T e x t } ` ,   e r r o r T e x t ) ; 
+ 
+                 t h r o w   n e w   E r r o r ( ` O l l a m a   A P I   e r r o r :   $ { r e s p o n s e . s t a t u s }   -   $ { r e s p o n s e . s t a t u s T e x t } ` ) ; 
+ 
+             } 
+ 
+ 
+ 
+             c o n s t   d a t a   =   a w a i t   r e s p o n s e . j s o n ( ) ; 
+ 
+             
+ 
+             / /   C h e c k   i f   r e s p o n s e   h a s   t h e   e x p e c t e d   s t r u c t u r e 
+ 
+             i f   ( ! d a t a . m e s s a g e   | |   ! d a t a . m e s s a g e . c o n t e n t )   { 
+ 
+                 c o n s o l e . e r r o r ( ' O l l a m a   A P I   r e t u r n e d   u n e x p e c t e d   r e s p o n s e   s t r u c t u r e : ' ,   d a t a ) ; 
+ 
+                 r e t u r n   n u l l ; 
+ 
+             } 
+ 
+             
+ 
+             / /   E x t r a c t   t h e   A I   r e s p o n s e 
+ 
+             c o n s t   a i R e s p o n s e   =   d a t a . m e s s a g e . c o n t e n t . t r i m ( ) ; 
+ 
+ 
+ 
+             / /   I f   n o   r e s p o n s e ,   u s e   f a l l b a c k   t e x t 
+ 
+             i f   ( ! a i R e s p o n s e )   { 
+ 
+                 c o n s o l e . l o g ( ' O l l a m a   r e t u r n e d   e m p t y   r e s p o n s e ,   f a l l i n g   b a c k   t o   r u l e - b a s e d   r e s p o n s e s ' ) ; 
+ 
+                 r e t u r n   n u l l ; 
+ 
+             } 
+ 
+ 
+ 
+             / /   C r e a t e   a   c o m p r e h e n s i v e   A I R e s p o n s e   o b j e c t 
+ 
+             r e t u r n   { 
+ 
+                 t e x t :   a i R e s p o n s e , 
+ 
+                 s u g g e s t i o n s :   [ " F i n d   r e n t a l s " ,   " L i s t   i t e m s " ,   " C h e c k   b o o k i n g s " ,   " V i e w   w i s h l i s t " ] 
+ 
+             } ; 
+ 
+         }   c a t c h   ( e r r o r )   { 
+ 
+             i f   ( e r r o r . n a m e   = = =   ' A b o r t E r r o r ' )   { 
+ 
+                 c o n s o l e . e r r o r ( ' O l l a m a   r e q u e s t   t i m e d   o u t ' ) ; 
+ 
+             }   e l s e   { 
+ 
+                 c o n s o l e . e r r o r ( ' E r r o r   p r o c e s s i n g   w i t h   O l l a m a : ' ,   e r r o r ) ; 
+ 
+             } 
+ 
+             r e t u r n   n u l l ; 
+ 
+         } 
+ 
+     } 
+ 
+ 
+ 
+     / * * 
+ 
+       *   C h e c k   O l l a m a   s e r v i c e   h e a l t h 
+ 
+       *   @ r e t u r n s   W h e t h e r   O l l a m a   s e r v i c e   i s   a c c e s s i b l e 
+ 
+       * / 
+ 
+     p u b l i c   a s y n c   c h e c k O l l a m a H e a l t h ( ) :   P r o m i s e < b o o l e a n >   { 
+ 
+         t r y   { 
+ 
+             / /   C h e c k   i f   O l l a m a   i s   e n a b l e d 
+ 
+             i f   ( p r o c e s s . e n v . O L L A M A _ E N A B L E D   ! = =   ' t r u e ' )   { 
+ 
+                 r e t u r n   f a l s e ; 
+ 
+             } 
+ 
+ 
+ 
+             c o n s t   o l l a m a H o s t   =   p r o c e s s . e n v . O L L A M A _ H O S T   | |   ' h t t p : / / l o c a l h o s t : 1 1 4 3 4 ' ; 
+ 
+             
+ 
+             / /   M a k e   r e q u e s t   t o   O l l a m a   A P I   h e a l t h   e n d p o i n t 
+ 
+             c o n s t   r e s p o n s e   =   a w a i t   f e t c h ( ` $ { o l l a m a H o s t } / a p i / t a g s ` ,   { 
+ 
+                 m e t h o d :   ' G E T ' , 
+ 
+                 s i g n a l :   A b o r t S i g n a l . t i m e o u t ( 5 0 0 0 )   / /   5   s e c o n d   t i m e o u t 
+ 
+             } ) ; 
+ 
+             
+ 
+             r e t u r n   r e s p o n s e . o k ; 
+ 
+         }   c a t c h   ( e r r o r )   { 
+ 
+             c o n s o l e . e r r o r ( ' O l l a m a   h e a l t h   c h e c k   e r r o r : ' ,   e r r o r ) ; 
+ 
+             r e t u r n   f a l s e ; 
+ 
+         } 
+ 
+     } 
+ 
+ 
+ 
+     / * * 
+ 
+       *   C h e c k   i f   t h e   r e q u i r e d   O l l a m a   m o d e l   i s   a v a i l a b l e 
+ 
+       *   @ r e t u r n s   W h e t h e r   t h e   r e q u i r e d   m o d e l   i s   a v a i l a b l e 
+ 
+       * / 
+ 
+     p u b l i c   a s y n c   c h e c k O l l a m a M o d e l ( ) :   P r o m i s e < b o o l e a n >   { 
+ 
+         t r y   { 
+ 
+             / /   C h e c k   i f   O l l a m a   i s   e n a b l e d 
+ 
+             i f   ( p r o c e s s . e n v . O L L A M A _ E N A B L E D   ! = =   ' t r u e ' )   { 
+ 
+                 r e t u r n   f a l s e ; 
+ 
+             } 
+ 
+ 
+ 
+             c o n s t   o l l a m a H o s t   =   p r o c e s s . e n v . O L L A M A _ H O S T   | |   ' h t t p : / / l o c a l h o s t : 1 1 4 3 4 ' ; 
+ 
+             c o n s t   o l l a m a M o d e l   =   p r o c e s s . e n v . O L L A M A _ M O D E L   | |   ' l l a m a 3 . 1 : 8 b ' ; 
+ 
+             
+ 
+             / /   G e t   l i s t   o f   a v a i l a b l e   m o d e l s 
+ 
+             c o n s t   r e s p o n s e   =   a w a i t   f e t c h ( ` $ { o l l a m a H o s t } / a p i / t a g s ` ,   { 
+ 
+                 m e t h o d :   ' G E T ' , 
+ 
+                 s i g n a l :   A b o r t S i g n a l . t i m e o u t ( 5 0 0 0 )   / /   5   s e c o n d   t i m e o u t 
+ 
+             } ) ; 
+ 
+             
+ 
+             i f   ( ! r e s p o n s e . o k )   { 
+ 
+                 r e t u r n   f a l s e ; 
+ 
+             } 
+ 
+ 
+ 
+             c o n s t   d a t a   =   a w a i t   r e s p o n s e . j s o n ( ) ; 
+ 
+             
+ 
+             / /   C h e c k   i f   t h e   r e q u i r e d   m o d e l   i s   i n   t h e   l i s t 
+ 
+             i f   ( d a t a . m o d e l s   & &   A r r a y . i s A r r a y ( d a t a . m o d e l s ) )   { 
+ 
+                 r e t u r n   d a t a . m o d e l s . s o m e ( ( m o d e l :   a n y )   = >   m o d e l . n a m e   = = =   o l l a m a M o d e l ) ; 
+ 
+             } 
+ 
+             
+ 
+             r e t u r n   f a l s e ; 
+ 
+         }   c a t c h   ( e r r o r )   { 
+ 
+             c o n s o l e . e r r o r ( ' O l l a m a   m o d e l   c h e c k   e r r o r : ' ,   e r r o r ) ; 
+ 
+             r e t u r n   f a l s e ; 
+ 
+         } 
+ 
+     } 
+ 
+ 
+ 
+     / * * 
+ 
+       *   T e s t   O l l a m a   c o n n e c t i v i t y 
+ 
+       *   @ r e t u r n s   C o n n e c t i v i t y   t e s t   r e s u l t s 
+ 
+       * / 
+ 
+     p u b l i c   a s y n c   t e s t O l l a m a C o n n e c t i v i t y ( ) :   P r o m i s e < {   s u c c e s s :   b o o l e a n ;   e r r o r ? :   s t r i n g   } >   { 
+ 
+         t r y   { 
+ 
+             c o n s t   o l l a m a H o s t   =   p r o c e s s . e n v . O L L A M A _ H O S T   | |   ' h t t p : / / l o c a l h o s t : 1 1 4 3 4 ' ; 
+ 
+             c o n s t   o l l a m a M o d e l   =   p r o c e s s . e n v . O L L A M A _ M O D E L   | |   ' l l a m a 3 . 1 : 8 b ' ; 
+ 
+             
+ 
+             / /   T e s t   c o n n e c t i o n   t o   O l l a m a 
+ 
+             c o n s t   r e s p o n s e   =   a w a i t   f e t c h ( ` $ { o l l a m a H o s t } / a p i / t a g s ` ,   { 
+ 
+                 m e t h o d :   ' G E T ' , 
+ 
+                 s i g n a l :   A b o r t S i g n a l . t i m e o u t ( 5 0 0 0 ) 
+ 
+             } ) ; 
+ 
+             
+ 
+             i f   ( ! r e s p o n s e . o k )   { 
+ 
+                 r e t u r n   {   
+ 
+                     s u c c e s s :   f a l s e ,   
+ 
+                     e r r o r :   ` O l l a m a   A P I   n o t   a c c e s s i b l e :   $ { r e s p o n s e . s t a t u s }   -   $ { r e s p o n s e . s t a t u s T e x t } `   
+ 
+                 } ; 
+ 
+             } 
+ 
+             
+ 
+             c o n s t   d a t a   =   a w a i t   r e s p o n s e . j s o n ( ) ; 
+ 
+             
+ 
+             / /   C h e c k   i f   t h e   r e q u i r e d   m o d e l   i s   a v a i l a b l e 
+ 
+             c o n s t   m o d e l E x i s t s   =   d a t a . m o d e l s ? . s o m e ( ( m o d e l :   a n y )   = >   m o d e l . n a m e   = = =   o l l a m a M o d e l ) ; 
+ 
+             
+ 
+             i f   ( ! m o d e l E x i s t s )   { 
+ 
+                 r e t u r n   {   
+ 
+                     s u c c e s s :   f a l s e ,   
+ 
+                     e r r o r :   ` R e q u i r e d   m o d e l   $ { o l l a m a M o d e l }   n o t   f o u n d   i n   O l l a m a `   
+ 
+                 } ; 
+ 
+             } 
+ 
+             
+ 
+             r e t u r n   {   s u c c e s s :   t r u e   } ; 
+ 
+         }   c a t c h   ( e r r o r )   { 
+ 
+             r e t u r n   {   
+ 
+                 s u c c e s s :   f a l s e ,   
+ 
+                 e r r o r :   ` F a i l e d   t o   c o n n e c t   t o   O l l a m a :   $ { e r r o r   i n s t a n c e o f   E r r o r   ?   e r r o r . m e s s a g e   :   ' U n k n o w n   e r r o r ' } `   
+ 
+             } ; 
+ 
+         } 
+ 
+     } 
+ 
+ } 
+ 
+ 
+ 
+ / /   E x p o r t   s i n g l e t o n   i n s t a n c e 
+ 
+ e x p o r t   c o n s t   r e n A I S e r v i c e   =   n e w   R e n A I S e r v i c e ( ) ; 
+ 
+ 
