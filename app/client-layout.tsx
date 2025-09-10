@@ -9,7 +9,7 @@ import PageTransitionLoader from "@/components/PageTransitionLoader"
 import Header from "@/components/header"
 import HydrationErrorBoundary from "@/components/hydration-error-boundary"
 import BrowserExtensionCleanup from "@/components/browser-extension-cleanup"
-<<<<<<< HEAD
+import { us<<<<<<< HEAD
 import { RenMascot } from "@/components/ai/ren-mascot"
 import { RenChat } from "@/components/ai/ren-chat"
 import { useState, useEffect } from "react"
@@ -349,9 +349,3 @@ export default function ClientLayout({
             </AnimatePresence>
 =======
 >>>>>>> 8668939 (2025-09-10: Temporary disabling of REN AI)
-          </ThemeProvider>
-        </GeolocationProvider>
-      </SessionProvider>
-    </HydrationErrorBoundary>
-  )
-}

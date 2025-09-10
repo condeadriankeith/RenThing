@@ -1,11 +1,12 @@
 import { prisma } from '@/lib/prisma'
 import { v4 as uuidv4 } from 'uuid'
 
+// Update interfaces to match what Prisma actually returns (with null values)
 export interface Purchase {
   id: string
   userId: string
   itemType: string // badge, voucher
-  itemId?: string
+  itemId: string | null
   amount: number
   currency: string
   status: string
@@ -18,9 +19,9 @@ export interface Voucher {
   voucherType: string // item, owner, seasonal
   code: string
   discount: number
-  expiresAt?: Date
+  expiresAt: Date | null
   used: boolean
-  usedAt?: Date
+  usedAt: Date | null
   createdAt: Date
 }
 
@@ -28,8 +29,8 @@ export interface UserBadge {
   id: string
   userId: string
   badgeType: string // verified, gold_owner, gold_renter
-  purchaseId?: string
-  expiresAt?: Date
+  purchaseId: string | null
+  expiresAt: Date | null
   createdAt: Date
 }
 
@@ -113,12 +114,16 @@ class PurchaseService {
     amount: number
     currency?: string
   }): Promise<Purchase> {
+    if (!prisma) {
+      throw new Error('Database not available')
+    }
+    
     try {
       const purchase = await prisma.purchase.create({
         data: {
           userId: data.userId,
           itemType: data.itemType,
-          itemId: data.itemId,
+          itemId: data.itemId || null,
           amount: data.amount,
           currency: data.currency || 'PHP',
           status: 'completed',
@@ -136,6 +141,10 @@ class PurchaseService {
    * Get user's purchase history
    */
   async getUserPurchases(userId: string): Promise<Purchase[]> {
+    if (!prisma) {
+      throw new Error('Database not available')
+    }
+    
     try {
       const purchases = await prisma.purchase.findMany({
         where: { userId },
@@ -154,6 +163,10 @@ class PurchaseService {
    * Redeem a voucher code
    */
   async redeemVoucher(code: string, userId: string): Promise<VoucherRedemptionResult> {
+    if (!prisma) {
+      return { success: false, error: 'Database not available' }
+    }
+    
     try {
       const voucher = await prisma.voucher.findUnique({
         where: { code }
@@ -196,6 +209,10 @@ class PurchaseService {
    * Get user's active badges
    */
   async getUserBadges(userId: string): Promise<UserBadge[]> {
+    if (!prisma) {
+      throw new Error('Database not available')
+    }
+    
     try {
       const badges = await prisma.userBadge.findMany({
         where: {
@@ -225,13 +242,17 @@ class PurchaseService {
     purchaseId?: string
     expiresAt?: Date
   }): Promise<UserBadge> {
+    if (!prisma) {
+      throw new Error('Database not available')
+    }
+    
     try {
       const badge = await prisma.userBadge.create({
         data: {
           userId: data.userId,
           badgeType: data.badgeType,
-          purchaseId: data.purchaseId,
-          expiresAt: data.expiresAt,
+          purchaseId: data.purchaseId || null,
+          expiresAt: data.expiresAt || null,
           createdAt: new Date()
         }
       })
@@ -251,6 +272,10 @@ class PurchaseService {
     discount: number
     expiresAt?: Date
   }): Promise<Voucher> {
+    if (!prisma) {
+      throw new Error('Database not available')
+    }
+    
     try {
       // Generate a unique voucher code
       const code = `V${uuidv4().substring(0, 8).toUpperCase()}`
@@ -261,7 +286,7 @@ class PurchaseService {
           voucherType: data.voucherType,
           code,
           discount: data.discount,
-          expiresAt: data.expiresAt,
+          expiresAt: data.expiresAt || null,
           used: false,
           createdAt: new Date()
         }
