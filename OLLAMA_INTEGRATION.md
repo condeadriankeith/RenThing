@@ -4,7 +4,7 @@ This document explains how to set up and use Ollama as a locally hosted AI model
 
 ## Overview
 
-Ollama integration provides an alternative to the OpenRouter API for running the AI assistant locally. This approach offers several benefits:
+Ollama integration provides a way to run the AI assistant locally. This approach offers several benefits:
 
 - **Privacy**: All data stays on your local machine
 - **Cost**: No API costs since you're hosting the model yourself
@@ -14,7 +14,7 @@ Ollama integration provides an alternative to the OpenRouter API for running the
 ## Prerequisites
 
 1. [Ollama](https://ollama.com/) installed on your machine
-2. The DeepSeek-v3 model pulled locally
+2. The Llama 3.1 8B model pulled locally
 
 ## Setup Instructions
 
@@ -47,11 +47,7 @@ pnpm dev
 
 ## How It Works
 
-The AI service in RenThing now follows this priority order:
-
-1. **Ollama** (if enabled) - Uses your locally hosted DeepSeek-v3 model
-2. **OpenRouter** (fallback) - Uses the DeepSeek API through OpenRouter
-3. **Rule-based system** (final fallback) - Uses built-in responses for basic queries
+The AI service in RenThing uses your locally hosted Llama 3.1 8B model when Ollama is enabled.
 
 ## Configuration Options
 
@@ -65,9 +61,8 @@ The AI service in RenThing now follows this priority order:
 
 For production deployments, it's recommended to:
 
-1. Keep `OLLAMA_ENABLED=false` to use the more reliable OpenRouter API
-2. Ensure proper error handling and monitoring
-3. Consider the performance implications of running large models locally
+1. Ensure proper error handling and monitoring
+2. Consider the performance implications of running large models locally
 
 ## Troubleshooting
 

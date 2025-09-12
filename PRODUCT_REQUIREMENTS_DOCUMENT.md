@@ -203,10 +203,6 @@ The platform supports various rental categories including electronics, tools, sp
 - **Real-time**: Socket.IO server
 - **Image Processing**: Cloudinary
 - **Web Scraping**: Axios and Cheerio
-<<<<<<< HEAD
-- **AI Integration**: OpenRouter API for DeepSeek-R1 model
-=======
->>>>>>> 8668939 (2025-09-10: Temporary disabling of REN AI)
 - **Email Service**: SMTP with Nodemailer
 - **Payment Processing**: Xendit API
 
@@ -233,10 +229,6 @@ The platform supports various rental categories including electronics, tools, sp
 - **Analytics**: Google Analytics
 - **Monitoring**: Sentry
 - **Image Storage**: Cloudinary
-<<<<<<< HEAD
-- **AI Services**: OpenRouter (DeepSeek-R1 model)
-=======
->>>>>>> 8668939 (2025-09-10: Temporary disabling of REN AI)
 - **Web Scraping**: No external services (self-hosted)
 
 ## 6. User Interface Design
@@ -257,10 +249,6 @@ The platform supports various rental categories including electronics, tools, sp
 - Featured listings carousel
 - Category browsing
 - Search bar with location detection
-<<<<<<< HEAD
-- REN AI assistant integration
-=======
->>>>>>> 8668939 (2025-09-10: Temporary disabling of REN AI)
 - Call-to-action buttons
 
 #### Browse Page
@@ -269,10 +257,6 @@ The platform supports various rental categories including electronics, tools, sp
 - Map integration for location-based browsing
 - Sorting controls
 - Pagination or infinite scroll
-<<<<<<< HEAD
-- REN search assistance
-=======
->>>>>>> 8668939 (2025-09-10: Temporary disabling of REN AI)
 
 #### Listing Detail Page
 - Image gallery with lightbox
@@ -296,10 +280,6 @@ The platform supports various rental categories including electronics, tools, sp
 - Quick action buttons
 - Recent activity feed
 - Performance metrics for owners
-<<<<<<< HEAD
-- REN personalized recommendations
-=======
->>>>>>> 8668939 (2025-09-10: Temporary disabling of REN AI)
 
 #### Messaging Interface
 - Chat-style conversation view
@@ -409,10 +389,6 @@ The platform supports various rental categories including electronics, tools, sp
 - Session duration and pages per session
 - User retention rates (day 1, 7, 30)
 - Feature adoption rates
-<<<<<<< HEAD
-- REN AI interaction frequency
-=======
->>>>>>> 8668939 (2025-09-10: Temporary disabling of REN AI)
 - Wishlist and favorites usage
 
 ### 9.2 Business Metrics
@@ -678,14 +654,6 @@ The platform supports various rental categories including electronics, tools, sp
 - **XML**: eXtensible Markup Language
 
 ### 18.3 References
-<<<<<<< HEAD
-- [REN_AI_PERSONALITY_PRD.md](REN_AI_PERSONALITY_PRD.md) - Detailed requirements for REN AI personality
-- [REN_DEEPSEEK_INTEGRATION.md](REN_DEEPSEEK_INTEGRATION.md) - Technical details for AI model integration
 - [WEB_SCRAPING.md](WEB_SCRAPING.md) - Documentation for web scraping functionality
 - [ENVIRONMENT_VARIABLES.md](ENVIRONMENT_VARIABLES.md) - Configuration guide for environment variables
 - [RECENT_CHANGES_SUMMARY.md](RECENT_CHANGES_SUMMARY.md) - Summary of recent development changes
-=======
-- [WEB_SCRAPING.md](WEB_SCRAPING.md) - Documentation for web scraping functionality
-- [ENVIRONMENT_VARIABLES.md](ENVIRONMENT_VARIABLES.md) - Configuration guide for environment variables
-- [RECENT_CHANGES_SUMMARY.md](RECENT_CHANGES_SUMMARY.md) - Summary of recent development changes
->>>>>>> 8668939 (2025-09-10: Temporary disabling of REN AI)

@@ -1,0 +1,12 @@
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.renAIService = exports.RenAIService = void 0;
+// This is a placeholder for the actual implementation
+var RenAIService = /** @class */ (function () {
+    function RenAIService() {
+    }
+    return RenAIService;
+}());
+exports.RenAIService = RenAIService;
+// Export singleton instance
+exports.renAIService = new RenAIService();

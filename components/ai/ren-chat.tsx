@@ -6,11 +6,10 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import { renAIClientService, type AIResponse, type AIContext } from "@/ren-ai/services/ren-ai-service-client";
 import { motion } from "framer-motion";
-import { Sparkles, X, Send, ExternalLink, ThumbsUp, ThumbsDown } from "lucide-react"; // Added feedback icons
-import { useToast } from "@/hooks/use-toast"; // Add this import
-import { useGeolocation } from "@/contexts/geolocation-context"; // Import geolocation context
+import { Sparkles, X, Send, ExternalLink, ThumbsUp, ThumbsDown } from "lucide-react";
+import { useToast } from "@/hooks/use-toast";
+import { useGeolocation } from "@/contexts/geolocation-context";
 
 // Helper function to parse markdown-like formatting
 const parseMarkdown = (text: string) => {
@@ -68,18 +67,28 @@ interface Message {
   };
 }
 
+// Add new interface for search results
+interface SearchResult {
+  id: string;
+  title: string;
+  description: string;
+  price: number;
+  location: string;
+  images: string[];
+}
+
 interface RenChatProps {
   onAction?: (action: any) => void;
   onMessagesChange?: (messages: Message[]) => void;
   initialMessages?: Message[];
-  onClose?: () => void; // Added onClose prop
-  onMinimize?: () => void; // Added onMinimize prop
+  onClose?: () => void;
+  onMinimize?: () => void;
 }
 
 export function RenChat({ onAction, onMessagesChange, initialMessages, onClose, onMinimize }: RenChatProps) {
   const { data: session } = useSession();
-  const { toast } = useToast(); // Add toast hook
-  const { latitude, longitude, error: geolocationError } = useGeolocation(); // Get geolocation data
+  const { toast } = useToast();
+  const { latitude, longitude, error: geolocationError } = useGeolocation();
   const [messages, setMessages] = useState<Message[]>(initialMessages || [
     {
       id: "1",
@@ -141,7 +150,7 @@ export function RenChat({ onAction, onMessagesChange, initialMessages, onClose, 
         content: msg.content
       }));
       
-      const context: AIContext = {
+      const context = {
         userId: session?.user?.id,
         conversationHistory: conversationHistory,
         userPreferences: {
@@ -156,21 +165,37 @@ export function RenChat({ onAction, onMessagesChange, initialMessages, onClose, 
       };
 
       // Get AI response
-      const response: AIResponse = await renAIClientService.processMessage(input, context);
+      const response = await fetch('/api/ai/chat', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          message: input,
+          context
+        })
+      });
 
+      if (!response.ok) {
+        const errorText = await response.text();
+        throw new Error(`HTTP error! status: ${response.status}, message: ${errorText}`);
+      }
+
+      const data = await response.json();
+      
       // Handle actions from AI response
-      if (response.action && onAction) {
-        onAction(response.action);
+      if (data.response.action && onAction) {
+        onAction(data.response.action);
       }
 
       // Add AI response
       const aiMessage: Message = {
         id: (Date.now() + 1).toString(),
-        content: response.text,
+        content: data.response.text,
         role: "assistant",
         timestamp: new Date(),
-        suggestions: response.suggestions,
-        action: response.action || undefined // Store action for potential later use
+        suggestions: data.response.suggestions,
+        action: data.response.action || undefined
       };
 
       setMessages(prev => [...prev, aiMessage]);
@@ -285,10 +310,66 @@ export function RenChat({ onAction, onMessagesChange, initialMessages, onClose, 
     </div>
   );
 
+  // Render a search results card
+  const renderSearchResults = (results: SearchResult[]) => (
+    <div className="mt-2 p-3 bg-blue-50 rounded-lg border border-blue-200">
+      <h4 className="font-medium text-blue-800 mb-2">Search Results</h4>
+      <div className="space-y-2">
+        {results.slice(0, 3).map((result) => (
+          <div key={result.id} className="flex items-center p-2 bg-white rounded border">
+            <div className="bg-gray-200 border-2 border-dashed rounded-xl w-12 h-12" />
+            <div className="ml-2 flex-1">
+              <h5 className="font-medium text-sm truncate">{result.title}</h5>
+              <p className="text-xs text-gray-500 truncate">{result.description}</p>
+              <div className="flex justify-between items-center mt-1">
+                <span className="text-sm font-medium text-blue-600">₱{result.price}/day</span>
+              </div>
+            </div>
+          </div>
+        ))}
+      </div>
+      <Button 
+        size="sm" 
+        className="mt-2 h-7 text-xs w-full"
+        onClick={() => {
+          if (onAction) {
+            onAction({
+              type: "navigate",
+              payload: { path: "/browse" }
+            });
+          }
+        }}
+      >
+        View All Results
+      </Button>
+    </div>
+  );
+
+  // Render web search results
+  const renderWebSearchResults = (results: any[]) => (
+    <div className="mt-2 p-3 bg-purple-50 rounded-lg border border-purple-200">
+      <h4 className="font-medium text-purple-800 mb-2">Web Search Results</h4>
+      <div className="space-y-2">
+        {results.slice(0, 2).map((result, index) => (
+          <div key={index} className="p-2 bg-white rounded border">
+            <h5 className="font-medium text-sm">{result.title}</h5>
+            <p className="text-xs text-gray-600 mt-1">{result.snippet}</p>
+            <a 
+              href={result.url} 
+              target="_blank" 
+              rel="noopener noreferrer"
+              className="text-xs text-purple-600 hover:underline mt-1 inline-block"
+            >
+              Read more
+            </a>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+
   return (
-    // Changed from fixed height to dynamic height with max-height constraint
     <div className="flex flex-col h-full max-h-[70vh] bg-white">
-      {/* Messages Area - flex-1 to take available space */}
       <ScrollArea className="flex-1 p-4">
         <div className="space-y-4">
           {messages.map((message) => (
@@ -315,10 +396,19 @@ export function RenChat({ onAction, onMessagesChange, initialMessages, onClose, 
               >
                 <FormattedText content={message.content} />
                 
+                {/* Render search results if action is to show search results */}
+                {message.action && message.action.type === "search_results" && message.action.payload?.results && (
+                  renderSearchResults(message.action.payload.results)
+                )}
+                
+                {/* Render web search results if action is to show web search results */}
+                {message.action && message.action.type === "web_search_results" && message.action.payload?.results && (
+                  renderWebSearchResults(message.action.payload.results)
+                )}
+                
                 {/* Render listing suggestion if action is to show a listing */}
                 {message.action && message.action.type === "show_listing" && message.action.payload?.listingId && (
                   <div className="mt-2">
-                    {/* In a real implementation, we would fetch the actual listing data */}
                     <div className="p-3 bg-blue-50 rounded-lg border border-blue-200">
                       <p className="text-sm text-blue-800">
                         I can show you this listing directly. Would you like me to take you there?
@@ -411,10 +501,10 @@ export function RenChat({ onAction, onMessagesChange, initialMessages, onClose, 
       </ScrollArea>
 
       {/* Suggestions */}
-      {messages.length > 0 && messages[messages.length - 1].suggestions && messages[messages.length - 1].suggestions.length > 0 ? (
+      {messages.length > 0 && messages[messages.length - 1]?.suggestions && messages[messages.length - 1].suggestions!.length > 0 ? (
         <div className="px-4 py-3 bg-gray-50 border-t border-gray-200">
           <div className="flex flex-wrap gap-2">
-            {messages[messages.length - 1].suggestions.map((suggestion, index) => (
+            {messages[messages.length - 1].suggestions!.map((suggestion, index) => (
               <Button
                 key={index}
                 variant="outline"
@@ -429,7 +519,6 @@ export function RenChat({ onAction, onMessagesChange, initialMessages, onClose, 
         </div>
       ) : null}
 
-      {/* Input Area - Removed extra padding */}
       <div className="p-4 bg-white border-t border-gray-200">
         <div className="flex gap-2">
           <Input

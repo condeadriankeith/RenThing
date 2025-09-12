@@ -4,7 +4,7 @@
 
 The REN AI assistant was falling back to generic responses instead of using the Ollama llama3.1:8b model with REN's personality. This was happening because:
 
-1. The [processMessage](file:///c:/Users/conde/Downloads/RenThing_v6/ren-ai/services/ren-ai-service.ts#L1044-L1179) method in [ren-ai-service.ts](file:///c:/Users/conde/Downloads/RenThing_v6/ren-ai/services/ren-ai-service.ts) was still trying to use OpenRouter (DeepSeek) first before falling back to Ollama
+1. The [processMessage](file:///c:/Users/conde/Downloads/RenThing_v6/ren-ai/services/ren-ai-service.ts#L1044-L1179) method in [ren-ai-service.ts](file:///c:/Users/conde/Downloads/RenThing_v6/ren-ai/services/ren-ai-service.ts) was not properly configured to use Ollama exclusively
 2. When `OLLAMA_ENABLED=true`, the system should operate in exclusive mode with no fallbacks to external services
 
 ## Fix Implemented

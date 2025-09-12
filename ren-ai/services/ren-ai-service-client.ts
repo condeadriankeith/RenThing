@@ -54,6 +54,19 @@ export interface AIResponse {
   } | null; // Allow null values
 }
 
+// Add new interface for search actions
+export interface SearchAction {
+  type: 'search_query' | 'web_search';
+  payload: {
+    query: string;
+    filters?: {
+      category?: string;
+      location?: string;
+      priceRange?: { min: number; max: number };
+    };
+  };
+}
+
 export class RenAIClientService {
   /**
    * Process a user message by calling the AI API
@@ -229,6 +242,141 @@ export class RenAIClientService {
       console.error('Error getting inferred user preferences:', error);
       return null;
     }
+  }
+
+  /**
+   * Execute a search query on the platform
+   * @param query The search query
+   * @param filters Optional filters for the search
+   * @returns Search results
+   */
+  async executeSearch(query: string, filters?: { category?: string; location?: string; priceRange?: { min: number; max: number } }) {
+    try {
+      const response = await fetch('/api/search', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ query, filters })
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      const data = await response.json();
+      return data.results || [];
+    } catch (error) {
+      console.error('Error executing search:', error);
+      return [];
+    }
+  }
+
+  /**
+   * Perform a web search using an external API
+   * @param query The search query
+   * @returns Web search results
+   */
+  async performWebSearch(query: string) {
+    try {
+      const response = await fetch('/api/ai/web-search', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ query })
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      const data = await response.json();
+      return data.results || [];
+    } catch (error) {
+      console.error('Error performing web search:', error);
+      return [];
+    }
+  }
+
+  /**
+   * Parse user intent from their message
+   * @param message The user's input message
+   * @returns Parsed intent with entities
+   */
+  parseIntent(message: string): { query: string; filters?: { category?: string; location?: string; priceRange?: { min: number; max: number } } } | null {
+    const lowerMessage = message.toLowerCase();
+    
+    // Extract potential search queries
+    const searchPatterns = [
+      /find\s+(.*?)(?:\s+in\s+(\w+))?$/i,
+      /search\s+for\s+(.*?)(?:\s+in\s+(\w+))?$/i,
+      /show\s+me\s+(.*?)(?:\s+in\s+(\w+))?$/i,
+      /i\s+need\s+(.*?)(?:\s+in\s+(\w+))?$/i,
+      /i\s+want\s+(.*?)(?:\s+in\s+(\w+))?$/i,
+      /looking\s+for\s+(.*?)(?:\s+in\s+(\w+))?$/i
+    ];
+    
+    for (const pattern of searchPatterns) {
+      const match = message.match(pattern);
+      if (match) {
+        const query = match[1].trim();
+        const location = match[2];
+        
+        // Extract price range if mentioned
+        let priceRange: { min: number; max: number } | undefined;
+        const priceMatch = message.match(/(?:under|below|less than|under ₱?|below ₱?|less than ₱?)\s*(\d+)/i);
+        if (priceMatch) {
+          const maxPrice = parseInt(priceMatch[1]);
+          priceRange = { min: 0, max: maxPrice };
+        }
+        
+        // Extract category if mentioned
+        let category: string | undefined;
+        const categoryKeywords = ['camera', 'tool', 'bike', 'car', 'dress', 'party', 'speaker', 'tent', 'sports'];
+        for (const keyword of categoryKeywords) {
+          if (lowerMessage.includes(keyword)) {
+            category = keyword;
+            break;
+          }
+        }
+        
+        return {
+          query,
+          filters: {
+            category,
+            location,
+            priceRange
+          }
+        };
+      }
+    }
+    
+    // If no specific pattern matched, treat the entire message as a query
+    if (lowerMessage.includes('find') || lowerMessage.includes('search') || lowerMessage.includes('show me')) {
+      return {
+        query: message.replace(/^(find|search|show me)\s+/i, '').trim()
+      };
+    }
+    
+    return null;
+  }
+
+  /**
+   * Determine if a query should be executed as a web search
+   * @param query The search query
+   * @returns Whether the query should be a web search
+   */
+  isWebSearchQuery(query: string): boolean {
+    const lowerQuery = query.toLowerCase();
+    
+    // Keywords that suggest an informational query
+    const webSearchKeywords = [
+      'difference', 'compare', 'how to', 'what is', 'why', 'when', 'where',
+      'tips', 'guide', 'tutorial', 'best practices', 'review', 'opinion'
+    ];
+    
+    return webSearchKeywords.some(keyword => lowerQuery.includes(keyword));
   }
 }
 

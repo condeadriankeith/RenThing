@@ -2,7 +2,7 @@
 
 ## Overview
 
-We have successfully integrated Ollama as a locally hosted AI model for the RenThing platform. This provides an alternative to the OpenRouter API for running the AI assistant locally.
+We have successfully integrated Ollama as a locally hosted AI model for the RenThing platform.
 
 ## Implementation Details
 
@@ -11,7 +11,7 @@ We have successfully integrated Ollama as a locally hosted AI model for the RenT
 We modified the `RenAIService` class in `lib/ai/ren-ai-service.ts` to:
 
 1. Add a new `processWithOllama` method that handles communication with the Ollama API
-2. Update the `processMessage` method to prioritize Ollama as the first option, followed by OpenRouter, and finally the rule-based system as a fallback
+2. Update the `processMessage` method to use Ollama as the primary option, with the rule-based system as a fallback
 
 ### 2. Environment Configuration
 
@@ -29,11 +29,7 @@ We created comprehensive documentation:
 
 ## How It Works
 
-The AI service now follows this priority order:
-
-1. **Ollama** (if enabled) - Uses your locally hosted model
-2. **OpenRouter** (fallback) - Uses the DeepSeek API through OpenRouter
-3. **Rule-based system** (final fallback) - Uses built-in responses for basic queries
+The AI service now uses your locally hosted model when Ollama is enabled, with the rule-based system as a fallback.
 
 ## Benefits
 

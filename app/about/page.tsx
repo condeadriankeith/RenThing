@@ -72,18 +72,19 @@ export default function AboutPage() {
                 <h2 className="text-3xl font-bold text-gray-900 dark:text-white mb-6">Our Story</h2>
                 <div className="space-y-4 text-gray-600 dark:text-gray-300">
                   <p>
-                    RenThing was born from a simple observation: many quality items sit unused while people need them. 
-                    Whether it's a camera for a weekend trip, tools for a home project, or equipment for a special event, 
-                    there's a better way to access what we need.
+                    RenThing was founded in 2025 from a simple but powerful realization: so many of the things we buy end up sitting unused, while others around us are searching for exactly those items.
                   </p>
                   <p>
-                    Founded in 2024, we started as a small community of neighbors sharing tools and equipment. 
-                    Today, we're proud to connect thousands of renters and owners, creating a more sustainable 
-                    and connected way to access quality items.
+                    We often noticed it in everyday life—mothers rushing to boutiques in downtown Mayfair Plaza, searching every corner for the perfect outfit for their child's event or competition. Families planning a vacation would struggle to find a car or van, unless they had immediate connections. And in those moments, we would often hear people say: "If only I had this right now, things would have been so much easier."
                   </p>
                   <p>
-                    Our platform isn't just about transactions – it's about building trust, reducing waste, 
-                    and making quality accessible to everyone regardless of their budget or storage space.
+                    That's when it clicked: what if there was a way to access the things you need, right when you need them, without the hassle of saving up for a purchase or committing to something you'll rarely use?
+                  </p>
+                  <p>
+                    RenThing was built with that vision in mind—not just as a platform, but as a community. A place where the things lying unused in our homes could bring joy, convenience, and opportunity to others. After all, "the happiest memories we create with the things we own can bring the same happiness to someone else when they need them most."
+                  </p>
+                  <p>
+                    Today, RenThing connects people across communities—renters and owners—fostering trust, reducing waste, and making quality accessible to everyone. It's more than just renting; it's about sharing, connecting, and creating a more sustainable way of living.
                   </p>
                 </div>
               </div>

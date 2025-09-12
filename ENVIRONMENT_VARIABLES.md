@@ -33,14 +33,6 @@ This document provides a comprehensive guide to all environment variables requir
 - **CLOUDINARY_API_KEY**: Cloudinary API key
 - **CLOUDINARY_API_SECRET**: Cloudinary API secret
 
-<<<<<<< HEAD
-### AI Service (OpenRouter)
-- **OPENROUTER_API_KEY**: API key for OpenRouter AI service
-  - Sign up at [OpenRouter](https://openrouter.ai/) to get your API key
-  - Required for enhanced AI capabilities in REN assistant
-
-=======
->>>>>>> 8668939 (2025-09-10: Temporary disabling of REN AI)
 ### Application Configuration
 - **NEXT_PUBLIC_BASE_URL**: Public base URL for the application
   - Example: `http://localhost:3000`, `https://renthing.vercel.app`
@@ -95,12 +87,6 @@ CLOUDINARY_CLOUD_NAME="Root"
 CLOUDINARY_API_KEY="338114178816117"
 CLOUDINARY_API_SECRET="SHtjXMsHfCGM7ghUlvO_pJ_t95I"
 
-<<<<<<< HEAD
-# AI Service (OpenRouter) - Required for enhanced AI capabilities
-OPENROUTER_API_KEY="sk-or-v1-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
-
-=======
->>>>>>> 8668939 (2025-09-10: Temporary disabling of REN AI)
 # Application
 NEXT_PUBLIC_BASE_URL="https://renthing.vercel.app"
 NEXT_PUBLIC_APP_URL="https://renthing.vercel.app"
@@ -133,12 +119,6 @@ CLOUDINARY_CLOUD_NAME="Root"
 CLOUDINARY_API_KEY="338114178816117"
 CLOUDINARY_API_SECRET="SHtjXMsHfCGM7ghUlvO_pJ_t95I"
 
-<<<<<<< HEAD
-# AI Service (OpenRouter) - Required for enhanced AI capabilities
-OPENROUTER_API_KEY="sk-or-v1-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
-
-=======
->>>>>>> 8668939 (2025-09-10: Temporary disabling of REN AI)
 # Application
 NEXT_PUBLIC_BASE_URL="https://renthing.vercel.app"
 NEXT_PUBLIC_APP_URL="https://renthing.vercel.app"
@@ -162,15 +142,4 @@ SENTRY_DSN="https://xxxxxxxx@xxxxxxx.ingest.sentry.io/xxxxxxx"
    - API Secret: `SHtjXMsHfCGM7ghUlvO_pJ_t95I`
 2. Images will be stored in folders based on usage (e.g., `renthing/listings`)
 
-<<<<<<< HEAD
 ### Email Service
-
-### AI Service (OpenRouter)
-1. Sign up at [OpenRouter](https://openrouter.ai/)
-2. Navigate to your account settings
-3. Create a new API key
-4. Copy the key and add it to your environment variables as `OPENROUTER_API_KEY`
-5. REN will automatically use the DeepSeek-R1 model for enhanced conversational capabilities
-=======
-### Email Service
->>>>>>> 8668939 (2025-09-10: Temporary disabling of REN AI)

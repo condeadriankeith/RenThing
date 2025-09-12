@@ -4,7 +4,17 @@ import { webScraperService } from '@/lib/web-scraper';
 // POST /api/scrape - Scrape a website for rental listing information
 export async function POST(request: NextRequest) {
   try {
-    const body = await request.json();
+    // Parse the request body with error handling
+    let body;
+    try {
+      body = await request.json();
+    } catch (parseError) {
+      return NextResponse.json(
+        { error: 'Invalid JSON in request body' },
+        { status: 400 }
+      );
+    }
+    
     const { url } = body;
 
     if (!url) {

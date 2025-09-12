@@ -10,9 +10,9 @@ module.exports = {
   },
   transform: {
     '^.+\.(ts|tsx)$': 'ts-jest',
-    '^.+\.js$': 'ts-jest',
   },
   transformIgnorePatterns: [
-    '/node_modules/(?!lru-cache)/',
+    '/node_modules/(?!cheerio|axios)/',
   ],
+  setupFilesAfterEnv: ['<rootDir>/jest.setup.ts'],
 };

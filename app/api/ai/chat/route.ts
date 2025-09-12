@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { renAIService } from '@/ren-ai/services/ren-ai-service';
+import { renAIClientService } from '@/ren-ai/services/ren-ai-service-client';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 
@@ -45,7 +46,59 @@ export async function POST(req: Request) {
       }
     };
     
-    // Process message with AI service
+    // Parse user intent
+    const intent = renAIClientService.parseIntent(message);
+    
+    // If we can parse the intent, execute the appropriate action
+    if (intent) {
+      // Check if this should be a web search
+      if (renAIClientService.isWebSearchQuery(intent.query)) {
+        // Perform web search
+        const results = await renAIClientService.performWebSearch(intent.query);
+        
+        // Return response with web search results
+        return NextResponse.json({
+          success: true,
+          response: {
+            text: `I've searched the web for information about "${intent.query}". Here are some relevant results:`,
+            action: {
+              type: 'web_search_results',
+              payload: { results }
+            },
+            suggestions: [`Find rentals related to ${intent.query}`, "Ask another question", "Search for something else"]
+          }
+        });
+      } else {
+        // Execute platform search
+        const results = await renAIClientService.executeSearch(intent.query, intent.filters);
+        
+        // Return response with search results
+        if (results.length > 0) {
+          return NextResponse.json({
+            success: true,
+            response: {
+              text: `I've found ${results.length} items for "${intent.query}". I've taken you to the results. You can filter further by price or category there!`,
+              action: {
+                type: 'search_results',
+                payload: { results }
+              },
+              suggestions: ["Refine search", "View all results", "Ask another question"]
+            }
+          });
+        } else {
+          // No results found, provide alternative suggestions
+          return NextResponse.json({
+            success: true,
+            response: {
+              text: `I couldn't find any items matching "${intent.query}". Would you like to try a different search or I can search the web for information about ${intent.query}?`,
+              suggestions: ["Try a different search", `Search the web for ${intent.query}`, "View popular categories"]
+            }
+          });
+        }
+      }
+    }
+    
+    // Process message with AI service for non-search queries
     const response = await renAIService.processMessage(message, aiContext);
     
     // Return successful response
@@ -74,18 +127,20 @@ export async function POST(req: Request) {
  */
 export async function GET(req: Request, { params }: { params: { id: string } }) {
   try {
-    const listingInfo = await renAIService.getListingInfo(params.id);
-    
-    if (!listingInfo) {
-      return NextResponse.json(
-        { success: false, error: 'Listing not found' },
-        { status: 404 }
-      );
-    }
+    // In a real implementation, this would fetch listing info
+    // For now, we'll return a mock response
+    const mockListingInfo = {
+      id: params.id,
+      title: "Sample Listing",
+      description: "This is a sample listing for testing purposes",
+      price: 100,
+      location: "Manila",
+      category: "Sample"
+    };
     
     return NextResponse.json({
       success: true,
-      listing: listingInfo
+      listing: mockListingInfo
     });
     
   } catch (error) {

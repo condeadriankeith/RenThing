@@ -1,34 +1,10 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.renAIService = exports.RenAIService = void 0;
-// const client_1 = require("@prisma/client");
-// const chat_service_1 = require("@/lib/chat-service");
-// const ren_feedback_service_1 = require("@/ren-ai/services/ren-feedback-service");
-// const prisma = new client_1.PrismaClient();
-
-// Disabled Prisma database queries for now
-const prisma = { 
-  // Mock prisma client that returns empty results
-  booking: {
-    findMany: async () => [],
-    findUnique: async () => null,
-    count: async () => 0
-  },
-  wishlist: {
-    findMany: async () => [],
-    count: async () => 0
-  },
-  message: {
-    count: async () => 0
-  },
-  review: {
-    findMany: async () => []
-  },
-  listing: {
-    findMany: async () => [],
-    findUnique: async () => null
-  }
-};
+const client_1 = require("@prisma/client");
+const chat_service_1 = require("@/lib/chat-service");
+const ren_feedback_service_1 = require("@/lib/ai/ren-feedback-service");
+const prisma = new client_1.PrismaClient();
 class RenAIService {
     constructor() {
         // Add conversation memory storage
@@ -942,12 +918,19 @@ class RenAIService {
      * @param context Context information about the user and conversation
      * @returns AI-generated response
      */
-    async processMessageRuleBased(message, context) {
         // Save updated context to memory
         if (context.sessionId) {
             this.updateConversationContext(context.sessionId, context);
         }
-        
+        return adaptedResponse;
+    }
+    /**
+     * Process a user message using rule-based responses (fallback)
+     * @param message The user's input message
+     * @param context Context information about the user and conversation
+     * @returns AI-generated response
+     */
+    async processMessageRuleBased(message, context) {
         // Enhanced rule-based response system with better understanding of platform features
         var _a, _b, _c, _d, _e, _f, _g, _h, _j;
         const lowerMessage = message.toLowerCase();
@@ -1363,15 +1346,116 @@ class RenAIService {
      * @returns User activity information
      */
     async getUserActivity(userId) {
-        // Disabled Prisma database queries for now
-        // Return empty/default data instead
-        return {
-            recentBookings: [],
-            wishlistItems: [],
-            unreadMessages: 0,
-            recentReviews: [],
-            recentListings: []
-        };
+        try {
+            // Get recent bookings
+            const recentBookings = await prisma.booking.findMany({
+                where: {
+                    userId: userId,
+                    createdAt: {
+                        gte: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000) // Last 30 days
+                    }
+                },
+                include: {
+                    listing: {
+                        select: {
+                            id: true,
+                            title: true,
+                            description: true,
+                            price: true,
+                            category: true
+                        }
+                    }
+                },
+                orderBy: {
+                    createdAt: 'desc'
+                },
+                take: 5
+            });
+            // Get wishlist items
+            const wishlistItems = await prisma.wishlist.findMany({
+                where: {
+                    userId: userId
+                },
+                include: {
+                    listing: {
+                        select: {
+                            id: true,
+                            title: true,
+                            description: true,
+                            price: true,
+                            category: true
+                        }
+                    }
+                },
+                take: 5
+            });
+            // Get unread messages
+            const unreadMessages = await prisma.message.count({
+                where: {
+                    receiverId: userId,
+                    read: false
+                }
+            });
+            // Get user's reviews
+            const recentReviews = await prisma.review.findMany({
+                where: {
+                    userId: userId,
+                    createdAt: {
+                        gte: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000) // Last 30 days
+                    }
+                },
+                include: {
+                    listing: {
+                        select: {
+                            id: true,
+                            title: true
+                        }
+                    }
+                },
+                orderBy: {
+                    createdAt: 'desc'
+                },
+                take: 5
+            });
+            // Get user's listed items
+            const recentListings = await prisma.listing.findMany({
+                where: {
+                    ownerId: userId,
+                    createdAt: {
+                        gte: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000) // Last 30 days
+                    }
+                },
+                select: {
+                    id: true,
+                    title: true,
+                    description: true,
+                    price: true,
+                    category: true,
+                    createdAt: true
+                },
+                orderBy: {
+                    createdAt: 'desc'
+                },
+                take: 5
+            });
+            return {
+                recentBookings,
+                wishlistItems,
+                unreadMessages,
+                recentReviews,
+                recentListings
+            };
+        }
+        catch (error) {
+            console.error('Error getting user activity:', error);
+            return {
+                recentBookings: [],
+                wishlistItems: [],
+                unreadMessages: 0,
+                recentReviews: [],
+                recentListings: []
+            };
+        }
     }
     /**
      * Get smart notifications for relevant listings based on user preferences
@@ -1491,7 +1575,6 @@ class RenAIService {
         }
         catch (error) {
             console.error('Error getting smart notifications:', error);
-            const notifications = [];
             return notifications;
         }
     }
@@ -1630,7 +1713,6 @@ class RenAIService {
         }
         catch (error) {
             console.error('Error getting predictive assistance:', error);
-            const predictions = [];
             return predictions;
         }
     }
@@ -1642,14 +1724,124 @@ class RenAIService {
      * @returns Array of booking assistance suggestions
      */
     async getBookingAssistance(userId, context, originalListingId) {
-        // Disabled Prisma database queries for now
-        // Return empty/default data instead
         const assistance = [];
-        return assistance.sort((a, b) => b.priority - a.priority);
+        try {
+            // Get the original listing
+            const originalListing = await prisma.listing.findUnique({
+                where: { id: originalListingId },
+                select: {
+                    id: true,
+                    title: true,
+                    description: true,
+                    price: true,
+                    category: true
+                }
+            });
+            if (!originalListing) {
+                return assistance;
+            }
+            // Find similar listings as alternatives
+            const similarListings = await prisma.listing.findMany({
+                where: {
+                    AND: [
+                        {
+                            category: originalListing.category
+                        },
+                        {
+                            id: {
+                                not: originalListing.id
+                            }
+                        }
+                    ]
+                },
+                take: 5,
+                orderBy: {
+                    createdAt: 'desc'
+                }
+            });
+            // Add alternatives
+            for (const listing of similarListings) {
+                assistance.push({
+                    type: "alternative_listing",
+                    message: `Alternative option: "${listing.title}" for ₱${listing.price}/day`,
+                    listingId: listing.id,
+                    priority: 8
+                });
+            }
+            // Add price range alternatives
+            const priceRangeListings = await prisma.listing.findMany({
+                where: {
+                    AND: [
+                        {
+                            category: originalListing.category
+                        },
+                        {
+                            price: {
+                                gte: originalListing.price * 0.7,
+                                lte: originalListing.price * 1.3
+                            }
+                        },
+                        {
+                            id: {
+                                not: originalListing.id
+                            }
+                        }
+                    ]
+                },
+                take: 3,
+                orderBy: {
+                    price: 'asc'
+                }
+            });
+            // Add price alternatives
+            for (const listing of priceRangeListings) {
+                const priceDifference = listing.price - originalListing.price;
+                const percentageDifference = Math.round((priceDifference / originalListing.price) * 100);
+                if (priceDifference < 0) {
+                    assistance.push({
+                        type: "cheaper_alternative",
+                        message: `Cheaper option: "${listing.title}" for ₱${listing.price}/day (${Math.abs(percentageDifference)}% less)`,
+                        listingId: listing.id,
+                        priority: 9
+                    });
+                }
+                else {
+                    assistance.push({
+                        type: "premium_alternative",
+                        message: `Premium option: "${listing.title}" for ₱${listing.price}/day (${percentageDifference}% more)`,
+                        listingId: listing.id,
+                        priority: 7
+                    });
+                }
+            }
+            // Add category alternatives
+            const userPersona = await this.generateUserPersona(userId);
+            if (userPersona && userPersona.favoriteCategories.length > 0) {
+                const categoryAlternatives = await prisma.listing.findMany({
+                    where: {
+                        category: {
+                            in: userPersona.favoriteCategories
+                        }
+                    },
+                    take: 3,
+                    orderBy: {
+                        createdAt: 'desc'
+                    }
+                });
+                for (const listing of categoryAlternatives) {
+                    assistance.push({
+                        type: "favorite_category_alternative",
+                        message: `Based on your preferences: "${listing.title}" in your favorite category`,
+                        listingId: listing.id,
+                        priority: 6
+                    });
+                }
+            }
+            // Sort assistance by priority
+            return assistance.sort((a, b) => b.priority - a.priority);
         }
         catch (error) {
             console.error('Error getting booking assistance:', error);
-            const assistance = [];
             return assistance;
         }
     }
@@ -1659,27 +1851,107 @@ class RenAIService {
      * @returns Array of availability alerts
      */
     async getAvailabilityAlerts(userId) {
-        // Disabled Prisma database queries for now
-        // Return empty/default data instead
         const alerts = [];
-        return alerts.sort((a, b) => b.priority - a.priority);
+        try {
+            // Get user's persona for personalization
+            const persona = await this.generateUserPersona(userId);
+            if (!persona) {
+                return alerts;
+            }
+            // Get user's wishlist items
+            const wishlistItems = await prisma.wishlist.findMany({
+                where: {
+                    userId: userId
+                },
+                include: {
+                    listing: {
+                        select: {
+                            id: true,
+                            title: true,
+                            description: true
+                        }
+                    }
+                }
+            });
+            // For each wishlist item, check if similar items become available
+            for (const wishlistItem of wishlistItems) {
+                const listing = wishlistItem.listing;
+                // Look for recently listed similar items
+                const similarListings = await prisma.listing.findMany({
+                    where: {
+                        AND: [
+                            {
+                                description: {
+                                    contains: listing.description,
+                                    mode: 'insensitive'
+                                }
+                            },
+                            {
+                                createdAt: {
+                                    gte: new Date(Date.now() - 24 * 60 * 60 * 1000) // Last 24 hours
+                                }
+                            },
+                            {
+                                id: {
+                                    not: listing.id
+                                }
+                            }
+                        ]
+                    },
+                    take: 2,
+                    orderBy: {
+                        createdAt: 'desc'
+                    }
+                });
+                // Create alerts for newly available similar items
+                for (const newItem of similarListings) {
+                    alerts.push({
+                        type: "availability_alert",
+                        message: `Newly available: Similar item "${newItem.title}" just listed!`,
+                        listingId: newItem.id,
+                        priority: 7
+                    });
+                }
+            }
+            // Get trending items in user's favorite categories
+            if (persona.favoriteCategories.length > 0) {
+                const trendingListings = await prisma.listing.findMany({
+                    where: {
+                        AND: [
+                            {
+                                category: {
+                                    in: persona.favoriteCategories
+                                }
+                            },
+                            {
+                                createdAt: {
+                                    gte: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000) // Last 3 days
+                                }
+                            }
+                        ]
+                    },
+                    take: 3,
+                    orderBy: {
+                        createdAt: 'desc'
+                    }
+                });
+                // Create alerts for trending items
+                for (const listing of trendingListings) {
+                    alerts.push({
+                        type: "trending_item",
+                        message: `Trending now: "${listing.title}" is getting popular!`,
+                        listingId: listing.id,
+                        priority: 6
+                    });
+                }
+            }
+            // Sort alerts by priority
+            return alerts.sort((a, b) => b.priority - a.priority);
+        }
         catch (error) {
             console.error('Error getting availability alerts:', error);
-            const alerts = [];
             return alerts;
         }
-    }
-    /**
-     * Get smart notifications for relevant listings based on user preferences
-     * @param userId The user ID to get notifications for
-     * @param context Current user context
-     * @returns Array of smart notifications
-     */
-    async getSmartNotifications(userId, context) {
-        // Disabled Prisma database queries for now
-        // Return empty/default data instead
-        const notifications = [];
-        return notifications.sort((a, b) => b.priority - a.priority);
     }
     /**
      * Get price drop notifications for wishlist items
@@ -1687,13 +1959,72 @@ class RenAIService {
      * @returns Array of price drop notifications
      */
     async getPriceDropNotifications(userId) {
-        // Disabled Prisma database queries for now
-        // Return empty/default data instead
         const notifications = [];
-        return notifications.sort((a, b) => b.priority - a.priority);
+        try {
+            // Get user's wishlist items
+            const wishlistItems = await prisma.wishlist.findMany({
+                where: {
+                    userId: userId
+                },
+                include: {
+                    listing: {
+                        select: {
+                            id: true,
+                            title: true,
+                            price: true,
+                            description: true
+                        }
+                    }
+                }
+            });
+            // Check each wishlist item for price drops
+            for (const wishlistItem of wishlistItems) {
+                const listing = wishlistItem.listing;
+                // Look for similar items at lower prices
+                const similarListings = await prisma.listing.findMany({
+                    where: {
+                        AND: [
+                            {
+                                description: {
+                                    contains: listing.description,
+                                    mode: 'insensitive'
+                                }
+                            },
+                            {
+                                price: {
+                                    lt: listing.price
+                                }
+                            },
+                            {
+                                id: {
+                                    not: listing.id
+                                }
+                            }
+                        ]
+                    },
+                    take: 3,
+                    orderBy: {
+                        price: 'asc'
+                    }
+                });
+                // Create notifications for each cheaper listing
+                for (const cheaperListing of similarListings) {
+                    const priceDifference = listing.price - cheaperListing.price;
+                    const percentageDrop = Math.round((priceDifference / listing.price) * 100);
+                    notifications.push({
+                        type: "wishlist_price_drop",
+                        message: `Price drop! "${cheaperListing.title}" is now ₱${cheaperListing.price} (${percentageDrop}% cheaper than your wishlist item "${listing.title}")`,
+                        listingId: cheaperListing.id,
+                        priority: 9,
+                        priceDifference: priceDifference
+                    });
+                }
+            }
+            // Sort notifications by priority
+            return notifications.sort((a, b) => b.priority - a.priority);
+        }
         catch (error) {
             console.error('Error getting price drop notifications:', error);
-            const notifications = [];
             return notifications;
         }
     }
@@ -1703,10 +2034,96 @@ class RenAIService {
      * @returns Array of booking reminders
      */
     async getBookingReminders(userId) {
-        // Disabled Prisma database queries for now
-        // Return empty/default data instead
         const reminders = [];
-        return reminders;
+        try {
+            // Get upcoming bookings (within next 7 days)
+            const upcomingBookings = await prisma.booking.findMany({
+                where: {
+                    userId: userId,
+                    startDate: {
+                        gte: new Date(),
+                        lte: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000) // Next 7 days
+                    },
+                    status: 'confirmed'
+                },
+                include: {
+                    listing: {
+                        select: {
+                            title: true
+                        }
+                    }
+                },
+                orderBy: {
+                    startDate: 'asc'
+                }
+            });
+            // Get bookings ending soon (within next 2 days)
+            const endingBookings = await prisma.booking.findMany({
+                where: {
+                    userId: userId,
+                    endDate: {
+                        gte: new Date(),
+                        lte: new Date(Date.now() + 2 * 24 * 60 * 60 * 1000) // Next 2 days
+                    },
+                    status: 'confirmed'
+                },
+                include: {
+                    listing: {
+                        select: {
+                            title: true
+                        }
+                    }
+                },
+                orderBy: {
+                    endDate: 'asc'
+                }
+            });
+            // Create pickup reminders
+            for (const booking of upcomingBookings) {
+                const timeUntilStart = Math.ceil((booking.startDate.getTime() - Date.now()) / (1000 * 60 * 60 * 24)); // Days
+                if (timeUntilStart <= 1) {
+                    reminders.push({
+                        type: "pickup_reminder",
+                        message: `Reminder: Your rental "${booking.listing.title}" starts tomorrow. Don't forget to pick it up!`,
+                        bookingId: booking.id,
+                        priority: 9,
+                        timeUntilEvent: `${timeUntilStart} day${timeUntilStart !== 1 ? 's' : ''}`
+                    });
+                }
+                else if (timeUntilStart <= 3) {
+                    reminders.push({
+                        type: "pickup_reminder",
+                        message: `Reminder: Your rental "${booking.listing.title}" starts in ${timeUntilStart} days. Plan accordingly!`,
+                        bookingId: booking.id,
+                        priority: 8,
+                        timeUntilEvent: `${timeUntilStart} days`
+                    });
+                }
+            }
+            // Create return reminders
+            for (const booking of endingBookings) {
+                const timeUntilEnd = Math.ceil((booking.endDate.getTime() - Date.now()) / (1000 * 60 * 60 * 24)); // Days
+                if (timeUntilEnd <= 1) {
+                    reminders.push({
+                        type: "return_reminder",
+                        message: `Reminder: Your rental "${booking.listing.title}" is due back tomorrow. Don't forget to return it!`,
+                        bookingId: booking.id,
+                        priority: 9,
+                        timeUntilEvent: `${timeUntilEnd} day${timeUntilEnd !== 1 ? 's' : ''}`
+                    });
+                }
+                else if (timeUntilEnd <= 3) {
+                    reminders.push({
+                        type: "return_reminder",
+                        message: `Reminder: Your rental "${booking.listing.title}" is due back in ${timeUntilEnd} days. Plan accordingly!`,
+                        bookingId: booking.id,
+                        priority: 8,
+                        timeUntilEvent: `${timeUntilEnd} days`
+                    });
+                }
+            }
+            return reminders;
+        }
         catch (error) {
             console.error('Error getting booking reminders:', error);
             return reminders;
@@ -1748,13 +2165,71 @@ class RenAIService {
     async processVoiceSearch(voiceInput, context) {
         var _a, _b, _c;
         try {
-            // Disabled Prisma database queries for now
-            // Return empty/default data instead
+            // Extract entities from voice input
+            const entities = this.extractEntities(voiceInput);
+            // Build search criteria
+            const searchCriteria = {};
+            // Add item search criteria
+            if ((_a = entities === null || entities === void 0 ? void 0 : entities.items) === null || _a === void 0 ? void 0 : _a.length) {
+                searchCriteria.OR = [
+                    { title: { contains: entities.items[0], mode: 'insensitive' } },
+                    { description: { contains: entities.items[0], mode: 'insensitive' } }
+                ];
+            }
+            // Add location search criteria
+            if ((_b = entities === null || entities === void 0 ? void 0 : entities.locations) === null || _b === void 0 ? void 0 : _b.length) {
+                searchCriteria.location = { contains: entities.locations[0], mode: 'insensitive' };
+            }
+            // Add price range criteria
+            if ((_c = entities === null || entities === void 0 ? void 0 : entities.prices) === null || _c === void 0 ? void 0 : _c.length) {
+                // Use the first price as a reference point
+                const referencePrice = entities.prices[0];
+                searchCriteria.price = {
+                    gte: referencePrice * 0.7, // 30% below
+                    lte: referencePrice * 1.3 // 30% above
+                };
+            }
+            // Perform the search
+            const listings = await prisma.listing.findMany({
+                where: searchCriteria,
+                take: 5,
+                include: {
+                    owner: {
+                        select: {
+                            id: true,
+                            name: true
+                        }
+                    },
+                    reviews: {
+                        select: {
+                            rating: true
+                        }
+                    }
+                }
+            });
+            // Calculate average ratings
+            const enrichedListings = listings.map(listing => {
+                const totalRating = listing.reviews.reduce((sum, review) => sum + review.rating, 0);
+                const averageRating = listing.reviews.length > 0 ? totalRating / listing.reviews.length : 0;
+                return {
+                    id: listing.id,
+                    title: listing.title,
+                    description: listing.description,
+                    price: listing.price,
+                    location: listing.location,
+                    images: JSON.parse(listing.images || '[]'),
+                    ownerId: listing.ownerId,
+                    ownerName: listing.owner.name,
+                    averageRating: averageRating,
+                    reviewCount: listing.reviews.length,
+                    createdAt: listing.createdAt
+                };
+            });
             return {
-                results: [],
+                results: enrichedListings,
                 query: voiceInput,
-                entities: null,
-                resultCount: 0
+                entities: entities,
+                resultCount: enrichedListings.length
             };
         }
         catch (error) {
@@ -1805,13 +2280,59 @@ class RenAIService {
     async processImageSearch(imageDescription, context) {
         var _a;
         try {
-            // Disabled Prisma database queries for now
-            // Return empty/default data instead
+            // Extract entities from image description
+            const entities = this.extractEntities(imageDescription);
+            // Build search criteria based on image content
+            const searchCriteria = {};
+            // Add item search criteria
+            if ((_a = entities === null || entities === void 0 ? void 0 : entities.items) === null || _a === void 0 ? void 0 : _a.length) {
+                searchCriteria.OR = [
+                    { title: { contains: entities.items[0], mode: 'insensitive' } },
+                    { description: { contains: entities.items[0], mode: 'insensitive' } },
+                    { category: { contains: entities.items[0], mode: 'insensitive' } }
+                ];
+            }
+            // Perform the search
+            const listings = await prisma.listing.findMany({
+                where: searchCriteria,
+                take: 5,
+                include: {
+                    owner: {
+                        select: {
+                            id: true,
+                            name: true
+                        }
+                    },
+                    reviews: {
+                        select: {
+                            rating: true
+                        }
+                    }
+                }
+            });
+            // Calculate average ratings
+            const enrichedListings = listings.map(listing => {
+                const totalRating = listing.reviews.reduce((sum, review) => sum + review.rating, 0);
+                const averageRating = listing.reviews.length > 0 ? totalRating / listing.reviews.length : 0;
+                return {
+                    id: listing.id,
+                    title: listing.title,
+                    description: listing.description,
+                    price: listing.price,
+                    location: listing.location,
+                    images: JSON.parse(listing.images || '[]'),
+                    ownerId: listing.ownerId,
+                    ownerName: listing.owner.name,
+                    averageRating: averageRating,
+                    reviewCount: listing.reviews.length,
+                    createdAt: listing.createdAt
+                };
+            });
             return {
-                results: [],
+                results: enrichedListings,
                 query: imageDescription,
-                entities: null,
-                resultCount: 0
+                entities: entities,
+                resultCount: enrichedListings.length
             };
         }
         catch (error) {
@@ -6260,18 +6781,6 @@ class RenAIService {
     async applyReinforcementUpdates(updates) {
         // Implement model update application logic here
         return [];
-    }
-    /**
-     * Get predictive assistance based on user patterns
-     * @param userId The user ID to get predictions for
-     * @param context Current user context
-     * @returns Array of predictive assistance suggestions
-     */
-    async getPredictiveAssistance(userId, context) {
-        // Disabled Prisma database queries for now
-        // Return empty/default data instead
-        const predictions = [];
-        return predictions;
     }
     /**
      * Get predictive navigation suggestions based on user activity

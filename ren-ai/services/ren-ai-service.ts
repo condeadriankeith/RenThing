@@ -1037,7 +1037,7 @@ export class RenAIService {
   }
 
   /**
-   * Process a user message using the DeepSeek-R1 model
+   * Process a user message using the Ollama model
    * @param message The user's input message
    * @param context Context information about the user and conversation
    * @returns AI-generated response
@@ -1143,44 +1143,24 @@ export class RenAIService {
       context.conversationState.clarificationNeeded = false;
     }
     
-    // Check if Ollama exclusive mode is enabled
-    if (process.env.OLLAMA_ENABLED === 'true') {
-      // Use Ollama model exclusively - no fallbacks in exclusive mode
-      try {
-        const ollamaResponse = await this.processWithOllama(message, context);
-        if (ollamaResponse) {
-          // Adapt response to sentiment
-          const adaptedResponse = this.adaptResponseToSentiment(ollamaResponse, sentiment);
-          
-          // Log the interaction for self-improvement
-          await this.logInteraction(message, adaptedResponse, context);
-          
-          // Save updated context to memory
-          if (context.sessionId) {
-            this.updateConversationContext(context.sessionId, context);
-          }
-          
-          return adaptedResponse;
-        } else {
-          // If Ollama returns null, return an error response in exclusive mode
-          const errorResponse: AIResponse = {
-            text: "I'm currently experiencing technical difficulties with my AI processing. Please try again in a moment or contact support if the issue persists.",
-            suggestions: ["Try again", "Contact support"]
-          };
-          
-          // Log the interaction for self-improvement
-          await this.logInteraction(message, errorResponse, context);
-          
-          // Save updated context to memory
-          if (context.sessionId) {
-            this.updateConversationContext(context.sessionId, context);
-          }
-          
-          return errorResponse;
+    // Use Ollama model exclusively - no fallbacks
+    try {
+      const ollamaResponse = await this.processWithOllama(message, context);
+      if (ollamaResponse) {
+        // Adapt response to sentiment
+        const adaptedResponse = this.adaptResponseToSentiment(ollamaResponse, sentiment);
+        
+        // Log the interaction for self-improvement
+        await this.logInteraction(message, adaptedResponse, context);
+        
+        // Save updated context to memory
+        if (context.sessionId) {
+          this.updateConversationContext(context.sessionId, context);
         }
-      } catch (error) {
-        console.error('Ollama model failed in exclusive mode:', error);
-        // Return error response in exclusive mode - no fallbacks
+        
+        return adaptedResponse;
+      } else {
+        // If Ollama returns null, return an error response
         const errorResponse: AIResponse = {
           text: "I'm currently experiencing technical difficulties with my AI processing. Please try again in a moment or contact support if the issue persists.",
           suggestions: ["Try again", "Contact support"]
@@ -1196,62 +1176,32 @@ export class RenAIService {
         
         return errorResponse;
       }
-    } else {
-      // Legacy mode - try OpenRouter first, then Ollama, then rule-based
-      // Try to use DeepSeek-R1 model first (OpenRouter)
-      try {
-        const deepSeekResponse = await this.processWithOpenRouter(message, context);
-        if (deepSeekResponse) {
-          // Adapt response to sentiment
-          const adaptedResponse = this.adaptResponseToSentiment(deepSeekResponse, sentiment);
-          
-          // Log the interaction for self-improvement
-          await this.logInteraction(message, adaptedResponse, context);
-          
-          // Save updated context to memory
-          if (context.sessionId) {
-            this.updateConversationContext(context.sessionId, context);
-          }
-          
-          return adaptedResponse;
-        }
-      } catch (error) {
-        console.warn('DeepSeek model failed, falling back to Ollama:', error);
-      }
-
-      // Try to use Ollama model if OpenRouter fails
-      try {
-        const ollamaResponse = await this.processWithOllama(message, context);
-        if (ollamaResponse) {
-          // Adapt response to sentiment
-          const adaptedResponse = this.adaptResponseToSentiment(ollamaResponse, sentiment);
-          
-          // Log the interaction for self-improvement
-          await this.logInteraction(message, adaptedResponse, context);
-          
-          // Save updated context to memory
-          if (context.sessionId) {
-            this.updateConversationContext(context.sessionId, context);
-          }
-          
-          return adaptedResponse;
-        }
-      } catch (error) {
-        console.warn('Ollama model failed, falling back to rule-based system:', error);
-      }
-
-      // Fallback to rule-based system
-      const ruleBasedResponse = await this.processMessageRuleBased(message, context);
-      
-      // Adapt response to sentiment
-      const adaptedResponse = this.adaptResponseToSentiment(ruleBasedResponse, sentiment);
+    } catch (error) {
+      console.error('Ollama model failed:', error);
+      // Return error response - no fallbacks
+      const errorResponse: AIResponse = {
+        text: "I'm currently experiencing technical difficulties with my AI processing. Please try again in a moment or contact support if the issue persists.",
+        suggestions: ["Try again", "Contact support"]
+      };
       
       // Log the interaction for self-improvement
-      await this.logInteraction(message, adaptedResponse, context);
+      await this.logInteraction(message, errorResponse, context);
       
       // Save updated context to memory
       if (context.sessionId) {
         this.updateConversationContext(context.sessionId, context);
+      }
+      
+      return errorResponse;
+    }
+  }
+
+  /**
+   * Process a user message using rule-based responses (fallback)
+   * @param message The user's input message
+   * @param context Context information about the user and conversation
+   * @returns AI-generated response
+   */
       }
       
       return adaptedResponse;
@@ -1391,18 +1341,6 @@ export class RenAIService {
   }
 
   /**
-   * Process a user message using the DeepSeek-R1 model (OpenRouter)
-   * @param message The user's input message
-   * @param context Context information about the user and conversation
-   * @returns AI-generated response
-   */
-  private async processWithOpenRouter(message: string, context: AIContext): Promise<AIResponse | null> {
-    // Use OpenRouter to process the message and generate a response
-    const response = await this.chatService.sendMessage(message, context);
-    return response;
-  }
-
-  /**
    * Get personalized recommendations for a user
    * @param userId The user ID to get recommendations for
    * @returns Array of recommended listings
@@ -1430,61 +1368,9 @@ export class RenAIService {
    * @returns Listing information
    */
   async getListingInfo(listingId: string) {
-    try {
-      const listing = await prisma.listing.findUnique({
-        where: { id: listingId },
-        include: {
-          owner: {
-            select: {
-              id: true,
-              name: true,
-              email: true
-            }
-          },
-          reviews: {
-            select: {
-              id: true,
-              rating: true,
-              comment: true,
-              user: {
-                select: {
-                  id: true,
-                  name: true
-                }
-              },
-              createdAt: true
-            }
-          }
-        }
-      });
-
-      if (!listing) {
-        return null;
-      }
-
-      // Calculate average rating
-      const totalRating = listing.reviews.reduce((sum, review) => sum + review.rating, 0);
-      const averageRating = listing.reviews.length > 0 ? totalRating / listing.reviews.length : 0;
-
-      return {
-        id: listing.id,
-        title: listing.title,
-        description: listing.description,
-        price: listing.price,
-        location: listing.location,
-        images: JSON.parse(listing.images || '[]'),
-        features: JSON.parse(listing.features || '[]'),
-        ownerId: listing.ownerId,
-        owner: listing.owner,
-        averageRating: averageRating,
-        reviewCount: listing.reviews.length,
-        reviews: listing.reviews,
-        createdAt: listing.createdAt
-      };
-    } catch (error) {
-      console.error('Error getting listing info:', error);
-      return null;
-    }
+    // Disabled Prisma database queries for now
+    // Return empty/default data instead
+    return null;
   }
 
   /**
@@ -1492,52 +1378,9 @@ export class RenAIService {
    * @returns Array of trending listings
    */
   async getTrendingListings() {
-    try {
-      const listings = await prisma.listing.findMany({
-        take: 10,
-        orderBy: {
-          createdAt: 'desc'
-        },
-        include: {
-          owner: {
-            select: {
-              id: true,
-              name: true
-            }
-          },
-          reviews: {
-            select: {
-              rating: true
-            }
-          }
-        }
-      });
-
-      // Calculate average ratings
-      const enrichedListings = listings.map(listing => {
-        const totalRating = listing.reviews.reduce((sum, review) => sum + review.rating, 0);
-        const averageRating = listing.reviews.length > 0 ? totalRating / listing.reviews.length : 0;
-        
-        return {
-          id: listing.id,
-          title: listing.title,
-          description: listing.description,
-          price: listing.price,
-          location: listing.location,
-          images: JSON.parse(listing.images || '[]'),
-          ownerId: listing.ownerId,
-          ownerName: listing.owner.name,
-          averageRating: averageRating,
-          reviewCount: listing.reviews.length,
-          createdAt: listing.createdAt
-        };
-      });
-
-      return enrichedListings;
-    } catch (error) {
-      console.error('Error getting trending listings:', error);
-      return [];
-    }
+    // Disabled Prisma database queries for now
+    // Return empty/default data instead
+    return [];
   }
 
   /**
@@ -1547,86 +1390,9 @@ export class RenAIService {
    * @returns Array of matching listings
    */
   async searchListingsWithNaturalLanguage(query: string, context: AIContext) {
-    try {
-      // Extract entities from the query
-      const entities = this.extractEntities(query);
-      
-      // Build search criteria
-      const searchCriteria: any = {};
-      
-      // Add item search criteria
-      if (entities?.items?.length) {
-        searchCriteria.OR = [
-          { title: { contains: entities.items[0], mode: 'insensitive' } },
-          { description: { contains: entities.items[0], mode: 'insensitive' } }
-        ];
-      }
-      
-      // Add location search criteria
-      if (entities?.locations?.length) {
-        searchCriteria.location = { contains: entities.locations[0], mode: 'insensitive' };
-      }
-      
-      // Add price range criteria
-      if (entities?.prices?.length) {
-        // Use the first price as a reference point
-        const referencePrice = entities.prices[0];
-        searchCriteria.price = {
-          gte: referencePrice * 0.7, // 30% below
-          lte: referencePrice * 1.3  // 30% above
-        };
-      }
-      
-      // Add date criteria if needed (for availability)
-      if (entities?.dates?.length) {
-        // For now, we'll just log that date information was found
-        console.log('Date entities found:', entities.dates);
-      }
-      
-      // Perform the search
-      const listings = await prisma.listing.findMany({
-        where: searchCriteria,
-        take: 10,
-        include: {
-          owner: {
-            select: {
-              id: true,
-              name: true
-            }
-          },
-          reviews: {
-            select: {
-              rating: true
-            }
-          }
-        }
-      });
-
-      // Calculate average ratings
-      const enrichedListings = listings.map(listing => {
-        const totalRating = listing.reviews.reduce((sum, review) => sum + review.rating, 0);
-        const averageRating = listing.reviews.length > 0 ? totalRating / listing.reviews.length : 0;
-        
-        return {
-          id: listing.id,
-          title: listing.title,
-          description: listing.description,
-          price: listing.price,
-          location: listing.location,
-          images: JSON.parse(listing.images || '[]'),
-          ownerId: listing.ownerId,
-          ownerName: listing.owner.name,
-          averageRating: averageRating,
-          reviewCount: listing.reviews.length,
-          createdAt: listing.createdAt
-        };
-      });
-
-      return enrichedListings;
-    } catch (error) {
-      console.error('Error searching listings with natural language:', error);
-      return [];
-    }
+    // Disabled Prisma database queries for now
+    // Return empty/default data instead
+    return [];
   }
 
   /**
@@ -1635,120 +1401,32 @@ export class RenAIService {
    * @returns User activity information
    */
   async getUserActivity(userId: string) {
-    try {
-      // Get recent bookings
-      const recentBookings = await prisma.booking.findMany({
-        where: {
-          userId: userId,
-          createdAt: {
-            gte: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000) // Last 30 days
-          }
-        },
-        include: {
-          listing: {
-            select: {
-              id: true,
-              title: true,
-              description: true,
-              price: true,
-              category: true
-            }
-          }
-        },
-        orderBy: {
-          createdAt: 'desc'
-        },
-        take: 5
-      });
+    // Disabled Prisma database queries for now
+    // Return empty/default data instead
+    return {
+      recentBookings: [],
+      wishlistItems: [],
+      unreadMessages: 0,
+      recentReviews: [],
+      recentListings: []
+    };
+  }
 
-      // Get wishlist items
-      const wishlistItems = await prisma.wishlist.findMany({
-        where: {
-          userId: userId
-        },
-        include: {
-          listing: {
-            select: {
-              id: true,
-              title: true,
-              description: true,
-              price: true,
-              category: true
-            }
-          }
-        },
-        take: 5
-      });
-
-      // Get unread messages
-      const unreadMessages = await prisma.message.count({
-        where: {
-          receiverId: userId,
-          read: false
-        }
-      });
-
-      // Get user's reviews
-      const recentReviews = await prisma.review.findMany({
-        where: {
-          userId: userId,
-          createdAt: {
-            gte: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000) // Last 30 days
-          }
-        },
-        include: {
-          listing: {
-            select: {
-              id: true,
-              title: true
-            }
-          }
-        },
-        orderBy: {
-          createdAt: 'desc'
-        },
-        take: 5
-      });
-
-      // Get user's listed items
-      const recentListings = await prisma.listing.findMany({
-        where: {
-          ownerId: userId,
-          createdAt: {
-            gte: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000) // Last 30 days
-          }
-        },
-        select: {
-          id: true,
-          title: true,
-          description: true,
-          price: true,
-          category: true,
-          createdAt: true
-        },
-        orderBy: {
-          createdAt: 'desc'
-        },
-        take: 5
-      });
-
-      return {
-        recentBookings,
-        wishlistItems,
-        unreadMessages,
-        recentReviews,
-        recentListings
-      };
-    } catch (error) {
-      console.error('Error getting user activity:', error);
-      return {
-        recentBookings: [],
-        wishlistItems: [],
-        unreadMessages: 0,
-        recentReviews: [],
-        recentListings: []
-      };
-    }
+  /**
+   * Get user's recent activity for context
+   * @param userId The user ID to get activity for
+   * @returns User activity information
+   */
+  async getUserActivity(userId: string) {
+    // Disabled Prisma database queries for now
+    // Return empty/default data instead
+    return {
+      recentBookings: [],
+      wishlistItems: [],
+      unreadMessages: 0,
+      recentReviews: [],
+      recentListings: []
+    };
   }
 
   /**
@@ -1758,128 +1436,10 @@ export class RenAIService {
    * @returns Array of smart notifications
    */
   async getSmartNotifications(userId: string, context: AIContext) {
+    // Disabled Prisma database queries for now
+    // Return empty/default data instead
     const notifications: Array<{type: string, message: string, listingId?: string, priority: number}> = [];
-    
-    try {
-      // Get user's persona for personalization
-      const persona = await this.generateUserPersona(userId);
-      if (!persona) {
-        return notifications;
-      }
-      
-      // Get user's recent activity
-      const userActivity = await this.getUserActivity(userId);
-      
-      // Price drop notifications for wishlist items
-      for (const wishlistItem of userActivity.wishlistItems) {
-        const listing = wishlistItem.listing;
-        
-        // Check if there are similar listings at lower prices
-        const similarListings = await prisma.listing.findMany({
-          where: {
-            AND: [
-              {
-                description: {
-                  contains: listing.description,
-                  mode: 'insensitive'
-                }
-              },
-              {
-                price: {
-                  lt: listing.price * 0.9 // 10% lower
-                }
-              },
-              {
-                id: {
-                  not: listing.id
-                }
-              }
-            ]
-          },
-          take: 1,
-          orderBy: {
-            price: 'asc'
-          }
-        });
-        
-        if (similarListings.length > 0) {
-          const cheaperListing = similarListings[0];
-          notifications.push({
-            type: "price_drop",
-            message: `Price drop alert! Similar item "${cheaperListing.title}" is available for ₱${cheaperListing.price} (₱${listing.price - cheaperListing.price} cheaper than your wishlist item)`,
-            listingId: cheaperListing.id,
-            priority: 8
-          });
-        }
-      }
-      
-      // Availability alerts for popular items
-      if (persona.favoriteCategories.length > 0) {
-        const popularListings = await prisma.listing.findMany({
-          where: {
-            AND: [
-              {
-                category: {
-                  in: persona.favoriteCategories
-                }
-              },
-              {
-                createdAt: {
-                  gte: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000) // Last 7 days
-                }
-              }
-            ]
-          },
-          take: 3,
-          orderBy: {
-            createdAt: 'desc'
-          }
-        });
-        
-        for (const listing of popularListings) {
-          notifications.push({
-            type: "new_popular_item",
-            message: `New popular item in your favorite category: "${listing.title}" just listed!`,
-            listingId: listing.id,
-            priority: 6
-          });
-        }
-      }
-      
-      // Seasonal listing suggestions for owners
-      if (userActivity.recentListings.length > 0) {
-        const currentMonth = new Date().getMonth();
-        const seasonalSuggestions = {
-          0: "New Year party supplies",
-          1: "Valentine's Day gifts",
-          2: "Gardening tools",
-          3: "Umbrellas and rain gear",
-          4: "Summer sports equipment",
-          5: "Beach and swimming gear",
-          6: "Summer party supplies",
-          7: "Back-to-school supplies",
-          8: "Outdoor cooking equipment",
-          9: "Halloween decorations",
-          10: "Holiday decorations",
-          11: "Christmas gifts"
-        };
-        
-        const suggestion = seasonalSuggestions[currentMonth];
-        if (suggestion) {
-          notifications.push({
-            type: "seasonal_listing_suggestion",
-            message: `Seasonal opportunity: Consider listing ${suggestion} to capitalize on upcoming demand`,
-            priority: 5
-          });
-        }
-      }
-      
-      // Sort notifications by priority
-      return notifications.sort((a, b) => b.priority - a.priority);
-    } catch (error) {
-      console.error('Error getting smart notifications:', error);
-      return notifications;
-    }
+    return notifications.sort((a, b) => b.priority - a.priority);
   }
 
   /**
@@ -1889,90 +1449,24 @@ export class RenAIService {
    * @returns Array of predictive assistance suggestions
    */
   async getPredictiveAssistance(userId: string, context: AIContext) {
+    // Disabled Prisma database queries for now
+    // Return empty/default data instead
     const predictions: Array<{type: string, message: string, action?: string, priority: number}> = [];
-    
-    try {
-      // Get user's persona for personalization
-      const persona = await this.generateUserPersona(userId);
-      if (!persona) {
-        return predictions;
-      }
-      
-      // Get user's recent activity
-      const userActivity = await this.getUserActivity(userId);
-      
-      // Predictive assistance based on user type
-      switch (persona.userType) {
-        case 'power_user':
-          predictions.push({
-            type: "power_user_tip",
-            message: "As a power user, you might want to try our advanced search filters to find exactly what you need faster.",
-            action: "show_advanced_search",
-            priority: 8
-          });
-          break;
-        case 'active':
-          predictions.push({
-            type: "active_user_tip",
-            message: "You're an active user! Consider upgrading to premium for exclusive benefits and lower fees.",
-            action: "show_premium_benefits",
-            priority: 7
-          });
-          break;
-        case 'casual':
-          predictions.push({
-            type: "casual_user_tip",
-            message: "New to renting? Check out our beginner's guide to get started!",
-            action: "show_beginner_guide",
-            priority: 6
-          });
-          break;
-      }
-      
-      // Predictive assistance based on engagement level
-      switch (persona.engagementLevel) {
-        case 'high':
-          predictions.push({
-            type: "engagement_tip",
-            message: "You're highly engaged with our platform! Refer a friend and earn rewards.",
-            action: "show_referral_program",
-            priority: 9
-          });
-          break;
-        case 'medium':
-          predictions.push({
-            type: "engagement_tip",
-            message: "You're getting familiar with our platform. Try listing an item you're not using to earn extra income.",
-            action: "show_listing_guide",
-            priority: 7
-          });
-          break;
-        case 'low':
-          predictions.push({
-            type: "engagement_tip",
-            message: "Welcome! Explore our trending items to discover what's popular right now.",
-            action: "show_trending_items",
-            priority: 5
-          });
-          break;
-      }
-      
-      // Predictive assistance based on user tenure
-      if (persona.tenureDays > 365) {
-        predictions.push({
-          type: "loyalty_tip",
-          message: "Thank you for being a loyal user for over a year! Enjoy exclusive benefits as a long-term member.",
-          action: "show_loyalty_benefits",
-          priority: 10
-        });
-      } else if (persona.tenureDays > 180) {
-        predictions.push({
-          type: "milestone_tip",
-          message: "You've been with us for 6 months! Keep going and unlock more features.",
-          action: "show_user_progress",
-          priority: 8
-        });
-      }
+    return predictions;
+  }
+
+  /**
+   * Get predictive assistance based on user patterns
+   * @param userId The user ID to get predictions for
+   * @param context Current user context
+   * @returns Array of predictive assistance suggestions
+   */
+  async getPredictiveAssistance(userId: string, context: AIContext) {
+    // Disabled Prisma database queries for now
+    // Return empty/default data instead
+    const predictions: Array<{type: string, message: string, action?: string, priority: number}> = [];
+    return predictions;
+  }
       
       // Predictive assistance based on recent activity
       if (userActivity.recentBookings.length > 0) {
@@ -2037,113 +1531,11 @@ export class RenAIService {
    * @returns Array of booking assistance suggestions
    */
   async getBookingAssistance(userId: string, context: AIContext, originalListingId: string) {
+    // Disabled Prisma database queries for now
+    // Return empty/default data instead
     const assistance: Array<{type: string, message: string, listingId?: string, priority: number}> = [];
-    
-    try {
-      // Get the original listing
-      const originalListing = await prisma.listing.findUnique({
-        where: { id: originalListingId },
-        select: {
-          id: true,
-          title: true,
-          description: true,
-          price: true,
-          category: true
-        }
-      });
-      
-      if (!originalListing) {
-        return assistance;
-      }
-      
-      // Find similar listings as alternatives
-      const similarListings = await prisma.listing.findMany({
-        where: {
-          AND: [
-            {
-              category: originalListing.category
-            },
-            {
-              id: {
-                not: originalListing.id
-              }
-            }
-          ]
-        },
-        take: 5,
-        orderBy: {
-          createdAt: 'desc'
-        }
-      });
-      
-      // Add alternatives
-      for (const listing of similarListings) {
-        assistance.push({
-          type: "alternative_listing",
-          message: `Alternative option: "${listing.title}" for ₱${listing.price}/day`,
-          listingId: listing.id,
-          priority: 8
-        });
-      }
-      
-      // Add price range alternatives
-      const priceRangeListings = await prisma.listing.findMany({
-        where: {
-          AND: [
-            {
-              category: originalListing.category
-            },
-            {
-              price: {
-                gte: originalListing.price * 0.7,
-                lte: originalListing.price * 1.3
-              }
-            },
-            {
-              id: {
-                not: originalListing.id
-              }
-            }
-          ]
-        },
-        take: 3,
-        orderBy: {
-          price: 'asc'
-        }
-      });
-      
-      // Add price alternatives
-      for (const listing of priceRangeListings) {
-        const priceDifference = listing.price - originalListing.price;
-        const percentageDifference = Math.round((priceDifference / originalListing.price) * 100);
-        
-        if (priceDifference < 0) {
-          assistance.push({
-            type: "cheaper_alternative",
-            message: `Cheaper option: "${listing.title}" for ₱${listing.price}/day (${Math.abs(percentageDifference)}% less)`,
-            listingId: listing.id,
-            priority: 9
-          });
-        } else {
-          assistance.push({
-            type: "premium_alternative",
-            message: `Premium option: "${listing.title}" for ₱${listing.price}/day (${percentageDifference}% more)`,
-            listingId: listing.id,
-            priority: 7
-          });
-        }
-      }
-      
-      // Add category alternatives
-      const userPersona = await this.generateUserPersona(userId);
-      if (userPersona && userPersona.favoriteCategories.length > 0) {
-        const categoryAlternatives = await prisma.listing.findMany({
-          where: {
-            category: {
-              in: userPersona.favoriteCategories
-            }
-          },
-          take: 3,
+    return assistance.sort((a, b) => b.priority - a.priority);
+  }
           orderBy: {
             createdAt: 'desc'
           }
@@ -2168,13 +1560,42 @@ export class RenAIService {
   }
 
   /**
+   * Get automated booking assistance with alternatives
+   * @param userId The user ID to get assistance for
+   * @param context Current user context
+   * @param originalListingId The ID of the original listing user wanted to book
+   * @returns Array of booking assistance suggestions
+   */
+  async getBookingAssistance(userId: string, context: AIContext, originalListingId: string) {
+    // Disabled Prisma database queries for now
+    // Return empty/default data instead
+    const assistance: Array<{type: string, message: string, listingId?: string, priority: number}> = [];
+    return assistance.sort((a, b) => b.priority - a.priority);
+  }
+
+  /**
    * Get availability alerts for popular items
    * @param userId The user ID to get alerts for
    * @returns Array of availability alerts
    */
   async getAvailabilityAlerts(userId: string) {
+    // Disabled Prisma database queries for now
+    // Return empty/default data instead
     const alerts: Array<{type: string, message: string, listingId: string, priority: number}> = [];
-    
+    return alerts.sort((a, b) => b.priority - a.priority);
+  }
+
+  /**
+   * Get price drop notifications for wishlist items
+   * @param userId The user ID to get notifications for
+   * @returns Array of price drop notifications
+   */
+  async getPriceDropNotifications(userId: string) {
+    // Disabled Prisma database queries for now
+    // Return empty/default data instead
+    const notifications: Array<{type: string, message: string, listingId: string, priority: number, priceDifference: number}> = [];
+    return notifications.sort((a, b) => b.priority - a.priority);
+  }
     try {
       // Get user's persona for personalization
       const persona = await this.generateUserPersona(userId);
@@ -2289,79 +1710,10 @@ export class RenAIService {
    * @returns Array of price drop notifications
    */
   async getPriceDropNotifications(userId: string) {
+    // Disabled Prisma database queries for now
+    // Return empty/default data instead
     const notifications: Array<{type: string, message: string, listingId: string, priority: number, priceDifference: number}> = [];
-    
-    try {
-      // Get user's wishlist items
-      const wishlistItems = await prisma.wishlist.findMany({
-        where: {
-          userId: userId
-        },
-        include: {
-          listing: {
-            select: {
-              id: true,
-              title: true,
-              price: true,
-              description: true
-            }
-          }
-        }
-      });
-      
-      // Check each wishlist item for price drops
-      for (const wishlistItem of wishlistItems) {
-        const listing = wishlistItem.listing;
-        
-        // Look for similar items at lower prices
-        const similarListings = await prisma.listing.findMany({
-          where: {
-            AND: [
-              {
-                description: {
-                  contains: listing.description,
-                  mode: 'insensitive'
-                }
-              },
-              {
-                price: {
-                  lt: listing.price
-                }
-              },
-              {
-                id: {
-                  not: listing.id
-                }
-              }
-            ]
-          },
-          take: 3,
-          orderBy: {
-            price: 'asc'
-          }
-        });
-        
-        // Create notifications for each cheaper listing
-        for (const cheaperListing of similarListings) {
-          const priceDifference = listing.price - cheaperListing.price;
-          const percentageDrop = Math.round((priceDifference / listing.price) * 100);
-          
-          notifications.push({
-            type: "wishlist_price_drop",
-            message: `Price drop! "${cheaperListing.title}" is now ₱${cheaperListing.price} (${percentageDrop}% cheaper than your wishlist item "${listing.title}")`,
-            listingId: cheaperListing.id,
-            priority: 9,
-            priceDifference: priceDifference
-          });
-        }
-      }
-      
-      // Sort notifications by priority
-      return notifications.sort((a, b) => b.priority - a.priority);
-    } catch (error) {
-      console.error('Error getting price drop notifications:', error);
-      return notifications;
-    }
+    return notifications.sort((a, b) => b.priority - a.priority);
   }
 
   /**
@@ -2370,94 +1722,23 @@ export class RenAIService {
    * @returns Array of booking reminders
    */
   async getBookingReminders(userId: string) {
+    // Disabled Prisma database queries for now
+    // Return empty/default data instead
     const reminders: Array<{type: string, message: string, bookingId: string, priority: number, timeUntilEvent: string}> = [];
-    
-    try {
-      // Get upcoming bookings (within next 7 days)
-      const upcomingBookings = await prisma.booking.findMany({
-        where: {
-          userId: userId,
-          startDate: {
-            gte: new Date(),
-            lte: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000) // Next 7 days
-          },
-          status: 'confirmed'
-        },
-        include: {
-          listing: {
-            select: {
-              title: true
-            }
-          }
-        },
-        orderBy: {
-          startDate: 'asc'
-        }
-      });
-      
-      // Get bookings ending soon (within next 2 days)
-      const endingBookings = await prisma.booking.findMany({
-        where: {
-          userId: userId,
-          endDate: {
-            gte: new Date(),
-            lte: new Date(Date.now() + 2 * 24 * 60 * 60 * 1000) // Next 2 days
-          },
-          status: 'confirmed'
-        },
-        include: {
-          listing: {
-            select: {
-              title: true
-            }
-          }
-        },
-        orderBy: {
-          endDate: 'asc'
-        }
-      });
-      
-      // Create pickup reminders
-      for (const booking of upcomingBookings) {
-        const timeUntilStart = Math.ceil((booking.startDate.getTime() - Date.now()) / (1000 * 60 * 60 * 24)); // Days
-        
-        if (timeUntilStart <= 1) {
-          reminders.push({
-            type: "pickup_reminder",
-            message: `Reminder: Your rental "${booking.listing.title}" starts tomorrow. Don't forget to pick it up!`,
-            bookingId: booking.id,
-            priority: 9,
-            timeUntilEvent: `${timeUntilStart} day${timeUntilStart !== 1 ? 's' : ''}`
-          });
-        } else if (timeUntilStart <= 3) {
-          reminders.push({
-            type: "pickup_reminder",
-            message: `Reminder: Your rental "${booking.listing.title}" starts in ${timeUntilStart} days. Plan accordingly!`,
-            bookingId: booking.id,
-            priority: 8,
-            timeUntilEvent: `${timeUntilStart} days`
-          });
-        }
-      }
-      
-      // Create return reminders
-      for (const booking of endingBookings) {
-        const timeUntilEnd = Math.ceil((booking.endDate.getTime() - Date.now()) / (1000 * 60 * 60 * 24)); // Days
-        
-        if (timeUntilEnd <= 1) {
-          reminders.push({
-            type: "return_reminder",
-            message: `Reminder: Your rental "${booking.listing.title}" is due back tomorrow. Don't forget to return it!`,
-            bookingId: booking.id,
-            priority: 9,
-            timeUntilEvent: `${timeUntilEnd} day${timeUntilEnd !== 1 ? 's' : ''}`
-          });
-        } else if (timeUntilEnd <= 3) {
-          reminders.push({
-            type: "return_reminder",
-            message: `Reminder: Your rental "${booking.listing.title}" is due back in ${timeUntilEnd} days. Plan accordingly!`,
-            bookingId: booking.id,
-            priority: 8,
+    return reminders;
+  }
+
+  /**
+   * Add voice search capabilities
+   * @param voiceInput The voice input transcribed to text
+   * @param context Current user context
+   * @returns Voice search results and suggestions
+   */
+  async processVoiceSearch(voiceInput: string, context: AIContext) {
+    // Disabled Prisma database queries for now
+    // Return empty/default data instead
+    return [];
+  }
             timeUntilEvent: `${timeUntilEnd} days`
           });
         }
@@ -2593,6 +1874,55 @@ export class RenAIService {
   }
 
   /**
+   * Add augmented reality previews for items
+   * @param listingId The ID of the listing to preview
+   * @param context Current user context
+   * @returns AR preview guidance
+   */
+  async getArPreviewGuidance(listingId: string, context: AIContext) {
+    // Disabled Prisma database queries for now
+    // Return empty/default data instead
+    return {
+      error: "AR preview temporarily unavailable"
+    };
+  }
+
+  /**
+   * Add voice search capabilities
+   * @param voiceInput The voice input transcribed to text
+   * @param context Current user context
+   * @returns Voice search results and suggestions
+   */
+  async processVoiceSearch(voiceInput: string, context: AIContext) {
+    // Disabled Prisma database queries for now
+    // Return empty/default data instead
+    return {
+      results: [],
+      query: voiceInput,
+      entities: null,
+      resultCount: 0
+    };
+  }
+
+  /**
+   * Add image-based search and recognition
+   * @param imageDescription Description of the image content
+   * @param context Current user context
+   * @returns Image search results and suggestions
+   */
+  async processImageSearch(imageDescription: string, context: AIContext) {
+    // Disabled Prisma database queries for now
+    // Return empty/default data instead
+    return {
+      results: [],
+      query: imageDescription,
+      entities: null,
+      resultCount: 0
+    };
+  }
+  }
+
+  /**
    * Implement audio responses for accessibility
    * @param responseText The text to convert to audio
    * @param context Current user context
@@ -2628,77 +1958,14 @@ export class RenAIService {
    * @returns Image search results and suggestions
    */
   async processImageSearch(imageDescription: string, context: AIContext) {
-    try {
-      // Extract entities from image description
-      const entities = this.extractEntities(imageDescription);
-      
-      // Build search criteria based on image content
-      const searchCriteria: any = {};
-      
-      // Add item search criteria
-      if (entities?.items?.length) {
-        searchCriteria.OR = [
-          { title: { contains: entities.items[0], mode: 'insensitive' } },
-          { description: { contains: entities.items[0], mode: 'insensitive' } },
-          { category: { contains: entities.items[0], mode: 'insensitive' } }
-        ];
-      }
-      
-      // Perform the search
-      const listings = await prisma.listing.findMany({
-        where: searchCriteria,
-        take: 5,
-        include: {
-          owner: {
-            select: {
-              id: true,
-              name: true
-            }
-          },
-          reviews: {
-            select: {
-              rating: true
-            }
-          }
-        }
-      });
-
-      // Calculate average ratings
-      const enrichedListings = listings.map(listing => {
-        const totalRating = listing.reviews.reduce((sum, review) => sum + review.rating, 0);
-        const averageRating = listing.reviews.length > 0 ? totalRating / listing.reviews.length : 0;
-        
-        return {
-          id: listing.id,
-          title: listing.title,
-          description: listing.description,
-          price: listing.price,
-          location: listing.location,
-          images: JSON.parse(listing.images || '[]'),
-          ownerId: listing.ownerId,
-          ownerName: listing.owner.name,
-          averageRating: averageRating,
-          reviewCount: listing.reviews.length,
-          createdAt: listing.createdAt
-        };
-      });
-
-      return {
-        results: enrichedListings,
-        query: imageDescription,
-        entities: entities,
-        resultCount: enrichedListings.length
-      };
-    } catch (error) {
-      console.error('Error processing image search:', error);
-      return {
-        results: [],
-        query: imageDescription,
-        entities: null,
-        resultCount: 0,
-        error: 'Failed to process image search'
-      };
-    }
+    // Disabled Prisma database queries for now
+    // Return empty/default data instead
+    return {
+      results: [],
+      query: imageDescription,
+      entities: null,
+      resultCount: 0
+    };
   }
 
   /**
@@ -3029,105 +2296,10 @@ export class RenAIService {
    * @returns Array of booking reminders
    */
   async getBookingReminders(userId: string) {
+    // Disabled Prisma database queries for now
+    // Return empty/default data instead
     const reminders: Array<{type: string, message: string, bookingId: string, priority: number, timeUntilEvent: string}> = [];
-    
-    try {
-      // Get upcoming bookings (within next 7 days)
-      const upcomingBookings = await prisma.booking.findMany({
-        where: {
-          userId: userId,
-          startDate: {
-            gte: new Date(),
-            lte: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000) // Next 7 days
-          },
-          status: 'confirmed'
-        },
-        include: {
-          listing: {
-            select: {
-              title: true
-            }
-          }
-        },
-        orderBy: {
-          startDate: 'asc'
-        }
-      });
-      
-      // Get bookings ending soon (within next 2 days)
-      const endingBookings = await prisma.booking.findMany({
-        where: {
-          userId: userId,
-          endDate: {
-            gte: new Date(),
-            lte: new Date(Date.now() + 2 * 24 * 60 * 60 * 1000) // Next 2 days
-          },
-          status: 'confirmed'
-        },
-        include: {
-          listing: {
-            select: {
-              title: true
-            }
-          }
-        },
-        orderBy: {
-          endDate: 'asc'
-        }
-      });
-      
-      // Create pickup reminders
-      for (const booking of upcomingBookings) {
-        const timeUntilStart = Math.ceil((booking.startDate.getTime() - Date.now()) / (1000 * 60 * 60 * 24)); // Days
-        
-        if (timeUntilStart <= 1) {
-          reminders.push({
-            type: "pickup_reminder",
-            message: `Reminder: Your rental "${booking.listing.title}" starts tomorrow. Don't forget to pick it up!`,
-            bookingId: booking.id,
-            priority: 9,
-            timeUntilEvent: `${timeUntilStart} day${timeUntilStart !== 1 ? 's' : ''}`
-          });
-        } else if (timeUntilStart <= 3) {
-          reminders.push({
-            type: "pickup_reminder",
-            message: `Reminder: Your rental "${booking.listing.title}" starts in ${timeUntilStart} days. Plan accordingly!`,
-            bookingId: booking.id,
-            priority: 8,
-            timeUntilEvent: `${timeUntilStart} days`
-          });
-        }
-      }
-      
-      // Create return reminders
-      for (const booking of endingBookings) {
-        const timeUntilEnd = Math.ceil((booking.endDate.getTime() - Date.now()) / (1000 * 60 * 60 * 24)); // Days
-        
-        if (timeUntilEnd <= 1) {
-          reminders.push({
-            type: "return_reminder",
-            message: `Reminder: Your rental "${booking.listing.title}" is due tomorrow. Don't forget to return it!`,
-            bookingId: booking.id,
-            priority: 10,
-            timeUntilEvent: `${timeUntilEnd} day${timeUntilEnd !== 1 ? 's' : ''}`
-          });
-        } else if (timeUntilEnd <= 2) {
-          reminders.push({
-            type: "return_reminder",
-            message: `Reminder: Your rental "${booking.listing.title}" is due in ${timeUntilEnd} days. Prepare for return!`,
-            bookingId: booking.id,
-            priority: 8,
-            timeUntilEvent: `${timeUntilEnd} day${timeUntilEnd !== 1 ? 's' : ''}`
-          });
-        }
-      }
-      
-      // Sort reminders by priority
-      return reminders.sort((a, b) => b.priority - a.priority);
-    } catch (error) {
-      console.error('Error getting booking reminders:', error);
-      return reminders;
-    }
+    return reminders;
   }
 
   /**
@@ -3136,69 +2308,42 @@ export class RenAIService {
    * @returns Array of recommended listings
    */
   async generateRecommendations(userId: string) {
-    try {
-      // Get user's booking history
-      const userBookings = await prisma.booking.findMany({
-        where: { userId },
-        include: { listing: true }
-      });
-      
-      // If no booking history, return trending listings
-      if (userBookings.length === 0) {
-        return await this.getTrendingListings();
-      }
+    // Disabled Prisma database queries for now
+    // Return empty/default data instead
+    return [];
+  }
 
-      // Extract categories from past bookings
-      const categories = userBookings.map(booking => booking.listing.description);
+  /**
+   * Get live database information about a specific listing
+   * @param listingId The ID of the listing to get information for
+   * @returns Listing information
+   */
+  async getListingInfo(listingId: string) {
+    // Disabled Prisma database queries for now
+    // Return empty/default data instead
+    return null;
+  }
 
-      // Find similar listings
-      const recommendations = await prisma.listing.findMany({
-        where: {
-          description: {
-            in: categories
-          }
-        },
-        take: 5,
-        include: {
-          owner: {
-            select: {
-              id: true,
-              name: true
-            }
-          },
-          reviews: {
-            select: {
-              rating: true
-            }
-          }
-        }
-      });
-      
-      // Calculate average ratings
-      const enrichedRecommendations = recommendations.map(listing => {
-        const totalRating = listing.reviews.reduce((sum, review) => sum + review.rating, 0);
-        const averageRating = listing.reviews.length > 0 ? totalRating / listing.reviews.length : 0;
-        
-        return {
-          id: listing.id,
-          title: listing.title,
-          description: listing.description,
-          price: listing.price,
-          location: listing.location,
-          images: JSON.parse(listing.images || '[]'),
-          ownerId: listing.ownerId,
-          ownerName: listing.owner.name,
-          averageRating: averageRating,
-          reviewCount: listing.reviews.length,
-          createdAt: listing.createdAt
-        };
-      });
+  /**
+   * Get live trending listings for recommendations
+   * @returns Array of trending listings
+   */
+  async getTrendingListings() {
+    // Disabled Prisma database queries for now
+    // Return empty/default data instead
+    return [];
+  }
 
-      return enrichedRecommendations;
-    } catch (error) {
-      console.error('Error generating recommendations:', error);
-      return [];
-    }
+  /**
+   * Search listings using natural language query
+   * @param query Natural language search query
+   * @param context Current user context
+   * @returns Array of matching listings
+   */
+  async searchListingsWithNaturalLanguage(query: string, context: AIContext) {
+    // Disabled Prisma database queries for now
+    // Return empty/default data instead
+    return [];
   }
 
   /**
@@ -3217,64 +2362,10 @@ export class RenAIService {
    * @returns Array of booking modification assistance suggestions
    */
   async getBookingModificationAssistance(userId: string, context: AIContext) {
+    // Disabled Prisma database queries for now
+    // Return empty/default data instead
     const assistance: Array<{type: string, message: string, bookingId?: string, priority: number}> = [];
-    
-    try {
-      // Get user's upcoming bookings
-      const upcomingBookings = await prisma.booking.findMany({
-        where: {
-          userId: userId,
-          startDate: {
-            gte: new Date()
-          },
-          status: {
-            in: ['pending', 'confirmed', 'active']
-          }
-        },
-        include: {
-          listing: {
-            select: {
-              id: true,
-              title: true,
-              price: true
-            }
-          }
-        },
-        orderBy: {
-          startDate: 'asc'
-        }
-      });
-      
-      // Add modification options for each booking
-      for (const booking of upcomingBookings) {
-        assistance.push({
-          type: "modify_booking",
-          message: `Modify booking: "${booking.listing.title}" (₱${booking.listing.price}/day) starting ${booking.startDate.toDateString()}`,
-          bookingId: booking.id,
-          priority: 8
-        });
-        
-        assistance.push({
-          type: "cancel_booking",
-          message: `Cancel booking: "${booking.listing.title}" starting ${booking.startDate.toDateString()}`,
-          bookingId: booking.id,
-          priority: 7
-        });
-      }
-      
-      // Add general modification help
-      assistance.push({
-        type: "booking_help",
-        message: "Need help with modifying or canceling a booking? I can guide you through the process.",
-        priority: 5
-      });
-      
-      // Sort by priority
-      return assistance.sort((a, b) => b.priority - a.priority);
-    } catch (error) {
-      console.error('Error getting booking modification assistance:', error);
-      return assistance;
-    }
+    return assistance.sort((a, b) => b.priority - a.priority);
   }
 
   /**
@@ -3587,62 +2678,10 @@ export class RenAIService {
    * @returns Array of items to review
    */
   async getSuggestedReviews(userId: string, context: AIContext) {
+    // Disabled Prisma database queries for now
+    // Return empty/default data instead
     const suggestions: Array<{type: string, message: string, listingId?: string, bookingId?: string, priority: number}> = [];
-    
-    try {
-      // Get user's recent completed bookings without reviews
-      const recentBookings = await prisma.booking.findMany({
-        where: {
-          userId: userId,
-          status: 'completed',
-          endDate: {
-            lte: new Date()
-          },
-          startDate: {
-            gte: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000) // Last 30 days
-          }
-        },
-        include: {
-          listing: {
-            select: {
-              id: true,
-              title: true
-            }
-          },
-          reviews: true
-        },
-        orderBy: {
-          endDate: 'desc'
-        }
-      });
-      
-      // Filter for bookings without reviews
-      const bookingsWithoutReviews = recentBookings.filter(booking => booking.reviews.length === 0);
-      
-      // Add suggestions
-      for (const booking of bookingsWithoutReviews) {
-        suggestions.push({
-          type: "review_suggestion",
-          message: `How was your experience with "${booking.listing.title}"? Leave a review to help other renters.`,
-          listingId: booking.listing.id,
-          bookingId: booking.id,
-          priority: 8
-        });
-      }
-      
-      // Add general review help
-      suggestions.push({
-        type: "review_help",
-        message: "Want to leave a review? I can guide you through the process.",
-        priority: 5
-      });
-      
-      // Sort by priority
-      return suggestions.sort((a, b) => b.priority - a.priority);
-    } catch (error) {
-      console.error('Error getting suggested reviews:', error);
-      return suggestions;
-    }
+    return suggestions.sort((a, b) => b.priority - a.priority);
   }
 
   /**
@@ -3793,40 +2832,9 @@ export class RenAIService {
    * @returns Array of calendar events
    */
   private async getUserCalendarEvents(userId: string): Promise<CalendarEvent[]> {
-    try {
-      // In a real implementation, this would fetch from Google Calendar API or similar
-      // For now, we'll return mock data based on user's booking history
-      const userBookings = await prisma.booking.findMany({
-        where: { userId },
-        include: { 
-          listing: {
-            select: {
-              title: true,
-              description: true,
-              category: true,
-              location: true
-            }
-          }
-        },
-        orderBy: { startDate: 'asc' }
-      });
-
-      // Convert bookings to calendar events
-      const calendarEvents: CalendarEvent[] = userBookings.map(booking => ({
-        id: booking.id,
-        title: `Rent: ${booking.listing.title}`,
-        start: booking.startDate,
-        end: booking.endDate,
-        description: booking.listing.description,
-        location: booking.listing.location,
-        category: booking.listing.category || 'rental'
-      }));
-
-      return calendarEvents;
-    } catch (error) {
-      console.error('Error getting user calendar events:', error);
-      return [];
-    }
+    // Disabled Prisma database queries for now
+    // Return empty/default data instead
+    return [];
   }
 
   /**
@@ -4156,14 +3164,7 @@ export class RenAIService {
 
     // If user has recent bookings, suggest related actions
     if (context.userId) {
-      const recentBookings = await prisma.booking.count({
-        where: {
-          userId: context.userId,
-          createdAt: {
-            gte: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000) // Last 7 days
-          }
-        }
-      });
+      const recentBookings = 0; // Disabled Prisma database queries for now
 
       if (recentBookings > 0) {
         suggestions.push("Check booking status");
@@ -4171,23 +3172,14 @@ export class RenAIService {
       }
       
       // Check if user has wishlist items
-      const wishlistCount = await prisma.wishlist.count({
-        where: {
-          userId: context.userId
-        }
-      });
+      const wishlistCount = 0; // Disabled Prisma database queries for now
       
       if (wishlistCount > 0) {
         suggestions.push("View my wishlist");
       }
       
       // Check if user has unread messages
-      const unreadMessages = await prisma.message.count({
-        where: {
-          receiverId: context.userId,
-          read: false
-        }
-      });
+      const unreadMessages = 0; // Disabled Prisma database queries for now
       
       if (unreadMessages > 0) {
         suggestions.push(`Check messages (${unreadMessages} unread)`);
@@ -4443,63 +3435,9 @@ export class RenAIService {
    * @returns User persona object
    */
   async generateUserPersona(userId: string) {
-    try {
-      // Get user's booking history
-      const userBookings = await prisma.booking.findMany({
-        where: { userId },
-        include: { 
-          listing: {
-            select: {
-              id: true,
-              title: true,
-              description: true,
-              price: true,
-              category: true
-            }
-          }
-        },
-        orderBy: { startDate: 'asc' }
-      });
-
-      // Extract categories from past bookings
-      const categories = userBookings.map(booking => booking.listing.category);
-
-      // Determine user type based on booking frequency
-      const bookingCount = userBookings.length;
-      let userType = 'casual';
-      if (bookingCount >= 10) {
-        userType = 'power_user';
-      } else if (bookingCount >= 3) {
-        userType = 'active';
-      }
-
-      // Determine engagement level based on recent activity
-      const recentBookings = userBookings.filter(booking => 
-        booking.startDate >= new Date(Date.now() - 30 * 24 * 60 * 60 * 1000) // Last 30 days
-      );
-      const engagementLevel = recentBookings.length > 0 ? 'high' : 'low';
-
-      // Calculate user tenure in days
-      const firstBooking = userBookings[0];
-      const tenureDays = firstBooking ? Math.floor((Date.now() - firstBooking.startDate.getTime()) / (1000 * 60 * 60 * 24)) : 0;
-
-      // Get user's favorite categories
-      const favoriteCategories = Array.from(new Set(categories));
-
-      // Get user's calendar events
-      const calendarEvents = await this.getUserCalendarEvents(userId);
-
-      return {
-        userType,
-        engagementLevel,
-        tenureDays,
-        favoriteCategories,
-        calendarEvents
-      };
-    } catch (error) {
-      console.error('Error generating user persona:', error);
-      return null;
-    }
+    // Disabled Prisma database queries for now
+    // Return empty/default data instead
+    return null;
   }
 
   /**
@@ -4508,65 +3446,9 @@ export class RenAIService {
    * @returns Detailed user persona object
    */
   async generateDetailedUserPersona(userId: string) {
-    try {
-      // Get user's booking history
-      const userBookings = await prisma.booking.findMany({
-        where: { userId },
-        include: { 
-          listing: {
-            select: {
-              id: true,
-              title: true,
-              description: true,
-              price: true,
-              category: true
-            }
-          }
-        },
-        orderBy: { createdAt: 'asc' }
-      });
-
-      // Get user's listed items
-      const userListings = await prisma.listing.findMany({
-        where: { ownerId: userId },
-        select: {
-          id: true,
-          title: true,
-          description: true,
-          price: true,
-          category: true,
-          createdAt: true
-        }
-      });
-
-      // Get user's wishlist items
-      const userWishlist = await prisma.wishlist.findMany({
-        where: { userId },
-        include: {
-          listing: {
-            select: {
-              id: true,
-              title: true,
-              description: true,
-              price: true,
-              category: true
-            }
-          }
-        }
-      });
-
-      // Get user's reviews
-      const userReviews = await prisma.review.findMany({
-        where: { userId },
-        include: {
-          listing: {
-            select: {
-              id: true,
-              title: true
-            }
-          }
-        }
-      });
+    // Disabled Prisma database queries for now
+    // Return empty/default data instead
+    return null;
 
       // Analyze booking patterns
       const categoriesRented = userBookings.map(booking => booking.listing.category || booking.listing.description);
@@ -4766,88 +3648,9 @@ export class RenAIService {
    * @returns Array of recommended listings
    */
   async getPersonalizedRecommendations(userId: string) {
-    try {
-      // Generate user persona
-      const persona = await this.generateUserPersona(userId);
-      if (!persona) {
-        return await this.getTrendingListings();
-      }
-
-      // Get user's booking history and preferences
-      const userBookings = await prisma.booking.findMany({
-        where: { userId },
-        include: { listing: true }
-      });
-
-      // If no booking history, return trending listings
-      if (userBookings.length === 0) {
-        return await this.getTrendingListings();
-      }
-
-      // Extract categories from past bookings
-      const categories = userBookings.map(booking => booking.listing.description);
-
-      // Find similar listings with personalization
-      const recommendations = await prisma.listing.findMany({
-        where: {
-          AND: [
-            {
-              description: {
-                in: categories
-              }
-            },
-            {
-              price: {
-                gte: persona.priceRange.min * 0.7,
-                lte: persona.priceRange.max * 1.3
-              }
-            }
-          ]
-        },
-        take: 10,
-        orderBy: {
-          createdAt: 'desc'
-        },
-        include: {
-          owner: {
-            select: {
-              id: true,
-              name: true
-            }
-          },
-          reviews: {
-            select: {
-              rating: true
-            }
-          }
-        }
-      });
-
-      // Calculate average ratings and filter by quality
-      const enrichedListings = recommendations.map(listing => {
-        const totalRating = listing.reviews.reduce((sum, review) => sum + review.rating, 0);
-        const averageRating = listing.reviews.length > 0 ? totalRating / listing.reviews.length : 0;
-        
-        return {
-          id: listing.id,
-          title: listing.title,
-          description: listing.description,
-          price: listing.price,
-          location: listing.location,
-          images: JSON.parse(listing.images || '[]'),
-          ownerId: listing.ownerId,
-          ownerName: listing.owner.name,
-          averageRating: averageRating,
-          reviewCount: listing.reviews.length,
-          createdAt: listing.createdAt
-        };
-      }).filter(listing => listing.averageRating >= 3.5); // Only high-quality listings
-
-      return enrichedListings.slice(0, 5);
-    } catch (error) {
-      console.error('Error getting personalized recommendations:', error);
-      return [];
-    }
+    // Disabled Prisma database queries for now
+    // Return empty/default data instead
+    return [];
   }
 
   /**
@@ -4856,89 +3659,10 @@ export class RenAIService {
    * @returns Array of recommended listings based on similar users
    */
   async getCollaborativeRecommendations(userId: string) {
-    try {
-      // Get user's booking history with detailed information
-      const userBookings = await prisma.booking.findMany({
-        where: { userId },
-        include: {
-          listing: {
-            select: {
-              id: true,
-              title: true,
-              category: true,
-              description: true,
-              price: true
-            }
-          }
-        }
-      });
-      
-      if (userBookings.length === 0) {
-        return [];
-      }
-      
-      const userListingIds = userBookings.map(booking => booking.listingId);
-      const userCategories = [...new Set(userBookings.map(booking => booking.listing.category))].filter(Boolean);
-      
-      // Find other users who rented similar items (with similarity scoring)
-      const similarUsers = await prisma.$queryRaw`
-        SELECT 
-          b.userId,
-          COUNT(b.listingId) as sharedItems,
-          COUNT(b.listingId) * 1.0 / (
-            SELECT COUNT(*) 
-            FROM Booking 
-            WHERE userId = b.userId
-          ) as similarityScore
-        FROM Booking b
-        WHERE b.listingId IN (${Prisma.join(userListingIds)})
-          AND b.userId != ${userId}
-        GROUP BY b.userId
-        HAVING COUNT(b.listingId) >= 1
-        ORDER BY similarityScore DESC
-        LIMIT 20
-      `;
-      
-      if (similarUsers.length === 0) {
-        return [];
-      }
-      
-      // Get listings rented by similar users that the current user hasn't rented
-      const similarUserIds = similarUsers.map((user: any) => user.userId);
-      
-      const similarUserBookings = await prisma.booking.findMany({
-        where: {
-          userId: {
-            in: similarUserIds
-          },
-          listingId: {
-            notIn: userListingIds
-          }
-        },
-        include: {
-          listing: {
-            select: {
-              id: true,
-              title: true,
-              category: true,
-              description: true,
-              price: true,
-              reviews: {
-                select: {
-                  rating: true
-                }
-              }
-            }
-          }
-        }
-      });
-      
-      if (similarUserBookings.length === 0) {
-        return [];
-      }
-      
-      // Score recommendations based on multiple factors
-      const recommendationScores: Record<string, { listing: any; score: number; sources: string[] }> = {};
+    // Disabled Prisma database queries for now
+    // Return empty/default data instead
+    return [];
+  }
       
       for (const booking of similarUserBookings) {
         const listingId = booking.listingId;
@@ -5329,76 +4053,56 @@ export class RenAIService {
   }
 
   /**
+   * Get seasonal listing suggestions for owners based on rental history
+   * @param userId The user ID to get suggestions for
+   * @returns Array of seasonal listing suggestions
+   */
+  private async getSeasonalListingSuggestions(userId: string): Promise<Array<{type: string, message: string, priority: number}>> {
+    // Disabled Prisma database queries for now
+    // Return empty/default data instead
+    const suggestions: Array<{type: string, message: string, priority: number}> = [];
+    return suggestions;
+  }
+
+  /**
+   * Generate detailed analytics dashboard for user interactions
+   * @param userId The user ID to generate analytics for (optional, if null generates for all users)
+   * @returns Analytics dashboard data
+   */
+  async generateAnalyticsDashboard(userId?: string) {
+    // Disabled Prisma database queries for now
+    // Return empty/default data instead
+    return {
+      generatedAt: new Date(),
+      userId: userId || 'all',
+      platformMetrics: {},
+      aiAnalytics: {},
+      engagementMetrics: {},
+      conversionData: {},
+      sentimentData: {},
+      userActivity: null
+    };
+  }
+
+  /**
    * Get overall platform metrics
    * @returns Platform metrics data
    */
   private async getPlatformMetrics() {
-    try {
-      // Get total users
-      const totalUsers = await prisma.user.count();
-      
-      // Get total listings
-      const totalListings = await prisma.listing.count();
-      
-      // Get total bookings
-      const totalBookings = await prisma.booking.count();
-      
-      // Get total reviews
-      const totalReviews = await prisma.review.count();
-      
-      // Get average rating
-      const reviews = await prisma.review.findMany({
-        select: { rating: true }
-      });
-      
-      const averageRating = reviews.length > 0 
-        ? reviews.reduce((sum, review) => sum + review.rating, 0) / reviews.length
-        : 0;
-      
-      // Get recent activity (last 30 days)
-      const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
-      
-      const newUsers = await prisma.user.count({
-        where: { createdAt: { gte: thirtyDaysAgo } }
-      });
-      
-      const newListings = await prisma.listing.count({
-        where: { createdAt: { gte: thirtyDaysAgo } }
-      });
-      
-      const newBookings = await prisma.booking.count({
-        where: { createdAt: { gte: thirtyDaysAgo } }
-      });
-      
-      return {
-        totalUsers,
-        totalListings,
-        totalBookings,
-        totalReviews,
-        averageRating: averageRating.toFixed(2),
-        recentActivity: {
-          newUsers,
-          newListings,
-          newBookings,
-          period: "Last 30 days"
-        }
-      };
-    } catch (error) {
-      console.error('Error getting platform metrics:', error);
-      return {
-        totalUsers: 0,
-        totalListings: 0,
-        totalBookings: 0,
-        totalReviews: 0,
-        averageRating: "0.00",
-        recentActivity: {
-          newUsers: 0,
-          newListings: 0,
-          newBookings: 0,
-          period: "Last 30 days"
-        }
-      };
-    }
+    // Disabled Prisma database queries for now
+    // Return empty/default data instead
+    return {
+      totalUsers: 0,
+      totalListings: 0,
+      totalBookings: 0,
+      totalReviews: 0,
+      averageRating: "0.00",
+      recentActivity: {
+        newUsers: 0,
+        newListings: 0,
+        newBookings: 0
+      }
+    };
   }
 
   /**
@@ -5406,14 +4110,94 @@ export class RenAIService {
    * @returns AI interaction analytics data
    */
   private async getAIInteractionAnalytics() {
-    try {
-      // Get total AI interactions
-      const totalInteractions = await prisma.aIInteraction.count();
+    // Disabled Prisma database queries for now
+    // Return empty/default data instead
+    return {
+      totalInteractions: 0,
+      interactionsByDate: {}
+    };
+  }
+
+  /**
+   * Get user engagement metrics
+   * @returns User engagement metrics data
+   */
+  private async getUserEngagementMetrics() {
+    // Disabled Prisma database queries for now
+    // Return empty/default data instead
+    return {
+      totalLogins: 0,
+      loginsByDate: {}
+    };
+  }
+
+  /**
+   * Get conversion data
+   * @returns Conversion data
+   */
+  private async getConversionData() {
+    // Disabled Prisma database queries for now
+    // Return empty/default data instead
+    return {
+      totalSignups: 0,
+      signupsByDate: {}
+    };
+  }
+
+  /**
+   * Get sentiment data
+   * @returns Sentiment data
+   */
+  private async getSentimentData() {
+    // Disabled Prisma database queries for now
+    // Return empty/default data instead
+    return {
+      totalReviews: 0,
+      sentimentCounts: {}
+    };
+  }
+
+  /**
+   * Get user activity data
+   * @param userId The user ID to get activity for (optional, if null gets activity for all users)
+   * @returns User activity data
+   */
+  private async getUserActivityData(userId?: string) {
+    // Disabled Prisma database queries for now
+    // Return empty/default data instead
+    return null;
+  }
+        select: { sentiment: true }
+      });
       
-      // Get interactions by date (last 30 days)
-      const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
+      const sentimentCounts = reviews.reduce((acc, review) => {
+        acc[review.sentiment] = (acc[review.sentiment] || 0) + 1;
+        return acc;
+      }, {} as { [key: string]: number });
       
-      const recentInteractions = await prisma.aIInteraction.findMany({
+      return {
+        totalReviews,
+        sentimentCounts
+      };
+    } catch (error) {
+      console.error('Error getting sentiment data:', error);
+      return {
+        totalReviews: 0,
+        sentimentCounts: {}
+      };
+    }
+  }
+
+  /**
+   * Get user activity data
+   * @param userId The user ID to get activity for (optional, if null gets activity for all users)
+   * @returns User activity data
+   */
+  private async getUserActivity(userId?: string) {
+    // Disabled Prisma database queries for now
+    // Return empty/default data instead
+    return null;
+  }
         where: { createdAt: { gte: thirtyDaysAgo } },
         select: { createdAt: true, actionTaken: true }
       });
@@ -6437,6 +5221,8 @@ export class RenAIService {
    * @returns User engagement metrics
    */
   private async getUserEngagementMetrics(userId?: string) {
+    // Disabled Prisma database queries for now
+    // Return empty/default data instead
     try {
       // Get user activity data
       let userActivityData = null;
@@ -6502,6 +5288,8 @@ export class RenAIService {
    * @returns Conversion funnel data
    */
   private async getConversionFunnelData(userId?: string) {
+    // Disabled Prisma database queries for now
+    // Return empty/default data instead
     try {
       // Get funnel stages
       const funnelStages = {
@@ -6519,13 +5307,11 @@ export class RenAIService {
         funnelStages.wishlists = userActivity.wishlistItems.length > 0 ? 1 : 0;
         funnelStages.bookings = userActivity.recentBookings.length > 0 ? 1 : 0;
       } else {
-        // For all users (simplified)
-        funnelStages.visitors = await prisma.user.count();
-        funnelStages.viewers = await prisma.booking.count();
-        funnelStages.wishlists = await prisma.wishlist.count();
-        funnelStages.bookings = await prisma.booking.count({
-          where: { status: 'completed' }
-        });
+        // For all users (simplified) - return default values instead of Prisma queries
+        funnelStages.visitors = 0;
+        funnelStages.viewers = 0;
+        funnelStages.wishlists = 0;
+        funnelStages.bookings = 0;
       }
       
       // Calculate conversion rates
@@ -6560,14 +5346,12 @@ export class RenAIService {
    * @returns Sentiment analysis data
    */
   private async getSentimentAnalysis(userId?: string) {
+    // Disabled Prisma database queries for now
+    // Return empty/default data instead
     try {
       // Get sentiment data from AI interactions
-      const whereClause = userId ? { userId } : {};
-      
-      const interactions = await prisma.aIInteraction.findMany({
-        where: whereClause,
-        select: { userInput: true }
-      });
+      // Return empty array instead of Prisma query
+      const interactions = [];
       
       // Simple sentiment analysis based on keywords
       const sentimentCounts = {
@@ -7028,24 +5812,17 @@ export class RenAIService {
    * @returns Learning results and updates
    */
   async implementContinuousLearning(feedbackData?: { userId?: string, rating?: number, comment?: string }) {
+    // Disabled Prisma database queries for now
+    // Return empty/default data instead
     try {
-      // If specific feedback data is provided, log it
+      // If specific feedback data is provided, log it - disabled
       if (feedbackData) {
-        await prisma.aIFeedback.create({
-          data: {
-            userId: feedbackData.userId,
-            rating: feedbackData.rating || 0,
-            comment: feedbackData.comment,
-            messageId: `manual_feedback_${Date.now()}`,
-            createdAt: new Date()
-          }
-        });
+        // Disabled Prisma query
+        console.log('Feedback logging disabled:', feedbackData);
       }
       
-      // Get all feedback data
-      const allFeedback = await prisma.aIFeedback.findMany({
-        include: { user: true }
-      });
+      // Get all feedback data - disabled
+      const allFeedback = [];
       
       // Analyze feedback patterns
       const feedbackAnalysis = this.analyzeFeedbackPatterns(allFeedback);
@@ -7193,21 +5970,16 @@ export class RenAIService {
    * @returns Reinforcement learning results
    */
   async implementReinforcementLearning(userId?: string) {
+    // Disabled Prisma database queries for now
+    // Return empty/default data instead
     try {
-      // Get interaction history for learning
+      // Get interaction history for learning - disabled
       const whereClause = userId ? { userId } : {};
-      const interactions = await prisma.aIInteraction.findMany({
-        where: whereClause,
-        include: { user: true },
-        orderBy: { createdAt: 'desc' },
-        take: 1000 // Limit to last 1000 interactions for performance
-      });
+      const interactions = [];
       
-      // Get feedback data
-      const interactionIds = interactions.map(i => i.id);
-      const feedback = await prisma.aIFeedback.findMany({
-        where: { messageId: { in: interactionIds } }
-      });
+      // Get feedback data - disabled
+      const interactionIds = [];
+      const feedback = [];
       
       // Create feedback lookup map
       const feedbackMap = new Map(feedback.map(f => [f.messageId, f]));
@@ -7358,13 +6130,9 @@ export class RenAIService {
         console.log('Reinforcement Learning Updates:', updates);
       }
       
-      // Create a reinforcement learning record
-      await prisma.reinforcementLearningRecord.create({
-        data: {
-          updates: JSON.stringify(updates),
-          timestamp: new Date()
-        }
-      });
+      // Create a reinforcement learning record - disabled
+      // Disabled Prisma query
+      console.log("Reinforcement learning record creation disabled");
       
       return updates;
     } catch (error) {
@@ -7379,21 +6147,16 @@ export class RenAIService {
    * @returns Active learning results and improvement suggestions
    */
   async implementActiveLearning(userId?: string) {
+    // Disabled Prisma database queries for now
+    // Return empty/default data instead
     try {
-      // Get interaction history for analysis
+      // Get interaction history for analysis - disabled
       const whereClause = userId ? { userId } : {};
-      const interactions = await prisma.aIInteraction.findMany({
-        where: whereClause,
-        include: { user: true },
-        orderBy: { createdAt: 'desc' },
-        take: 1000 // Limit to last 1000 interactions for performance
-      });
+      const interactions = [];
       
-      // Get feedback data
-      const interactionIds = interactions.map(i => i.id);
-      const feedback = await prisma.aIFeedback.findMany({
-        where: { messageId: { in: interactionIds } }
-      });
+      // Get feedback data - disabled
+      const interactionIds = [];
+      const feedback = [];
       
       // Create feedback lookup map
       const feedbackMap = new Map(feedback.map(f => [f.messageId, f]));
@@ -7416,14 +6179,9 @@ export class RenAIService {
         lastAnalyzed: new Date()
       };
       
-      // Log the active learning results
-      await prisma.activeLearningRecord.create({
-        data: {
-          userId,
-          results: JSON.stringify(learningReport),
-          timestamp: new Date()
-        }
-      });
+      // Log the active learning results - disabled
+      // Disabled Prisma query
+      console.log("Active learning record creation disabled");
       
       return learningReport;
     } catch (error) {

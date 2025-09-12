@@ -9,7 +9,7 @@ import { renAIService } from '@/ren-ai/services/ren-ai-service';
  * Response:
  * - status: 'healthy' | 'degraded' | 'unhealthy' - Overall health status
  * - service: 'REN AI' - Service identifier
- * - backend: 'Ollama' | 'OpenRouter' - Current backend being used
+ * - backend: 'Ollama' - Current backend being used
  * - configuration: object - Configuration details
  *   - ollamaEnabled: boolean - Whether Ollama is enabled
  *   - ollamaHost: string | null - Ollama host URL
@@ -62,7 +62,7 @@ export async function GET() {
 
     // Determine overall status and backend
     let overallStatus: 'healthy' | 'degraded' | 'unhealthy' = 'healthy';
-    let backend: 'Ollama' | 'OpenRouter' = 'OpenRouter';
+    let backend: 'Ollama' = 'Ollama';
     
     if (process.env.OLLAMA_ENABLED === 'true') {
       backend = 'Ollama';
@@ -71,6 +71,9 @@ export async function GET() {
       } else if (ollamaStatus.status === 'degraded') {
         overallStatus = 'degraded';
       }
+    } else {
+      // If Ollama is not enabled, the service is unhealthy
+      overallStatus = 'unhealthy';
     }
 
     const healthData = {

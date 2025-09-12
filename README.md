@@ -52,31 +52,9 @@ DATABASE_URL=file:./dev.db
 NEXT_PUBLIC_BASE_URL=http://localhost:3000
 ```
 
-<<<<<<< HEAD
-### Ollama Integration (Optional)
-
-To use a locally hosted AI model with Ollama:
-
-1. Install [Ollama](https://ollama.com/) on your machine
-2. Pull the DeepSeek-v3 model: `ollama run deepseek-v3`
-3. Set the following environment variables in your `.env.local` file:
-
-```env
-# Ollama Configuration for local AI model
-OLLAMA_ENABLED=true
-OLLAMA_HOST=http://localhost:11434
-OLLAMA_MODEL=deepseek-v3
-```
-
-When Ollama is enabled, the AI assistant will use your local model instead of the OpenRouter API, providing:
-- Complete privacy (no data sent to external services)
-- No API costs
-- Full control over the AI model
-- Offline capability
-
 ### Local AI with Ollama (Optional)
 
-For even greater privacy and control, you can run a local AI model using Ollama:
+For greater privacy and control, you can run a local AI model using Ollama:
 
 1. Install [Ollama](https://ollama.com/) on your machine
 2. Pull the Llama 3.1 8B model: `ollama pull llama3.1:8b`
@@ -89,10 +67,8 @@ OLLAMA_HOST=http://localhost:11434
 OLLAMA_MODEL=llama3.1:8b
 ```
 
-When Ollama is enabled, the AI assistant will use your local model instead of the OpenRouter API. See [OLLAMA_INTEGRATION.md](OLLAMA_INTEGRATION.md) for detailed setup instructions.
+When Ollama is enabled, the AI assistant will use your local model. See [OLLAMA_INTEGRATION.md](OLLAMA_INTEGRATION.md) for detailed setup instructions.
 
-=======
->>>>>>> 8668939 (2025-09-10: Temporary disabling of REN AI)
 ## Supabase Migration
 
 This project currently uses Prisma with PostgreSQL as the default database. However, it can be migrated to use Supabase instead.
@@ -124,22 +100,17 @@ For detailed instructions, see [SUPABASE_MIGRATION_GUIDE.md](SUPABASE_MIGRATION_
 - Scrape rental listings from external websites:
   - Technical documentation: [WEB_SCRAPING.md](WEB_SCRAPING.md)
   - Usage guide: [HOW_TO_USE_WEB_SCRAPING.md](HOW_TO_USE_WEB_SCRAPING.md)
-<<<<<<< HEAD
+  - Import listings: Visit `/scrape` after starting the development server
 - Interact with REN, the AI assistant:
   - AI demo: Visit `/ai-demo` after starting the development server
   - Integration guide: [REN_INTEGRATION_GUIDE.md](REN_INTEGRATION_GUIDE.md)
   - AI requirements: [REN_AI_PERSONALITY_PRD.md](REN_AI_PERSONALITY_PRD.md)
-  - DeepSeek-R1 integration: [REN_DEEPSEEK_INTEGRATION.md](REN_DEEPSEEK_INTEGRATION.md)
-=======
->>>>>>> 8668939 (2025-09-10: Temporary disabling of REN AI)
 
 ## Documentation
 
 - [PRODUCT_REQUIREMENTS_DOCUMENT.md](PRODUCT_REQUIREMENTS_DOCUMENT.md) - Core platform requirements
 - [PRODUCT_REQUIREMENTS_DOCUMENT_UPDATED.md](PRODUCT_REQUIREMENTS_DOCUMENT_UPDATED.md) - Comprehensive PRD with enhanced details
-<<<<<<< HEAD
 - [REN_AI_PERSONALITY_PRD.md](REN_AI_PERSONALITY_PRD.md) - Detailed requirements for REN AI personality
-- [REN_DEEPSEEK_INTEGRATION.md](REN_DEEPSEEK_INTEGRATION.md) - Technical details for AI model integration
 - [WEB_SCRAPING.md](WEB_SCRAPING.md) - Documentation for web scraping functionality
 - [HOW_TO_USE_WEB_SCRAPING.md](HOW_TO_USE_WEB_SCRAPING.md) - User guide for web scraping
 - [ENVIRONMENT_VARIABLES.md](ENVIRONMENT_VARIABLES.md) - Configuration guide for environment variables
@@ -158,12 +129,6 @@ To work with the isolated REN AI files:
 3. Use the provided scripts for reintegration or removal when needed:
    - `reintegrate-ren-ai.ps1` - Reintegrate files back to their original locations
    - `remove-ren-ai-isolation.ps1` - Remove the isolated directory structure
-=======
-- [WEB_SCRAPING.md](WEB_SCRAPING.md) - Documentation for web scraping functionality
-- [HOW_TO_USE_WEB_SCRAPING.md](HOW_TO_USE_WEB_SCRAPING.md) - User guide for web scraping
-- [ENVIRONMENT_VARIABLES.md](ENVIRONMENT_VARIABLES.md) - Configuration guide for environment variables
-- [RECENT_CHANGES_SUMMARY.md](RECENT_CHANGES_SUMMARY.md) - Summary of recent development changes
->>>>>>> 8668939 (2025-09-10: Temporary disabling of REN AI)
 
 ## Contributing
 

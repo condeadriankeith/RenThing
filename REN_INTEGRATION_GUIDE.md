@@ -227,7 +227,7 @@ Customize the mascot appearance:
 
 ## Advanced AI Integration
 
-REN now supports the DeepSeek-R1 model through the Hugging Face Inference API for enhanced conversational capabilities. For implementation details, see [REN_DEEPSEEK_INTEGRATION.md](REN_DEEPSEEK_INTEGRATION.md).
+REN now supports enhanced conversational capabilities through locally hosted AI models with Ollama.
 
 ## Best Practices
 

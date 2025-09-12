@@ -101,7 +101,7 @@ To fully implement REN's capabilities, the following enhancements could be made:
 
 ## Recent Enhancements
 
-1. **DeepSeek-R1 Integration**: Added support for the powerful DeepSeek-R1 model through OpenRouter API for enhanced conversational capabilities. See [REN_DEEPSEEK_INTEGRATION.md](REN_DEEPSEEK_INTEGRATION.md) for details.
+1. **Ollama Integration**: Enhanced support for locally hosted AI models through Ollama for improved privacy and control.
 
 ## Usage
 
