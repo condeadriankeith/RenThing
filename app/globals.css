@@ -520,3 +520,34 @@ body {
     background-color: transparent;
   }
 }
+
+/* REN AI Chat Widget Styles */
+.ren-floating-button {
+  position: fixed;
+  right: 18px;
+  bottom: 18px;
+  z-index: 9999;
+  width: 56px;
+  height: 56px;
+  border-radius: 9999px;
+}
+
+.ren-chat-modal {
+  position: fixed;
+  width: 360px;
+  max-width: calc(100% - 36px);
+  z-index: 10000;
+  /* default fallback */
+  right: 18px;
+  bottom: calc(18px + 56px + 12px); /* fallback directly above button */
+  transition: opacity .16s ease, transform .16s ease;
+}
+
+@media (max-width: 640px) {
+  .ren-chat-modal {
+    width: calc(100% - 32px);
+    right: 16px;
+    left: 16px;
+    bottom: 80px;
+  }
+}

@@ -164,38 +164,77 @@ export function RenChat({ onAction, onMessagesChange, initialMessages, onClose, 
         } : undefined
       };
 
-      // Get AI response
-      const response = await fetch('/api/ai/chat', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          message: input,
-          context
-        })
-      });
+      // Try the new generate API first
+      let aiResponse;
+      try {
+        const generateResponse = await fetch('/api/ai/generate', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            messages: [
+              { role: "system", content: "You are REN, a helpful assistant for a rental marketplace." },
+              ...conversationHistory,
+              { role: "user", content: input }
+            ]
+          })
+        });
 
-      if (!response.ok) {
-        const errorText = await response.text();
-        throw new Error(`HTTP error! status: ${response.status}, message: ${errorText}`);
+        if (generateResponse.ok) {
+          const data = await generateResponse.json();
+          aiResponse = {
+            response: {
+              text: data.reply || data.response?.text || "I'm here to help!",
+              suggestions: ["Find rentals", "List items", "Check bookings", "View wishlist"]
+            }
+          };
+        } else if (generateResponse.status === 503) {
+          // AI service unavailable
+          aiResponse = {
+            response: {
+              text: "REN is temporarily offline — retry or use quick suggestions",
+              suggestions: ["Find rentals", "List items", "Check bookings", "View wishlist"]
+            }
+          };
+        } else {
+          throw new Error(`Generate API error: ${generateResponse.status}`);
+        }
+      } catch (generateError) {
+        // Fallback to the old chat API
+        console.log("Falling back to old chat API");
+        const response = await fetch('/api/ai/chat', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            message: input,
+            context
+          })
+        });
+
+        if (!response.ok) {
+          const errorText = await response.text();
+          throw new Error(`HTTP error! status: ${response.status}, message: ${errorText}`);
+        }
+
+        aiResponse = await response.json();
       }
 
-      const data = await response.json();
-      
       // Handle actions from AI response
-      if (data.response.action && onAction) {
-        onAction(data.response.action);
+      if (aiResponse.response.action && onAction) {
+        onAction(aiResponse.response.action);
       }
 
       // Add AI response
       const aiMessage: Message = {
         id: (Date.now() + 1).toString(),
-        content: data.response.text,
+        content: aiResponse.response.text,
         role: "assistant",
         timestamp: new Date(),
-        suggestions: data.response.suggestions,
-        action: data.response.action || undefined
+        suggestions: aiResponse.response.suggestions,
+        action: aiResponse.response.action || undefined
       };
 
       setMessages(prev => [...prev, aiMessage]);
