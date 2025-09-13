@@ -144,26 +144,6 @@ export function RenChat({ onAction, onMessagesChange, initialMessages, onClose, 
     setIsLoading(true);
 
     try {
-      // Prepare context with conversation history
-      const conversationHistory = messages.map(msg => ({
-        role: msg.role,
-        content: msg.content
-      }));
-      
-      const context = {
-        userId: session?.user?.id,
-        conversationHistory: conversationHistory,
-        userPreferences: {
-          language: "en",
-          currency: "PHP"
-        },
-        // Add geolocation data to context if available
-        currentGeolocation: latitude !== null && longitude !== null ? {
-          latitude,
-          longitude
-        } : undefined
-      };
-
       // Try the new generate API first
       let aiResponse;
       try {
@@ -175,7 +155,7 @@ export function RenChat({ onAction, onMessagesChange, initialMessages, onClose, 
           body: JSON.stringify({
             messages: [
               { role: "system", content: "You are REN, a helpful assistant for a rental marketplace." },
-              ...conversationHistory,
+              ...messages.map(msg => ({ role: msg.role, content: msg.content })),
               { role: "user", content: input }
             ]
           })
@@ -185,7 +165,7 @@ export function RenChat({ onAction, onMessagesChange, initialMessages, onClose, 
           const data = await generateResponse.json();
           aiResponse = {
             response: {
-              text: data.reply || data.response?.text || "I'm here to help!",
+              text: data.reply || "I'm here to help!",
               suggestions: ["Find rentals", "List items", "Check bookings", "View wishlist"]
             }
           };
@@ -203,6 +183,22 @@ export function RenChat({ onAction, onMessagesChange, initialMessages, onClose, 
       } catch (generateError) {
         // Fallback to the old chat API
         console.log("Falling back to old chat API");
+        
+        // Prepare context with conversation history
+        const conversationHistory = messages.map(msg => ({
+          role: msg.role,
+          content: msg.content
+        }));
+        
+        const context = {
+          userId: session?.user?.id,
+          conversationHistory: conversationHistory,
+          userPreferences: {
+            language: "en",
+            currency: "PHP"
+          }
+        };
+
         const response = await fetch('/api/ai/chat', {
           method: 'POST',
           headers: {

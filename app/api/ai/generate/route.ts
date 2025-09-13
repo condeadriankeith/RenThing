@@ -27,29 +27,30 @@ export async function POST(req: Request) {
     // Build a simple prompt (you can replace with the project's system prompt)
     const prompt = messages.map((m: any) => `${m.role.toUpperCase()}: ${m.content}`).join("\n");
 
-    // Call Ollama REST API
+    // Call Ollama REST API with stream=false to get a single response
     const timeout = 20000;
     const resp = await axios.post(
       `${host}/api/generate`,
       {
         model,
         prompt,
-        // optional: parameters: {max_new_tokens: 512}
+        stream: false  // This is important - set to false to get a single response
       },
       { timeout }
     );
 
-    // Ollama responses vary by version. Try to find actual text in common shapes:
+    // Extract the response text from Ollama's response
     let text: string | undefined;
-    if (resp.data?.output && typeof resp.data.output === "string") {
-      text = resp.data.output;
-    } else if (Array.isArray(resp.data) && resp.data[0]?.content) {
-      // some versions wrap messages in an array
-      text = resp.data[0].content;
-    } else if (resp.data?.choices?.[0]?.text) {
-      text = resp.data.choices[0].text;
+    if (resp.data?.response && typeof resp.data.response === "string") {
+      text = resp.data.response;
     } else {
-      text = JSON.stringify(resp.data);
+      // Fallback to handling the response as a stringified JSON
+      try {
+        const parsed = JSON.parse(JSON.stringify(resp.data));
+        text = parsed.response || JSON.stringify(parsed);
+      } catch (parseError) {
+        text = JSON.stringify(resp.data);
+      }
     }
 
     return NextResponse.json({ reply: text }, { status: 200 });

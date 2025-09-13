@@ -17,6 +17,7 @@ Created a new API endpoint with improved error handling:
 - Attempts to connect to Ollama with proper timeout
 - Provides friendly greeting fallbacks for simple inputs even when Ollama is down
 - Returns explicit 503 status when AI service is unavailable
+- **Fixed streaming response handling by setting `stream: false`**
 - Handles various Ollama response formats
 
 ### 2. Ollama Connectivity Check Script (`/scripts/check-ollama.js`)
@@ -52,7 +53,7 @@ Added a health check endpoint for monitoring:
 ## Testing
 
 All new features have been tested:
-- New generate API successfully connects to Ollama and returns responses
+- New generate API successfully connects to Ollama and returns clean responses
 - Chat modal properly positions itself above the launcher button
 - Fallback handling works when Ollama is unavailable
 - Health check endpoint provides accurate status information

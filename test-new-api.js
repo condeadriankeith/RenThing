@@ -15,6 +15,7 @@ async function testNewAPI() {
     });
     
     console.log('Response:', response.data);
+    console.log('Formatted reply:', response.data.reply);
   } catch (error) {
     console.error('Error:', error.response?.data || error.message);
   }
