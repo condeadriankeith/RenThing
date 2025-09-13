@@ -67,7 +67,7 @@ OLLAMA_HOST=http://localhost:11434
 OLLAMA_MODEL=llama3.1:8b
 ```
 
-When Ollama is enabled, the AI assistant will use your local model. See [OLLAMA_INTEGRATION.md](docs/general/OLLAMA_INTEGRATION.md) for detailed setup instructions.
+When Ollama is enabled, the AI assistant will use your local model. See [OLLAMA_INTEGRATION.md](OLLAMA_INTEGRATION.md) for detailed setup instructions.
 
 ## Supabase Migration
 
@@ -75,7 +75,7 @@ This project currently uses Prisma with PostgreSQL as the default database. Howe
 
 ### Migration Process
 
-1. **Setup Supabase Tables**: Follow the SQL schema in `docs/general/SUPABASE_MIGRATION_GUIDE.md` to create equivalent tables in your Supabase project.
+1. **Setup Supabase Tables**: Follow the SQL schema in `SUPABASE_MIGRATION_GUIDE.md` to create equivalent tables in your Supabase project.
 
 2. **Export Data**: Use the export script to extract data from your current Prisma database:
    ```bash
@@ -89,27 +89,7 @@ This project currently uses Prisma with PostgreSQL as the default database. Howe
 
 4. **Update Application Code**: Replace Prisma calls with Supabase calls throughout the application.
 
-For detailed instructions, see [docs/general/SUPABASE_MIGRATION_GUIDE.md](docs/general/SUPABASE_MIGRATION_GUIDE.md).
-
-## Project Organization
-
-This project has been organized into a structured directory layout for better maintainability:
-
-- `app/` - Next.js pages and API routes
-- `components/` - Reusable UI components
-- `contexts/` - React context providers
-- `hooks/` - Custom hooks
-- `lib/` - Utility functions and services
-- `prisma/` - Database schema and migrations
-- `scripts/` - Build, export, import, and utility scripts
-- `docs/` - Project documentation
-  - `general/` - General project documentation and guides
-- `tests/` - All test files
-  - `unit/` - Unit tests for individual components and functions
-  - `integration/` - Integration tests for API endpoints and service interactions
-  - `e2e/` - End-to-end tests for user flows and complete features
-  - `ai/` - AI-specific tests
-  - `components/` - Component tests
+For detailed instructions, see [SUPABASE_MIGRATION_GUIDE.md](SUPABASE_MIGRATION_GUIDE.md).
 
 ## Usage
 
@@ -118,25 +98,25 @@ This project has been organized into a structured directory layout for better ma
 - Chat with owners/renters
 - Manage your bookings and payments
 - Scrape rental listings from external websites:
-  - Technical documentation: [docs/general/WEB_SCRAPING.md](docs/general/WEB_SCRAPING.md)
-  - Usage guide: [docs/general/HOW_TO_USE_WEB_SCRAPING.md](docs/general/HOW_TO_USE_WEB_SCRAPING.md)
+  - Technical documentation: [WEB_SCRAPING.md](WEB_SCRAPING.md)
+  - Usage guide: [HOW_TO_USE_WEB_SCRAPING.md](HOW_TO_USE_WEB_SCRAPING.md)
   - Import listings: Visit `/scrape` after starting the development server
 - Interact with REN, the AI assistant:
   - AI demo: Visit `/ai-demo` after starting the development server
-  - Integration guide: [docs/general/REN_INTEGRATION_GUIDE.md](docs/general/REN_INTEGRATION_GUIDE.md)
-  - AI requirements: [docs/general/REN_AI_PERSONALITY_PRD.md](docs/general/REN_AI_PERSONALITY_PRD.md)
+  - Integration guide: [REN_INTEGRATION_GUIDE.md](REN_INTEGRATION_GUIDE.md)
+  - AI requirements: [REN_AI_PERSONALITY_PRD.md](REN_AI_PERSONALITY_PRD.md)
 
 ## Documentation
 
-All documentation has been moved to the [docs/general](docs/general) directory:
-- [docs/general/PRODUCT_REQUIREMENTS_DOCUMENT.md](docs/general/PRODUCT_REQUIREMENTS_DOCUMENT.md) - Core platform requirements
-- [docs/general/REN_AI_PERSONALITY_PRD.md](docs/general/REN_AI_PERSONALITY_PRD.md) - Detailed requirements for REN AI personality
-- [docs/general/WEB_SCRAPING.md](docs/general/WEB_SCRAPING.md) - Documentation for web scraping functionality
-- [docs/general/HOW_TO_USE_WEB_SCRAPING.md](docs/general/HOW_TO_USE_WEB_SCRAPING.md) - User guide for web scraping
-- [docs/general/ENVIRONMENT_VARIABLES.md](docs/general/ENVIRONMENT_VARIABLES.md) - Configuration guide for environment variables
-- [docs/general/OLLAMA_INTEGRATION.md](docs/general/OLLAMA_INTEGRATION.md) - Local AI model integration with Ollama
-- [docs/general/RECENT_CHANGES_SUMMARY.md](docs/general/RECENT_CHANGES_SUMMARY.md) - Summary of recent development changes
-- [docs/general/REN_AI_ISOLATION_SUMMARY.md](docs/general/REN_AI_ISOLATION_SUMMARY.md) - Summary of isolated REN AI files
+- [PRODUCT_REQUIREMENTS_DOCUMENT.md](PRODUCT_REQUIREMENTS_DOCUMENT.md) - Core platform requirements
+- [PRODUCT_REQUIREMENTS_DOCUMENT_UPDATED.md](PRODUCT_REQUIREMENTS_DOCUMENT_UPDATED.md) - Comprehensive PRD with enhanced details
+- [REN_AI_PERSONALITY_PRD.md](REN_AI_PERSONALITY_PRD.md) - Detailed requirements for REN AI personality
+- [WEB_SCRAPING.md](WEB_SCRAPING.md) - Documentation for web scraping functionality
+- [HOW_TO_USE_WEB_SCRAPING.md](HOW_TO_USE_WEB_SCRAPING.md) - User guide for web scraping
+- [ENVIRONMENT_VARIABLES.md](ENVIRONMENT_VARIABLES.md) - Configuration guide for environment variables
+- [OLLAMA_INTEGRATION.md](OLLAMA_INTEGRATION.md) - Local AI model integration with Ollama
+- [RECENT_CHANGES_SUMMARY.md](RECENT_CHANGES_SUMMARY.md) - Summary of recent development changes
+- [REN_AI_ISOLATION_SUMMARY.md](REN_AI_ISOLATION_SUMMARY.md) - Summary of isolated REN AI files
 
 ## REN AI Isolation
 

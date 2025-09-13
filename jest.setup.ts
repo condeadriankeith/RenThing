@@ -13,19 +13,19 @@ jest.mock('next/navigation', () => ({
 
 // Mock Next.js image component
 jest.mock('next/image', () => {
-  return ({ src, alt }: { src: string; alt: string }) => {
+  return function MockImage({ src, alt }: { src: string; alt: string }) {
     // eslint-disable-next-line @next/next/no-img-element
-    return <img src={src} alt={alt} />;
+    return React.createElement('img', { src, alt });
   };
 });
 
 // Mock framer-motion
 jest.mock('framer-motion', () => ({
   motion: {
-    div: ({ children, ...props }: any) => <div {...props}>{children}</div>,
-    span: ({ children, ...props }: any) => <span {...props}>{children}</span>,
+    div: ({ children, ...props }: any) => React.createElement('div', props, children),
+    span: ({ children, ...props }: any) => React.createElement('span', props, children),
   },
-  AnimatePresence: ({ children }: any) => <>{children}</>,
+  AnimatePresence: ({ children }: any) => children,
 }));
 
 // Mock next-auth

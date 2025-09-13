@@ -14,7 +14,8 @@
     "db:migrate": "prisma db push",
     "postinstall": "prisma generate",
     "export:data": "node scripts/export-prisma-data.js",
-    "import:data": "node scripts/import-to-supabase.js"
+    "import:data": "node scripts/import-to-supabase.js",
+    "project:info": "node scripts/project-structure-info.js"
   },
   "dependencies": {
     "@hookform/resolvers": "^3.10.0",

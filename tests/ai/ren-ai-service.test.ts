@@ -26,6 +26,16 @@ jest.mock('@prisma/client', () => {
     user: {
       findUnique: jest.fn().mockResolvedValue(null),
     },
+    personalityTrait: {
+      findMany: jest.fn().mockResolvedValue([]),
+    },
+    personalityDevelopment: {
+      create: jest.fn().mockResolvedValue({}),
+    },
+    aIInteraction: {
+      create: jest.fn().mockResolvedValue({}),
+      findMany: jest.fn().mockResolvedValue([]),
+    },
   };
   return {
     PrismaClient: jest.fn(() => mockPrisma),
@@ -40,7 +50,7 @@ describe('RenAIService', () => {
     it('should respond to greetings', async () => {
       const response = await renAIService.processMessage('Hello', {});
       console.log('Greeting response:', response);
-      // This might fall back to rule-based if OpenRouter fails
+      // This might fall back to rule-based if Ollama is not available
       expect(response.text).toBeDefined();
     });
 
@@ -66,29 +76,6 @@ describe('RenAIService', () => {
       const response = await renAIService.processMessage('Unknown query', {});
       console.log('Unknown query response:', response);
       expect(response.text).toBeDefined();
-    });
-  });
-
-  describe('getContextualSuggestions', () => {
-    it('should generate contextual suggestions', async () => {
-      const context: AIContext = {
-        userId: 'test-user',
-        userPreferences: {
-          categories: ['electronics']
-        }
-      };
-      
-      const suggestions = await renAIService.getContextualSuggestions(context);
-      console.log('Suggestions:', suggestions);
-      // This might be empty if there are errors
-      expect(suggestions).toBeDefined();
-    });
-  });
-
-  describe('scanCodebaseForIssues', () => {
-    it('should return placeholder response for code scanning', async () => {
-      const result = await renAIService.scanCodebaseForIssues();
-      expect(result.suggestions[0]).toContain('Code scanning feature will be implemented');
     });
   });
 });

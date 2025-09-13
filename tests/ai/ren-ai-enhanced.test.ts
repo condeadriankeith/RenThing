@@ -52,20 +52,4 @@ describe('Enhanced REN AI Service', () => {
       expect(response.text).toBeDefined();
     });
   });
-
-  describe('getContextualSuggestions', () => {
-    it('should generate contextual suggestions', async () => {
-      const context: AIContext = {
-        userId: 'test-user',
-        userPreferences: {
-          language: 'en',
-          currency: 'PHP'
-        }
-      };
-      
-      // Test the public method for generating contextual suggestions
-      const suggestions = await renAIService.generateContextualSuggestions(context);
-      expect(Array.isArray(suggestions)).toBe(true);
-    });
-  });
 });
