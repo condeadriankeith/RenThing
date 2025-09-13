@@ -9,6 +9,39 @@
 - [Framer Motion](https://www.framer.com/motion/) (Animations)
 - [Lucide React](https://lucide.dev/) (Icons)
 
+## Vercel Deployment
+
+To deploy this application to Vercel, follow these steps:
+
+1. Push your code to a GitHub repository
+2. Create a new project on Vercel and import your repository
+3. Configure the environment variables in the Vercel dashboard:
+   - `DATABASE_URL`: For production, you might want to use a PostgreSQL database instead of SQLite
+   - `NEXTAUTH_URL`: Your deployed URL (e.g., https://your-app.vercel.app)
+   - `NEXTAUTH_SECRET`: A random string for NextAuth
+4. Vercel should automatically detect the Next.js framework and configure the build settings
+5. The build process will:
+   - Install dependencies using npm
+   - Generate the Prisma client
+   - Build the Next.js application
+
+### Environment Variables for Vercel
+
+Create the following environment variables in your Vercel project settings:
+
+```env
+# Database (for production, consider using PostgreSQL instead of SQLite)
+DATABASE_URL=file:./dev.db
+
+# NextAuth configuration
+NEXTAUTH_URL=https://your-app.vercel.app
+NEXTAUTH_SECRET=your_random_secret_string
+
+# Other variables as needed for your specific features
+```
+
+Note: SQLite may not work well in production on Vercel due to its file-based nature. Consider using PostgreSQL or another database service for production deployments.
+
 ## Screenshots
 
 > _Add screenshots of your app here (e.g. homepage, booking flow, chat, etc.)_

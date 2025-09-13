@@ -11,7 +11,7 @@
       }
     }
   ],
-  "buildCommand": "pnpm build",
-  "installCommand": "pnpm install --no-frozen-lockfile",
+  "buildCommand": "npm run build",
+  "installCommand": "npm install",
   "outputDirectory": ".next"
 }

@@ -17,11 +17,12 @@ function runBuild() {
     
     // Build Next.js app
     console.log('Building Next.js app...');
-    execSync('next build', { stdio: 'inherit' });
+    execSync('npx next build', { stdio: 'inherit' });
     
     console.log('Build completed successfully!');
   } catch (error) {
     console.error('Build failed:', error.message);
+    console.error('Error stack:', error.stack);
     process.exit(1);
   }
 }
