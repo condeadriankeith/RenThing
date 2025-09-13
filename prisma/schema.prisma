@@ -72,6 +72,10 @@ model User {
   userBadges    UserBadge[]     // Reverse relation for UserBadge
   vouchers      Voucher[]       // Reverse relation for Voucher
   purchases     Purchase[]      // Reverse relation for Purchase
+  
+  // Reverse relations for personality traits and development
+  personalityTraits PersonalityTrait[] // Reverse relation for PersonalityTrait
+  personalityDevelopment PersonalityDevelopment[] // Reverse relation for PersonalityDevelopment
 }
 
 model Listing {
@@ -341,4 +345,34 @@ model CommissionRate {
   rate         Float     // percentage (e.g., 7.0 for 7%)
   createdAt    DateTime  @default(now())
   updatedAt    DateTime  @updatedAt
+}
+
+// Personality Traits Model for REN AI Character Development
+model PersonalityTrait {
+  id           String    @id @default(uuid())
+  userId       String?
+  traitName    String    // Name of the personality trait (e.g., "Malasakit", "Kapamilya")
+  traitValue   Float     // Value of the trait (0.0 to 1.0)
+  interactions Int       @default(0) // Number of interactions that contributed to this trait
+  lastUpdated  DateTime  @default(now())
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+  
+  user         User? @relation(fields: [userId], references: [id])
+
+  @@unique([userId, traitName])
+}
+
+// Personality Development History for tracking trait evolution
+model PersonalityDevelopment {
+  id           String    @id @default(uuid())
+  userId       String?
+  traitName    String    // Name of the personality trait
+  oldValue     Float     // Previous value of the trait
+  newValue     Float     // New value of the trait
+  reason       String    // Reason for the change
+  interactionId String?  // Reference to the interaction that caused the change
+  createdAt    DateTime  @default(now())
+  
+  user         User? @relation(fields: [userId], references: [id])
 }

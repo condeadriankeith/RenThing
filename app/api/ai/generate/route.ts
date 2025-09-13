@@ -2,19 +2,23 @@ import { NextResponse } from "next/server";
 import axios from "axios";
 
 export async function POST(req: Request) {
+  let body: any = {};
+  let messages: any[] = [];
+  let lastText = "";
+  
   try {
-    const body = await req.json();
-    const messages = body.messages ?? [];
+    body = await req.json();
+    messages = body.messages ?? [];
     if (!Array.isArray(messages) || messages.length === 0) {
       return NextResponse.json({ error: "messages required" }, { status: 400 });
     }
 
+    // helper last user text
+    lastText = (messages[messages.length - 1]?.content ?? "").trim();
+
     const ollamaEnabled = process.env.OLLAMA_ENABLED === "true";
     const host = process.env.OLLAMA_HOST ?? "http://localhost:11434";
     const model = process.env.OLLAMA_MODEL ?? "llama3.1:8b";
-
-    // helper last user text
-    const lastText = (messages[messages.length - 1]?.content ?? "").trim();
 
     if (!ollamaEnabled) {
       // If Ollama intentionally disabled, provide a predictable fallback for greetings
@@ -25,10 +29,14 @@ export async function POST(req: Request) {
     }
 
     // Build a simple prompt (you can replace with the project's system prompt)
-    const prompt = messages.map((m: any) => `${m.role.toUpperCase()}: ${m.content}`).join("\n");
+    // Use just the last message content instead of formatting with roles
+    const prompt = lastText;
+    
+    // Log the prompt for debugging
+    console.log("Sending prompt to Ollama:", prompt);
 
     // Call Ollama REST API with stream=false to get a single response
-    const timeout = 20000;
+    const timeout = 60000; // Increase timeout to 60 seconds
     const resp = await axios.post(
       `${host}/api/generate`,
       {
@@ -57,10 +65,6 @@ export async function POST(req: Request) {
   } catch (err: any) {
     // Log full error server-side so you can inspect in logs
     console.error("AI generate error:", err?.message ?? err, err?.response?.data ?? "");
-
-    const body = await (req.clone().json().catch(() => ({})));
-    const messages = body.messages ?? [];
-    const lastText = (messages[messages.length - 1]?.content ?? "").trim();
 
     // Smart simple greeting fallback only for greeting-like messages
     if (/^(hi|hello|hey|good (morning|afternoon|evening))/i.test(lastText)) {

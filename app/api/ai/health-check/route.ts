@@ -17,7 +17,7 @@ export async function GET() {
     const model = process.env.OLLAMA_MODEL || 'llama3.1:8b';
     
     // Check if Ollama is accessible
-    const modelsResponse = await axios.get(`${host}/api/models`, {
+    const modelsResponse = await axios.get(`${host}/api/tags`, {
       timeout: 5000
     });
     
@@ -40,7 +40,7 @@ export async function GET() {
         prompt: 'Hello',
         stream: false
       }, {
-        timeout: 10000
+        timeout: 30000
       });
       
       return NextResponse.json({
@@ -49,7 +49,7 @@ export async function GET() {
         model,
         timestamp: new Date().toISOString()
       }, { status: 200 });
-    } catch (generateError) {
+    } catch (generateError: any) {
       return NextResponse.json({
         status: 'degraded',
         message: 'Ollama is accessible but model generation failed',
