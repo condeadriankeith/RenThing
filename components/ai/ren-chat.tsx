@@ -6,10 +6,11 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import { Sparkles, X, Send, ExternalLink, ThumbsUp, ThumbsDown } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useGeolocation } from "@/contexts/geolocation-context";
+import { useReducedMotion } from "@/hooks/use-reduced-motion";
 
 // Helper function to parse markdown-like formatting
 const parseMarkdown = (text: string) => {
@@ -89,6 +90,7 @@ export function RenChat({ onAction, onMessagesChange, initialMessages, onClose, 
   const { data: session } = useSession();
   const { toast } = useToast();
   const { latitude, longitude, error: geolocationError } = useGeolocation();
+  const prefersReducedMotion = useReducedMotion();
   const [messages, setMessages] = useState<Message[]>(initialMessages || [
     {
       id: "1",
@@ -333,7 +335,12 @@ export function RenChat({ onAction, onMessagesChange, initialMessages, onClose, 
 
   // Render a listing suggestion card
   const renderListingSuggestion = (listing: any) => (
-    <div className="mt-2 p-3 bg-gray-50 rounded-lg border border-gray-200">
+    <motion.div
+      initial={prefersReducedMotion ? { opacity: 0 } : { opacity: 0, y: 10 }}
+      animate={prefersReducedMotion ? { opacity: 1 } : { opacity: 1, y: 0 }}
+      transition={prefersReducedMotion ? { duration: 0.1 } : { duration: 0.3 }}
+      className="mt-2 p-3 bg-gray-50 rounded-lg border border-gray-200"
+    >
       <div className="flex items-center">
         <div className="bg-gray-200 border-2 border-dashed rounded-xl w-16 h-16" />
         <div className="ml-3 flex-1">
@@ -352,12 +359,17 @@ export function RenChat({ onAction, onMessagesChange, initialMessages, onClose, 
           </div>
         </div>
       </div>
-    </div>
+    </motion.div>
   );
 
   // Render a search results card
   const renderSearchResults = (results: SearchResult[]) => (
-    <div className="mt-2 p-3 bg-blue-50 rounded-lg border border-blue-200">
+    <motion.div
+      initial={prefersReducedMotion ? { opacity: 0 } : { opacity: 0, y: 10 }}
+      animate={prefersReducedMotion ? { opacity: 1 } : { opacity: 1, y: 0 }}
+      transition={prefersReducedMotion ? { duration: 0.1 } : { duration: 0.3 }}
+      className="mt-2 p-3 bg-blue-50 rounded-lg border border-blue-200"
+    >
       <h4 className="font-medium text-blue-800 mb-2">Search Results</h4>
       <div className="space-y-2">
         {results.slice(0, 3).map((result) => (
@@ -387,12 +399,17 @@ export function RenChat({ onAction, onMessagesChange, initialMessages, onClose, 
       >
         View All Results
       </Button>
-    </div>
+    </motion.div>
   );
 
   // Render web search results
   const renderWebSearchResults = (results: any[]) => (
-    <div className="mt-2 p-3 bg-purple-50 rounded-lg border border-purple-200">
+    <motion.div
+      initial={prefersReducedMotion ? { opacity: 0 } : { opacity: 0, y: 10 }}
+      animate={prefersReducedMotion ? { opacity: 1 } : { opacity: 1, y: 0 }}
+      transition={prefersReducedMotion ? { duration: 0.1 } : { duration: 0.3 }}
+      className="mt-2 p-3 bg-purple-50 rounded-lg border border-purple-200"
+    >
       <h4 className="font-medium text-purple-800 mb-2">Web Search Results</h4>
       <div className="space-y-2">
         {results.slice(0, 2).map((result, index) => (
@@ -410,120 +427,130 @@ export function RenChat({ onAction, onMessagesChange, initialMessages, onClose, 
           </div>
         ))}
       </div>
-    </div>
+    </motion.div>
   );
 
   return (
-    <div className="flex flex-col h-full max-h-[70vh] bg-white">
+    <motion.div 
+      className="flex flex-col h-full max-h-[70vh] bg-white rounded-2xl shadow-2xl"
+      initial={prefersReducedMotion ? { opacity: 0 } : { opacity: 0, scale: 0.9 }}
+      animate={prefersReducedMotion ? { opacity: 1 } : { opacity: 1, scale: 1 }}
+      exit={prefersReducedMotion ? { opacity: 0 } : { opacity: 0, scale: 0.9 }}
+      transition={prefersReducedMotion ? { duration: 0.1 } : { type: "spring", stiffness: 300, damping: 30 }}
+    >
       <ScrollArea className="flex-1 p-4">
         <div className="space-y-4">
-          {messages.map((message) => (
-            <motion.div
-              key={message.id}
-              initial={{ opacity: 0, y: 5 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.2 }}
-              className={`flex ${message.role === "user" ? "justify-end" : "justify-start"}`}
-            >
-              {message.role === "assistant" && (
-                <Avatar className="h-8 w-8 mr-2 mt-1">
-                  <AvatarFallback className="bg-gradient-to-br from-blue-500 to-purple-600 text-white">
-                    <Sparkles className="h-4 w-4" />
-                  </AvatarFallback>
-                </Avatar>
-              )}
-              <div
-                className={`max-w-[85%] rounded-2xl px-4 py-2 ${
-                  message.role === "user"
-                    ? "bg-blue-500 text-white rounded-tr-none"
-                    : "bg-gray-100 text-gray-800 rounded-tl-none"
-                }`}
+          <AnimatePresence>
+            {messages.map((message) => (
+              <motion.div
+                key={message.id}
+                initial={prefersReducedMotion ? { opacity: 0 } : { opacity: 0, y: 5 }}
+                animate={prefersReducedMotion ? { opacity: 1 } : { opacity: 1, y: 0 }}
+                exit={prefersReducedMotion ? { opacity: 0 } : { opacity: 0, y: -5 }}
+                transition={prefersReducedMotion ? { duration: 0.1 } : { duration: 0.2 }}
+                className={`flex ${message.role === "user" ? "justify-end" : "justify-start"}`}
               >
-                <FormattedText content={message.content} />
-                
-                {/* Render search results if action is to show search results */}
-                {message.action && message.action.type === "search_results" && message.action.payload?.results && (
-                  renderSearchResults(message.action.payload.results)
+                {message.role === "assistant" && (
+                  <Avatar className="h-8 w-8 mr-2 mt-1">
+                    <AvatarFallback className="bg-gradient-to-br from-blue-500 to-purple-600 text-white">
+                      <Sparkles className="h-4 w-4" />
+                    </AvatarFallback>
+                  </Avatar>
                 )}
-                
-                {/* Render web search results if action is to show web search results */}
-                {message.action && message.action.type === "web_search_results" && message.action.payload?.results && (
-                  renderWebSearchResults(message.action.payload.results)
-                )}
-                
-                {/* Render listing suggestion if action is to show a listing */}
-                {message.action && message.action.type === "show_listing" && message.action.payload?.listingId && (
-                  <div className="mt-2">
-                    <div className="p-3 bg-blue-50 rounded-lg border border-blue-200">
-                      <p className="text-sm text-blue-800">
-                        I can show you this listing directly. Would you like me to take you there?
-                      </p>
+                <div
+                  className={`max-w-[85%] rounded-2xl px-4 py-2 ${
+                    message.role === "user"
+                      ? "bg-blue-500 text-white rounded-tr-none"
+                      : "bg-gray-100 text-gray-800 rounded-tl-none"
+                  }`}
+                >
+                  <FormattedText content={message.content} />
+                  
+                  {/* Render search results if action is to show search results */}
+                  {message.action && message.action.type === "search_results" && message.action.payload?.results && (
+                    renderSearchResults(message.action.payload.results)
+                  )}
+                  
+                  {/* Render web search results if action is to show web search results */}
+                  {message.action && message.action.type === "web_search_results" && message.action.payload?.results && (
+                    renderWebSearchResults(message.action.payload.results)
+                  )}
+                  
+                  {/* Render listing suggestion if action is to show a listing */}
+                  {message.action && message.action.type === "show_listing" && message.action.payload?.listingId && (
+                    <div className="mt-2">
+                      <div className="p-3 bg-blue-50 rounded-lg border border-blue-200">
+                        <p className="text-sm text-blue-800">
+                          I can show you this listing directly. Would you like me to take you there?
+                        </p>
+                        <Button 
+                          size="sm" 
+                          className="mt-2 h-7 text-xs"
+                          onClick={() => {
+                            if (onAction) {
+                              onAction({
+                                type: "navigate",
+                                payload: { path: `/listing/${message.action!.payload.listingId}` }
+                              });
+                            }
+                          }}
+                        >
+                          Show me this listing
+                        </Button>
+                      </div>
+                    </div>
+                  )}
+                  
+                  {/* Feedback buttons for assistant messages */}
+                  {message.role === "assistant" && !message.feedback && (
+                    <div className="flex items-center mt-2 space-x-2">
+                      <span className="text-xs text-gray-500">Was this helpful?</span>
                       <Button 
                         size="sm" 
-                        className="mt-2 h-7 text-xs"
-                        onClick={() => {
-                          if (onAction) {
-                            onAction({
-                              type: "navigate",
-                              payload: { path: `/listing/${message.action!.payload.listingId}` }
-                            });
-                          }
-                        }}
+                        variant="ghost" 
+                        className="h-6 w-6 p-0 text-gray-400 hover:text-green-500"
+                        onClick={() => handleFeedback(message.id, 5)}
                       >
-                        Show me this listing
+                        <ThumbsUp className="h-4 w-4" />
+                      </Button>
+                      <Button 
+                        size="sm" 
+                        variant="ghost" 
+                        className="h-6 w-6 p-0 text-gray-400 hover:text-red-500"
+                        onClick={() => handleFeedback(message.id, 1)}
+                      >
+                        <ThumbsDown className="h-4 w-4" />
                       </Button>
                     </div>
-                  </div>
+                  )}
+                  
+                  {/* Feedback confirmation */}
+                  {message.role === "assistant" && message.feedback && (
+                    <div className="flex items-center mt-2 text-xs text-gray-500">
+                      {message.feedback.rating >= 4 ? (
+                        <span className="text-green-600">Thanks for your positive feedback!</span>
+                      ) : (
+                        <span className="text-red-600">Thanks for your feedback. I'll try to do better.</span>
+                      )}
+                    </div>
+                  )}
+                </div>
+                {message.role === "user" && (
+                  <Avatar className="h-8 w-8 ml-2 mt-1">
+                    <AvatarFallback className="bg-gray-200 text-gray-800 text-xs">
+                      {session?.user?.name?.charAt(0) || "U"}
+                    </AvatarFallback>
+                  </Avatar>
                 )}
-                
-                {/* Feedback buttons for assistant messages */}
-                {message.role === "assistant" && !message.feedback && (
-                  <div className="flex items-center mt-2 space-x-2">
-                    <span className="text-xs text-gray-500">Was this helpful?</span>
-                    <Button 
-                      size="sm" 
-                      variant="ghost" 
-                      className="h-6 w-6 p-0 text-gray-400 hover:text-green-500"
-                      onClick={() => handleFeedback(message.id, 5)}
-                    >
-                      <ThumbsUp className="h-4 w-4" />
-                    </Button>
-                    <Button 
-                      size="sm" 
-                      variant="ghost" 
-                      className="h-6 w-6 p-0 text-gray-400 hover:text-red-500"
-                      onClick={() => handleFeedback(message.id, 1)}
-                    >
-                      <ThumbsDown className="h-4 w-4" />
-                    </Button>
-                  </div>
-                )}
-                
-                {/* Feedback confirmation */}
-                {message.role === "assistant" && message.feedback && (
-                  <div className="flex items-center mt-2 text-xs text-gray-500">
-                    {message.feedback.rating >= 4 ? (
-                      <span className="text-green-600">Thanks for your positive feedback!</span>
-                    ) : (
-                      <span className="text-red-600">Thanks for your feedback. I'll try to do better.</span>
-                    )}
-                  </div>
-                )}
-              </div>
-              {message.role === "user" && (
-                <Avatar className="h-8 w-8 ml-2 mt-1">
-                  <AvatarFallback className="bg-gray-200 text-gray-800 text-xs">
-                    {session?.user?.name?.charAt(0) || "U"}
-                  </AvatarFallback>
-                </Avatar>
-              )}
-            </motion.div>
-          ))}
+              </motion.div>
+            ))}
+          </AnimatePresence>
           
           {isLoading && (
             <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
+              initial={prefersReducedMotion ? { opacity: 0 } : { opacity: 0 }}
+              animate={prefersReducedMotion ? { opacity: 1 } : { opacity: 1 }}
+              transition={prefersReducedMotion ? { duration: 0.1 } : { duration: 0.2 }}
               className="flex justify-start"
             >
               <Avatar className="h-8 w-8 mr-2 mt-1">
@@ -547,7 +574,12 @@ export function RenChat({ onAction, onMessagesChange, initialMessages, onClose, 
 
       {/* Suggestions */}
       {messages.length > 0 && messages[messages.length - 1]?.suggestions && messages[messages.length - 1].suggestions!.length > 0 ? (
-        <div className="px-4 py-3 bg-gray-50 border-t border-gray-200">
+        <motion.div 
+          className="px-4 py-3 bg-gray-50 border-t border-gray-200"
+          initial={prefersReducedMotion ? { opacity: 0 } : { opacity: 0, y: 10 }}
+          animate={prefersReducedMotion ? { opacity: 1 } : { opacity: 1, y: 0 }}
+          transition={prefersReducedMotion ? { duration: 0.1 } : { duration: 0.3 }}
+        >
           <div className="flex flex-wrap gap-2">
             {messages[messages.length - 1].suggestions!.map((suggestion, index) => (
               <Button
@@ -556,15 +588,22 @@ export function RenChat({ onAction, onMessagesChange, initialMessages, onClose, 
                 size="sm"
                 className="text-xs h-7 px-2 bg-white hover:bg-gray-100 border-gray-300 rounded-full"
                 onClick={() => handleSuggestionClick(suggestion)}
+                whileHover={prefersReducedMotion ? {} : { scale: 1.05 }}
+                whileTap={prefersReducedMotion ? {} : { scale: 0.95 }}
               >
                 {suggestion}
               </Button>
             ))}
           </div>
-        </div>
+        </motion.div>
       ) : null}
 
-      <div className="p-4 bg-white border-t border-gray-200">
+      <motion.div 
+        className="p-4 bg-white border-t border-gray-200"
+        initial={prefersReducedMotion ? { opacity: 0 } : { opacity: 0, y: 10 }}
+        animate={prefersReducedMotion ? { opacity: 1 } : { opacity: 1, y: 0 }}
+        transition={prefersReducedMotion ? { duration: 0.1 } : { duration: 0.3, delay: 0.1 }}
+      >
         <div className="flex gap-2">
           <Input
             placeholder="Ask REN anything..."
@@ -578,11 +617,13 @@ export function RenChat({ onAction, onMessagesChange, initialMessages, onClose, 
             onClick={handleSend} 
             disabled={isLoading || !input.trim()}
             className="rounded-full bg-blue-500 hover:bg-blue-600 h-9 w-9 p-0"
+            whileHover={prefersReducedMotion ? {} : { scale: 1.05 }}
+            whileTap={prefersReducedMotion ? {} : { scale: 0.95 }}
           >
             <Send className="w-5 h-5" />
           </Button>
         </div>
-      </div>
-    </div>
+      </motion.div>
+    </motion.div>
   );
 }

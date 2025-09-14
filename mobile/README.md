@@ -28,14 +28,24 @@ Expo-based mobile application for RenThing rental marketplace.
 
 4. Scan the QR code with Expo Go app on your mobile device.
 
-### Available Scripts
+### Quick Setup
+
+For a quick setup, you can also run:
+```bash
+npm run setup
+```
+
+This will automatically install all dependencies and prepare the environment.
+
+## Available Scripts
 
 - `npm start` - Start the development server
 - `npm run android` - Start on Android device/emulator
 - `npm run ios` - Start on iOS simulator (macOS only)
 - `npm run web` - Start web version
+- `npm run setup` - Automated setup script
 
-### Project Structure
+## Project Structure
 
 ```
 mobile/
@@ -52,14 +62,14 @@ mobile/
 └── app.json            # Expo configuration
 ```
 
-### Development Notes
+## Development Notes
 
 - The mobile app uses the same backend API as the web app
 - API base URL is configured in `src/services/api/client.ts`
 - Update the API_BASE_URL to point to your development server
 - For local development, use your machine's IP address instead of localhost
 
-### Features
+## Features
 
 - User authentication (login/register)
 - Browse rental items
@@ -67,7 +77,7 @@ mobile/
 - User profile management
 - Responsive design for mobile devices
 
-### Tech Stack
+## Tech Stack
 
 - React Native with Expo
 - TypeScript
@@ -75,3 +85,23 @@ mobile/
 - React Native Paper (Material Design)
 - Axios for API calls
 - Secure storage for authentication tokens
+
+## Troubleshooting
+
+If you encounter any issues, please check our [Troubleshooting Guide](TROUBLESHOOTING.md) which covers common problems and their solutions.
+
+Common issues include:
+- Module not found errors
+- TypeScript compilation errors
+- Expo development server issues
+- Platform-specific problems (iOS/Android)
+
+## Dependency Information
+
+The mobile app requires several key dependencies:
+- **react-native-paper**: UI components library
+- **expo-image-picker**: For selecting images from device
+- **@react-navigation/native**: Navigation library
+- **react-native-safe-area-context**: For handling device safe areas
+
+All dependencies are listed in package.json and should be automatically installed with `npm install`.

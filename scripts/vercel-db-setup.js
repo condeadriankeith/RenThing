@@ -28,6 +28,10 @@ function setupDatabase() {
       console.log('Running Prisma migrations...');
       execSync('npx prisma migrate deploy', { stdio: 'inherit' });
       
+      // Seed the database with initial data
+      console.log('Seeding database with initial data...');
+      execSync('npx prisma db seed', { stdio: 'inherit' });
+      
       console.log('Database setup completed successfully!');
     } else if (databaseUrl.startsWith('file:')) {
       console.log('SQLite database detected');

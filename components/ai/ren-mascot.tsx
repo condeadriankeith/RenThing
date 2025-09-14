@@ -7,6 +7,7 @@ import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Tooltip, TooltipContent, TooltipTrigger, TooltipProvider } from "@/components/ui/tooltip";
 import { MessageCircle, Sparkles, Zap } from "lucide-react";
 import { RenChat } from "@/components/ai/ren-chat"; // Added import for RenChat
+import { useReducedMotion } from "@/hooks/use-reduced-motion";
 
 interface RenMascotProps {
   variant?: "floating" | "static";
@@ -24,12 +25,7 @@ export function RenMascot({
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isVisible, setIsVisible] = useState(true);
   const [isEnergized, setIsEnergized] = useState(false);
-
-  // Handle subtle floating animation
-  useEffect(() => {
-    // Clear any existing intervals
-    return () => {};
-  }, []);
+  const prefersReducedMotion = useReducedMotion();
 
   // Handle energized state periodically to show REN's enhanced capabilities
   useEffect(() => {
@@ -64,13 +60,15 @@ export function RenMascot({
     <>
       {/* Floating button for mobile/tablet */}
       <div className="fixed bottom-4 right-4 z-50 md:hidden">
-        <button 
+        <motion.button 
           onClick={() => setIsModalOpen(!isModalOpen)}
           className="w-16 h-16 bg-blue-600 rounded-full flex items-center justify-center shadow-lg hover:bg-blue-700 transition-colors"
+          whileHover={prefersReducedMotion ? {} : { scale: 1.05 }}
+          whileTap={prefersReducedMotion ? {} : { scale: 0.95 }}
         >
           <Sparkles className="w-8 h-8 text-white" />
           <span className="sr-only">Open REN chat</span>
-        </button>
+        </motion.button>
         
         {isModalOpen && (
           <RenChat 
@@ -84,9 +82,10 @@ export function RenMascot({
       <TooltipProvider>
         <AnimatePresence>
           <motion.div
-            initial={{ opacity: 0, scale: 0.8 }}
-            animate={{ opacity: 1, scale: 1 }}
-            exit={{ opacity: 0, scale: 0.8 }}
+            initial={prefersReducedMotion ? { opacity: 0 } : { opacity: 0, scale: 0.8 }}
+            animate={prefersReducedMotion ? { opacity: 1 } : { opacity: 1, scale: 1 }}
+            exit={prefersReducedMotion ? { opacity: 0 } : { opacity: 0, scale: 0.8 }}
+            transition={prefersReducedMotion ? { duration: 0.1 } : { duration: 0.3, ease: [0.4, 0, 0.2, 1] }}
             className={`fixed ${variant === "floating" ? positionClasses[position] : ""} z-50 hidden md:block`}
           >
             <Tooltip>
@@ -96,8 +95,8 @@ export function RenMascot({
                   onClick={onChatOpen}
                 >
                   <motion.div
-                    animate={{ y: [0, -5, 0] }}
-                    transition={{ 
+                    animate={prefersReducedMotion ? {} : { y: [0, -5, 0] }}
+                    transition={prefersReducedMotion ? {} : { 
                       duration: 2, 
                       repeat: Infinity, 
                       ease: "easeInOut" 
@@ -120,8 +119,9 @@ export function RenMascot({
                   {/* Floating action buttons */}
                   {variant === "floating" && (
                     <motion.div
-                      initial={{ opacity: 0, y: 10 }}
-                      animate={{ opacity: 1, y: 0 }}
+                      initial={prefersReducedMotion ? { opacity: 0 } : { opacity: 0, y: 10 }}
+                      animate={prefersReducedMotion ? { opacity: 1 } : { opacity: 1, y: 0 }}
+                      transition={prefersReducedMotion ? { duration: 0.1 } : { duration: 0.3 }}
                       className="absolute -top-2 -left-2 flex flex-col space-y-2"
                     >
                       <Button 

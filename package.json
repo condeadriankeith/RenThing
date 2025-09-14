@@ -11,7 +11,13 @@
     "project:info": "node scripts/project-structure-info.js",
     "postinstall": "node scripts/setup-ollama.js",
     "test:ollama": "node scripts/test-ollama-setup.js",
-    "vercel-build": "node scripts/vercel-build.js && node scripts/vercel-db-setup.js"
+    "vercel-build": "node scripts/vercel-build.js && node scripts/vercel-db-setup.js",
+    "test:db": "node scripts/test-db-connection.js",
+    "test:login": "node scripts/test-login.js",
+    "test:listing": "node scripts/test-listing-creation.js"
+  },
+  "prisma": {
+    "seed": "ts-node prisma/seed.ts"
   },
   "dependencies": {
     "@hookform/resolvers": "^3.10.0",

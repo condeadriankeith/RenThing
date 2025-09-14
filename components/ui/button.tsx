@@ -1,6 +1,8 @@
 import * as React from "react"
 import { Slot } from "@radix-ui/react-slot"
 import { cva, type VariantProps } from "class-variance-authority"
+import { motion } from "framer-motion"
+import { useReducedMotion } from "@/hooks/use-reduced-motion"
 
 import { cn } from "@/lib/utils"
 
@@ -35,25 +37,40 @@ const buttonVariants = cva(
   }
 )
 
-function Button({
-  className,
-  variant,
-  size,
-  asChild = false,
-  ...props
-}: React.ComponentProps<"button"> &
+const Button = React.forwardRef<
+  HTMLButtonElement,
+  React.ComponentProps<"button"> &
   VariantProps<typeof buttonVariants> & {
     asChild?: boolean
-  }) {
+    animated?: boolean
+  }
+>(({ className, variant, size, asChild = false, animated = false, ...props }, ref) => {
   const Comp = asChild ? Slot : "button"
+  const prefersReducedMotion = useReducedMotion()
+
+  if (animated && !asChild) {
+    return (
+      <motion.button
+        ref={ref}
+        data-slot="button"
+        className={cn(buttonVariants({ variant, size, className }))}
+        whileHover={prefersReducedMotion ? {} : { scale: 1.03 }}
+        whileTap={prefersReducedMotion ? {} : { scale: 0.98 }}
+        transition={prefersReducedMotion ? {} : { type: "spring", stiffness: 500, damping: 30 }}
+        {...props}
+      />
+    )
+  }
 
   return (
     <Comp
+      ref={ref}
       data-slot="button"
       className={cn(buttonVariants({ variant, size, className }))}
       {...props}
     />
   )
-}
+})
+Button.displayName = "Button"
 
 export { Button, buttonVariants }

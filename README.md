@@ -57,6 +57,8 @@ If you prefer to use an external PostgreSQL provider (like Supabase, Render, or 
 2. Get the connection string (should look like `postgresql://username:password@host:port/database`)
 3. Add it as `DATABASE_URL` in your Vercel environment variables
 
+For a comprehensive guide on deploying with PostgreSQL, see our [Vercel PostgreSQL Deployment Guide](VERCEL_POSTGRES_DEPLOYMENT.md).
+
 ### Environment Variables for Vercel
 
 Create the following environment variables in your Vercel project settings:
@@ -75,6 +77,24 @@ NEXTAUTH_SECRET=your_random_secret_string_at_least_32_characters
 ```
 
 Note: For the `NEXTAUTH_SECRET`, generate a random string of at least 32 characters.
+
+### Admin Credentials
+
+After deployment, you can log in using these credentials:
+- Email: admin@renthing.com
+- Password: admin123
+
+### Vendor Credentials
+
+For testing item listing functionality:
+- Email: vendor@renthing.com
+- Password: vendor123
+
+### User Credentials
+
+For regular user functionality:
+- Email: user@renthing.com
+- Password: user123
 
 ### Troubleshooting Deployment Issues
 
@@ -205,15 +225,13 @@ This project has been organized into a structured directory layout for better ma
 
 ## Documentation
 
-All documentation has been moved to the [docs/general](docs/general) directory:
-- [docs/general/PRODUCT_REQUIREMENTS_DOCUMENT.md](docs/general/PRODUCT_REQUIREMENTS_DOCUMENT.md) - Core platform requirements
-- [docs/general/REN_AI_PERSONALITY_PRD.md](docs/general/REN_AI_PERSONALITY_PRD.md) - Detailed requirements for REN AI personality
-- [docs/general/WEB_SCRAPING.md](docs/general/WEB_SCRAPING.md) - Documentation for web scraping functionality
-- [docs/general/HOW_TO_USE_WEB_SCRAPING.md](docs/general/HOW_TO_USE_WEB_SCRAPING.md) - User guide for web scraping
-- [docs/general/ENVIRONMENT_VARIABLES.md](docs/general/ENVIRONMENT_VARIABLES.md) - Configuration guide for environment variables
-- [docs/general/OLLAMA_INTEGRATION.md](docs/general/OLLAMA_INTEGRATION.md) - Local AI model integration with Ollama
-- [docs/general/RECENT_CHANGES_SUMMARY.md](docs/general/RECENT_CHANGES_SUMMARY.md) - Summary of recent development changes
-- [docs/general/REN_AI_ISOLATION_SUMMARY.md](docs/general/REN_AI_ISOLATION_SUMMARY.md) - Summary of isolated REN AI files
+Detailed documentation is available in the [docs](docs/) directory:
+
+- [System Architecture](docs/system-architecture.md)
+- [API Documentation](docs/api)
+- [Component Library](docs/components)
+- [Animation System](docs/animation-system.md) ← Added
+- [Animation Implementation Summary](docs/animation-implementation-summary.md) ← Added
 
 ## REN AI Isolation
 

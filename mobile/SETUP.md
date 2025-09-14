@@ -1,78 +1,138 @@
-# Quick Start Guide
+# Mobile App Setup Guide
 
-## 1. Install Mobile Dependencies
+This guide will help you set up the RenThing mobile application properly.
+
+## Prerequisites
+
+Before you begin, ensure you have the following installed:
+- Node.js (v18 or higher)
+- npm or yarn
+- Expo CLI (globally installed)
+
+## Setup Instructions
+
+### 1. Install Dependencies
+
+Navigate to the mobile directory and install all required dependencies:
 
 ```bash
 cd mobile
 npm install
 ```
 
-## 2. Update API Configuration
+This will install all dependencies listed in package.json, including:
+- react-native-paper
+- expo-image-picker
+- @react-navigation/native
+- react-native-safe-area-context
 
-Edit `mobile/src/services/api/client.ts` and update the API_BASE_URL:
+### 2. Install Expo CLI (if not already installed)
 
-```typescript
-// For local development, use your machine's IP address
-const API_BASE_URL = 'http://YOUR_IP_ADDRESS:3000/api';
-// Example: const API_BASE_URL = 'http://192.168.1.100:3000/api';
+```bash
+npm install -g expo-cli
 ```
 
-## 3. Start the Development Server
+### 3. Start the Development Server
 
 ```bash
 npm start
 ```
 
-This will:
-- Start the Metro bundler
-- Generate a QR code
-- Open Expo Dev Tools in your browser
-
-## 4. Run on Your Device
-
-1. Download the **Expo Go** app from your device's app store
-2. Open Expo Go and scan the QR code shown in the terminal
-3. The app will load on your device
-
-## 5. Development Workflow
-
-- Make changes to the code
-- The app will automatically reload on your device
-- Use the Expo Dev Tools in your browser for additional debugging
+Or use one of these commands for specific platforms:
+```bash
+npm run android  # For Android
+npm run ios      # For iOS
+npm run web      # For Web
+```
 
 ## Troubleshooting
 
-### Common Issues:
+### Dependency Issues
 
-1. **Network Error**: Ensure your device and computer are on the same WiFi network
-2. **API Connection**: Update the API_BASE_URL to use your machine's IP address
-3. **Port Already in Use**: Change the port with `npm start -- --port 8081`
+If you're seeing errors like "Cannot find module 'react-native-paper'", try these steps:
 
-### Get Your IP Address:
+1. Delete node_modules and package-lock.json:
+   ```bash
+   rm -rf node_modules package-lock.json
+   ```
 
-**Windows:**
+2. Reinstall dependencies:
+   ```bash
+   npm install
+   ```
+
+3. If you're still having issues, try installing the missing packages individually:
+   ```bash
+   npm install react-native-paper expo-image-picker @react-navigation/native react-native-safe-area-context
+   ```
+
+### iOS Specific Issues
+
+For iOS development, you might need to run:
 ```bash
-ipconfig
+cd ios
+pod install
+cd ..
 ```
 
-**macOS/Linux:**
+### Android Specific Issues
+
+For Android development, make sure you have:
+- Android Studio installed
+- Android SDK properly configured
+- JAVA_HOME environment variable set
+
+## Required Dependencies
+
+The mobile app requires these key dependencies:
+- **react-native-paper**: UI components library
+- **expo-image-picker**: For selecting images from device
+- **@react-navigation/native**: Navigation library
+- **react-native-safe-area-context**: For handling device safe areas
+- **@react-navigation/bottom-tabs**: Bottom tab navigation
+- **@react-navigation/native-stack**: Stack navigation
+
+## Development Workflow
+
+1. Make sure all dependencies are installed
+2. Start the Expo development server
+3. Scan the QR code with the Expo Go app on your device
+4. Or use an emulator/simulator
+
+## Building for Production
+
+To build the app for production:
+
+### Android
 ```bash
-ifconfig
+npm run build:android
 ```
 
-## Next Steps
+### iOS
+```bash
+npm run build:ios
+```
 
-1. Test authentication flow
-2. Add more screens and features
-3. Configure push notifications
-4. Add camera/image upload functionality
-5. Set up location services for item search
+Note: You'll need an Expo account and proper credentials for building production apps.
 
-## Testing on Physical Devices
+## Common Issues and Solutions
 
-The mobile app is now ready for testing with Expo Go. All major features are implemented:
-- User authentication
-- Navigation structure
-- API integration
-- Responsive design
-- Material Design UI components
+### "Module not found" errors
+This usually means dependencies aren't installed properly. Run:
+```bash
+npm install
+```
+
+### "Peer dependency" warnings
+These are usually safe to ignore unless they cause actual issues.
+
+### TypeScript errors
+Make sure you're using a compatible TypeScript version (included in dependencies).
+
+## Support
+
+If you continue to experience issues, please check:
+1. Node.js version (should be 18+)
+2. All dependencies are properly installed
+3. Expo CLI is up to date
+4. Platform-specific requirements (Android SDK, Xcode, etc.)

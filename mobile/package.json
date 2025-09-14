@@ -8,7 +8,8 @@
     "ios": "expo start --ios",
     "web": "expo start --web",
     "build:android": "expo build:android",
-    "build:ios": "expo build:ios"
+    "build:ios": "expo build:ios",
+    "setup": "node setup-mobile.js"
   },
   "dependencies": {
     "@expo/vector-icons": "^14.1.0",
