@@ -51,7 +51,7 @@ export default function CreateListingScreen({ navigation }: any) {
   const [newFeature, setNewFeature] = useState('');
   const [newRule, setNewRule] = useState('');
 
-  const categories = ['Electronics', 'Tools', 'Sports', 'Home', 'Clothing', 'Books', 'Vehicles', 'Other'];
+  const categories = ['Electronics', 'Tools', 'Sports', 'Home', 'Clothing', 'Books', 'Vehicles', 'Venues', 'Hobbies & Leisure'];
   const conditions = ['New', 'Like New', 'Good', 'Fair', 'Used'];
 
   const pickImage = async () => {
@@ -212,14 +212,14 @@ export default function CreateListingScreen({ navigation }: any) {
             <TextInput
               label="Title *"
               value={listing.title}
-              onChangeText={(text) => setListing(prev => ({ ...prev, title: text }))}
+              onChangeText={(text: string) => setListing(prev => ({ ...prev, title: text }))}
               style={styles.input}
             />
             
             <TextInput
               label="Description *"
               value={listing.description}
-              onChangeText={(text) => setListing(prev => ({ ...prev, description: text }))}
+              onChangeText={(text: string) => setListing(prev => ({ ...prev, description: text }))}
               multiline
               numberOfLines={4}
               style={styles.input}
@@ -228,7 +228,7 @@ export default function CreateListingScreen({ navigation }: any) {
             <TextInput
               label="Price per day *"
               value={listing.price.toString()}
-              onChangeText={(text) => setListing(prev => ({ ...prev, price: Number(text) || 0 }))}
+              onChangeText={(text: string) => setListing(prev => ({ ...prev, price: Number(text) || 0 }))}
               keyboardType="numeric"
               style={styles.input}
             />
@@ -236,7 +236,7 @@ export default function CreateListingScreen({ navigation }: any) {
             <TextInput
               label="Security deposit *"
               value={listing.deposit.toString()}
-              onChangeText={(text) => setListing(prev => ({ ...prev, deposit: Number(text) || 0 }))}
+              onChangeText={(text: string) => setListing(prev => ({ ...prev, deposit: Number(text) || 0 }))}
               keyboardType="numeric"
               style={styles.input}
             />
@@ -286,7 +286,7 @@ export default function CreateListingScreen({ navigation }: any) {
             <TextInput
               label="Address *"
               value={listing.location.address}
-              onChangeText={(text) => setListing(prev => ({ 
+              onChangeText={(text: string) => setListing(prev => ({ 
                 ...prev, 
                 location: { ...prev.location, address: text } 
               }))}
@@ -296,7 +296,7 @@ export default function CreateListingScreen({ navigation }: any) {
             <TextInput
               label="City *"
               value={listing.location.city}
-              onChangeText={(text) => setListing(prev => ({ 
+              onChangeText={(text: string) => setListing(prev => ({ 
                 ...prev, 
                 location: { ...prev.location, city: text } 
               }))}
@@ -306,7 +306,7 @@ export default function CreateListingScreen({ navigation }: any) {
             <TextInput
               label="State *"
               value={listing.location.state}
-              onChangeText={(text) => setListing(prev => ({ 
+              onChangeText={(text: string) => setListing(prev => ({ 
                 ...prev, 
                 location: { ...prev.location, state: text } 
               }))}
@@ -316,7 +316,7 @@ export default function CreateListingScreen({ navigation }: any) {
             <TextInput
               label="ZIP Code *"
               value={listing.location.zipCode}
-              onChangeText={(text) => setListing(prev => ({ 
+              onChangeText={(text: string) => setListing(prev => ({ 
                 ...prev, 
                 location: { ...prev.location, zipCode: text } 
               }))}

@@ -44,6 +44,8 @@ export default function HomeScreen() {
     { id: '4', name: 'Home', icon: '🏠', color: '#F3E5F5' },
     { id: '5', name: 'Clothing', icon: '👕', color: '#FFEBEE' },
     { id: '6', name: 'Books', icon: '📚', color: '#E1F5FE' },
+    { id: '7', name: 'Venues', icon: '🎪', color: '#E0F7FA' },
+    { id: '8', name: 'Hobbies & Leisure', icon: '🎨', color: '#F3E5F5' },
   ];
 
   useEffect(() => {

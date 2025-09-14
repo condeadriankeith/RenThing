@@ -232,8 +232,9 @@ export default function ListItemPage() {
                       <SelectItem value="tools">Tools & Equipment</SelectItem>
                       <SelectItem value="vehicles">Vehicles</SelectItem>
                       <SelectItem value="services">Services</SelectItem>
-                      <SelectItem value="events">Events</SelectItem>
+                      <SelectItem value="venues">Venues</SelectItem>
                       <SelectItem value="sports">Sports & Recreation</SelectItem>
+                      <SelectItem value="hobbies">Hobbies & Leisure</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>

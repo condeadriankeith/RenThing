@@ -181,6 +181,7 @@ export async function POST(request: NextRequest) {
     }
 
     console.log("Creating listing for user:", session.user.id);
+    console.log("Database URL being used:", process.env.DATABASE_URL);
 
     // Create listing in Prisma database
     const newListing = await prisma.listing.create({
@@ -224,6 +225,13 @@ export async function POST(request: NextRequest) {
     return NextResponse.json(newListing, { status: 201 })
   } catch (error: any) {
     console.error("Listings POST error:", error)
+    console.error("Error details:", {
+      message: error instanceof Error ? error.message : 'Unknown error',
+      stack: error instanceof Error ? error.stack : undefined,
+      code: error.code,
+      clientVersion: error.clientVersion
+    });
+    
     // Check if it's a foreign key constraint error
     if (error.code === 'P2003') {
       return NextResponse.json(
@@ -231,6 +239,19 @@ export async function POST(request: NextRequest) {
         { status: 400 }
       )
     }
+    
+    // Check if it's a readonly database error
+    if (error.message && error.message.includes('attempt to write a readonly database')) {
+      return NextResponse.json(
+        { 
+          error: "Database permission error", 
+          details: "The database file is readonly. Please check file permissions.",
+          suggestion: "Ensure the database file has write permissions for the application."
+        },
+        { status: 500 }
+      )
+    }
+    
     return NextResponse.json(
       { error: "Internal server error", details: error instanceof Error ? error.message : 'Unknown error' },
       { status: 500 }

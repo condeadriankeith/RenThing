@@ -115,7 +115,9 @@ export default function BrowsePage() {
           } else if (searchText.includes("golf") || searchText.includes("surf") || searchText.includes("ski") || searchText.includes("kayak") || searchText.includes("tennis") || searchText.includes("camping") || searchText.includes("paddleboard")) {
             category = "sports"
           } else if (searchText.includes("tent") || searchText.includes("wedding") || searchText.includes("party") || searchText.includes("bounce") || searchText.includes("dj") || searchText.includes("karaoke")) {
-            category = "events"
+            category = "venues"
+          } else if (searchText.includes("board game") || searchText.includes("puzzle") || searchText.includes("craft") || searchText.includes("hobby") || searchText.includes("leisure") || searchText.includes("music") || searchText.includes("art") || searchText.includes("photography")) {
+            category = "hobbies"
           }
           
           // Parse images and features if they're strings
@@ -175,8 +177,9 @@ export default function BrowsePage() {
     { value: "tools", label: "Tools & Equipment" },
     { value: "vehicles", label: "Vehicles" },
     { value: "services", label: "Services" },
-    { value: "events", label: "Events" },
+    { value: "venues", label: "Venues" },
     { value: "sports", label: "Sports & Recreation" },
+    { value: "hobbies", label: "Hobbies & Leisure" },
   ]
 
   const filteredListings = useMemo(() => {

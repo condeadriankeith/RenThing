@@ -41,7 +41,7 @@ export default function BrowseScreen({ navigation }: any) {
   const [refreshing, setRefreshing] = useState(false);
   const [sortBy, setSortBy] = useState<'price' | 'rating' | 'newest'>('newest');
 
-  const categories = ['all', 'Electronics', 'Tools', 'Sports', 'Home', 'Clothing', 'Books', 'Vehicles'];
+  const categories = ['all', 'Electronics', 'Tools', 'Sports', 'Home', 'Clothing', 'Books', 'Vehicles', 'Venues', 'Hobbies & Leisure'];
   const priceRanges = [
     { label: 'All Prices', value: 'all' },
     { label: 'Under $25', value: '0-25' },
@@ -196,7 +196,7 @@ export default function BrowseScreen({ navigation }: any) {
           <Text style={styles.filterTitle}>Sort By</Text>
           <SegmentedButtons
             value={sortBy}
-            onValueChange={(value) => setSortBy(value as any)}
+            onValueChange={(value: string) => setSortBy(value as any)}
             buttons={[
               { value: 'newest', label: 'Newest' },
               { value: 'price', label: 'Price' },

@@ -113,7 +113,8 @@ export default function BrowsingItemsPage() {
     { name: "Tools & Equipment", items: "Power Tools, Garden, Construction", popular: true },
     { name: "Sports & Recreation", items: "Bikes, Camping, Water Sports", popular: true },
     { name: "Vehicles", items: "Cars, Motorcycles, Boats", popular: false },
-    { name: "Party & Events", items: "Tables, Speakers, Decorations", popular: true },
+    { name: "Venues", items: "Event Spaces, Party Venues", popular: true },
+    { name: "Hobbies & Leisure", items: "Crafts, Games, Music", popular: true },
     { name: "Home & Garden", items: "Furniture, Appliances, Outdoor", popular: false },
     { name: "Fashion & Accessories", items: "Designer Items, Jewelry, Bags", popular: false },
     { name: "Books & Media", items: "Textbooks, DVDs, Games", popular: false }
