@@ -3,10 +3,19 @@ import './globals.css'
 import ClientLayout from './client-layout'
 
 export const metadata: Metadata = {
-  title: 'RenThing',
+  title: {
+    default: 'RenThing — Rent Anything, Anywhere',
+    template: '%s | RenThing — Rent Anything, Anywhere'
+  },
   description: 'RenThing - Rent and Book in the Philippines',
   generator: 'RenThing',
   viewport: 'width=device-width, initial-scale=1.0',
+  icons: {
+    icon: '/RenThing_Logo.png',
+    shortcut: '/RenThing_Logo.png',
+    apple: '/RenThing_Logo.png',
+  },
+  manifest: '/site.webmanifest',
 }
 
 export default function RootLayout({
@@ -17,7 +26,8 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <head>
-        {/* Removed duplicate font-awesome CDN link as it's already imported in globals.css */}
+        <link rel="icon" href="/RenThing_Logo.png" type="image/png" />
+        <link rel="apple-touch-icon" href="/RenThing_Logo.png" />
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="" />
         <style>{`
