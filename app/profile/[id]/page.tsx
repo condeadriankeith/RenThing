@@ -349,12 +349,6 @@ export default function UserProfilePage() {
                           currentBackground={profile.background} 
                           onBackgroundChange={handleBackgroundChange} 
                         />
-                        <Button asChild variant="outline" size="sm" className="hidden sm:flex">
-                          <Link href="/shop">
-                            <ShoppingBag className="h-4 w-4 mr-2" />
-                            Shop
-                          </Link>
-                        </Button>
                         <Button asChild variant="outline" size="sm">
                           <Link href="/profile/settings">
                             <Settings className="h-4 w-4" />

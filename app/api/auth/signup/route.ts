@@ -25,7 +25,7 @@ export async function POST(request: Request) {
       logger.warn("Too many signup requests", { ip });
       return NextResponse.json({ error: "Too many requests" }, { status: 429 });
     }
-    const { email, name, password } = await request.json();
+    const { email, name, password, userType } = await request.json();
 
     if (!email || !name || !password) {
       return NextResponse.json(
@@ -62,7 +62,13 @@ export async function POST(request: Request) {
 
     const hashedPassword = await bcrypt.hash(password, 10);
 
-    const userRole = ADMIN_EMAILS.includes(email) ? "ADMIN" : "USER";
+    // Determine user role based on email or userType
+    let userRole = "USER";
+    if (ADMIN_EMAILS.includes(email)) {
+      userRole = "ADMIN";
+    } else if (userType === "vendor") {
+      userRole = "VENDOR";
+    }
 
     const user = await prisma.user.create({
       data: {

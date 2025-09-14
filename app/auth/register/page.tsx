@@ -2,7 +2,7 @@
 
 import type React from "react"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
@@ -10,7 +10,7 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Separator } from "@/components/ui/separator"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Eye, EyeOff } from "lucide-react"
+import { Eye, EyeOff, ShieldCheck } from "lucide-react"
 import Image from "next/image"
 import { useToast } from "@/hooks/use-toast"
 
@@ -18,6 +18,7 @@ export default function RegisterPage() {
   const [showPassword, setShowPassword] = useState(false)
   const [showConfirmPassword, setShowConfirmPassword] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
+  const [userType, setUserType] = useState("")
   const { toast } = useToast()
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
@@ -31,6 +32,7 @@ export default function RegisterPage() {
     const username = formData.get('username') as string
     const password = formData.get('password') as string
     const confirmPassword = formData.get('confirmPassword') as string
+    const userType = formData.get('userType') as string
 
     if (password !== confirmPassword) {
       setIsLoading(false)
@@ -53,6 +55,7 @@ export default function RegisterPage() {
           name: `${firstName} ${lastName}`,
           username,
           password,
+          userType, // Include userType in the request
         }),
       })
 
@@ -149,7 +152,7 @@ export default function RegisterPage() {
             </div>
             <div className="space-y-2">
               <Label htmlFor="userType" className="text-sm font-medium">Account Type</Label>
-              <Select required name="userType">
+              <Select required name="userType" onValueChange={setUserType}>
                 <SelectTrigger className="h-11">
                   <SelectValue placeholder="Select account type" />
                 </SelectTrigger>
@@ -159,6 +162,32 @@ export default function RegisterPage() {
                 </SelectContent>
               </Select>
             </div>
+            
+            {/* Verified Badge Option for Vendors */}
+            {userType === "vendor" && (
+              <div className="space-y-2 p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-200 dark:border-blue-800">
+                <div className="flex items-start space-x-2">
+                  <ShieldCheck className="h-5 w-5 text-blue-500 mt-0.5 flex-shrink-0" />
+                  <div>
+                    <Label className="text-sm font-medium text-blue-800 dark:text-blue-200">Get Verified Badge</Label>
+                    <p className="text-xs text-blue-600 dark:text-blue-300 mt-1">
+                      As a vendor, you can apply for a verified badge to build trust with renters. 
+                      This will require additional verification steps.
+                    </p>
+                    <Button 
+                      type="button" 
+                      variant="outline" 
+                      size="sm" 
+                      className="mt-2 text-xs h-8 bg-white dark:bg-gray-800 border-blue-300 dark:border-blue-700 text-blue-600 dark:text-blue-300 hover:bg-blue-100 dark:hover:bg-blue-900/40"
+                      disabled
+                    >
+                      Apply for Verification (Coming Soon)
+                    </Button>
+                  </div>
+                </div>
+              </div>
+            )}
+            
             <div className="space-y-2">
               <Label htmlFor="password" className="text-sm font-medium">Password</Label>
               <div className="relative">

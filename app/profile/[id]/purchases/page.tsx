@@ -133,11 +133,8 @@ export default function PurchaseHistoryPage() {
                 No purchases yet
               </h3>
               <p className="text-gray-600 dark:text-gray-400 mb-6">
-                You haven't made any purchases yet. Visit our shop to get started!
+                You haven't made any purchases yet.
               </p>
-              <Button asChild>
-                <Link href="/shop">Visit Shop</Link>
-              </Button>
             </CardContent>
           </Card>
         ) : (

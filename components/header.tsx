@@ -89,12 +89,6 @@ export default function Header() {
                       Import Listing
                     </Link>
                   </DropdownMenuItem>
-                  <DropdownMenuItem asChild>
-                    <Link href="/shop" className="flex items-center">
-                      <ShoppingBag className="h-4 w-4 mr-2" />
-                      Shop
-                    </Link>
-                  </DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
               
@@ -132,9 +126,6 @@ export default function Header() {
                   </DropdownMenuItem>
                   <DropdownMenuItem asChild>
                     <Link href="/scrape">Import Listing</Link>
-                  </DropdownMenuItem>
-                  <DropdownMenuItem asChild>
-                    <Link href="/shop">Shop</Link>
                   </DropdownMenuItem>
                   <DropdownMenuSeparator />
                   <DropdownMenuItem onClick={() => signOut()}>
@@ -243,14 +234,6 @@ export default function Header() {
                         >
                           <Search className="h-5 w-5 mr-3 text-gray-500" />
                           Import Listing
-                        </Link>
-                        <Link 
-                          href="/shop" 
-                          className="flex items-center px-3 py-3 rounded-lg text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors" 
-                          onClick={() => setMobileNavOpen(false)}
-                        >
-                          <ShoppingBag className="h-5 w-5 mr-3 text-gray-500" />
-                          Shop
                         </Link>
                         <Link 
                           href="/profile" 
