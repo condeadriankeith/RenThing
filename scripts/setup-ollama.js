@@ -11,6 +11,12 @@ const { promisify } = require('util');
 const execPromise = promisify(exec);
 
 async function setupOllamaModel() {
+  // Skip Ollama setup in Vercel environment
+  if (process.env.VERCEL) {
+    console.log('⏭️  Skipping Ollama setup in Vercel environment');
+    return;
+  }
+
   console.log('🔍 Checking Ollama installation...');
   
   try {
