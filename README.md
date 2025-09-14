@@ -14,6 +14,7 @@
 - [TypeScript](https://www.typescriptlang.org/)
 - [Tailwind CSS](https://tailwindcss.com/)
 - [Prisma](https://www.prisma.io/) (Database ORM)
+- [Vercel Edge Config](https://vercel.com/docs/storage/edge-config) (Edge caching)
 - [Axios](https://axios-http.com/) (HTTP client)
 - [Cheerio](https://cheerio.js.org/) (Server-side jQuery)
 - [Framer Motion](https://www.framer.com/motion/) (Animations)
@@ -164,6 +165,20 @@ When Ollama is enabled, the AI assistant will use your local model. See [OLLAMA_
 You can test your Ollama setup by running:
 ```sh
 npm run test:ollama
+```
+
+### Edge Config Integration
+
+This project uses Vercel Edge Config as a caching layer to improve performance for frequently accessed data. For more information about how Edge Config is integrated with Prisma, see [EDGE_CONFIG_INTEGRATION.md](EDGE_CONFIG_INTEGRATION.md).
+
+To enable Edge Config:
+1. Create an Edge Config instance in your Vercel project
+2. Set the `EDGE_CONFIG` environment variable with your Edge Config connection string
+3. The application will automatically start using Edge Config for configured models
+
+You can manually sync data from Prisma to Edge Config using:
+```sh
+node scripts/migrate-to-edge-config.js
 ```
 
 ## Supabase Migration

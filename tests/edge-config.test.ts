@@ -1,8 +1,13 @@
 import { edgeConfigDB } from '@/lib/edge-config/edge-config-db';
+import { edgeConfigSyncService } from '@/lib/edge-config/sync-service';
 
 async function testEdgeConfig() {
   try {
     console.log('Testing Edge Config connection...');
+    
+    // Check if Edge Config is available
+    const isAvailable = await edgeConfigDB.isAvailable();
+    console.log('Edge Config available:', isAvailable);
     
     // Test creating a simple record
     const testRecord = await edgeConfigDB.create('test', {
@@ -22,9 +27,10 @@ async function testEdgeConfig() {
     const allRecords = await edgeConfigDB.findMany('test');
     console.log('All test records:', allRecords);
     
-    // Clean up
-    await edgeConfigDB.delete('test', { id: 'test-id' });
-    console.log('Cleaned up test record');
+    // Test sync service
+    console.log('Testing sync service...');
+    await edgeConfigSyncService.syncAllModels();
+    console.log('Sync service test completed');
     
     console.log('Edge Config test completed successfully!');
   } catch (error) {

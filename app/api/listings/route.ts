@@ -3,19 +3,11 @@ import { getServerSession } from "next-auth"
 import { authOptions } from "@/lib/auth"
 import { prisma } from "@/lib/prisma"
 import { edgeConfigDB } from "@/lib/edge-config/edge-config-db"
+import { shouldUseEdgeConfig, shouldSyncFromPrisma } from "@/lib/edge-config/config"
 
 // GET /api/listings - Get all listings
 export async function GET(request: NextRequest) {
   try {
-    // Check if prisma is available
-    if (!prisma) {
-      console.error("Prisma client is not available for fetching listings")
-      return NextResponse.json(
-        { error: "Database connection error", details: "Prisma client is not available" },
-        { status: 500 }
-      )
-    }
-    
     const { searchParams } = new URL(request.url)
     const pageParam = searchParams.get("page")
     const limitParam = searchParams.get("limit")
@@ -68,6 +60,75 @@ export async function GET(request: NextRequest) {
 
     const skip = (page - 1) * limit
 
+    // Check if we should use Edge Config for listings
+    const useEdgeConfig = shouldUseEdgeConfig('listing');
+    
+    if (useEdgeConfig) {
+      console.log('Using Edge Config for listings')
+      // Use Edge Config for faster reads
+      try {
+        const allListings = await edgeConfigDB.findMany('listing');
+        
+        // Apply filters manually since Edge Config doesn't support complex queries
+        let filteredListings = allListings.filter((listing: any) => {
+          // Price filter
+          if (listing.price < minPrice || listing.price > maxPrice) {
+            return false;
+          }
+          
+          // Search filter
+          if (search) {
+            const searchLower = search.toLowerCase();
+            if (!listing.title.toLowerCase().includes(searchLower) && 
+                !listing.description.toLowerCase().includes(searchLower)) {
+              return false;
+            }
+          }
+          
+          // Location filter
+          if (location && !listing.location.toLowerCase().includes(location.toLowerCase())) {
+            return false;
+          }
+          
+          return true;
+        });
+        
+        // Apply pagination
+        const total = filteredListings.length;
+        const paginatedListings = filteredListings.slice(skip, skip + limit);
+        
+        const listings = paginatedListings.map((listing: any) => {
+          return {
+            ...listing,
+            images: Array.isArray(listing.images) ? listing.images : 
+                   (typeof listing.images === "string" ? JSON.parse(listing.images || "[]") : listing.images || []),
+            features: Array.isArray(listing.features) ? listing.features : 
+                     (typeof listing.features === "string" ? JSON.parse(listing.features || "[]") : listing.features || []),
+            averageRating: 0, // For now, we'll set this to 0 since we're not handling reviews in this implementation
+            reviewCount: 0,   // For now, we'll set this to 0 since we're not handling reviews in this implementation
+          }
+        })
+
+        console.log('Successfully processed listings from Edge Config')
+
+        return NextResponse.json({
+          listings,
+          pagination: {
+            page,
+            limit,
+            total,
+            totalPages: Math.ceil(total / limit),
+          },
+        })
+      } catch (edgeConfigError) {
+        console.error("Failed to fetch from Edge Config, falling back to Prisma:", edgeConfigError)
+        // Fall back to Prisma if Edge Config fails
+      }
+    }
+    
+    // Fallback to Prisma if Edge Config is not configured or fails
+    console.log('Using Prisma for listings')
+    
     // Build where clause for Prisma
     const where: any = {
       price: {
@@ -114,7 +175,7 @@ export async function GET(request: NextRequest) {
       }
     })
 
-    console.log('Successfully processed listings')
+    console.log('Successfully processed listings from Prisma')
 
     return NextResponse.json({
       listings,
@@ -142,15 +203,6 @@ export async function GET(request: NextRequest) {
 // POST /api/listings - Create new listing
 export async function POST(request: NextRequest) {
   try {
-    // Check if prisma is available
-    if (!prisma) {
-      console.error("Prisma client is not available for creating listings")
-      return NextResponse.json(
-        { error: "Database connection error", details: "Prisma client is not available" },
-        { status: 500 }
-      )
-    }
-
     const session = await getServerSession(authOptions)
 
     if (!session?.user) {
@@ -200,26 +252,29 @@ export async function POST(request: NextRequest) {
 
     console.log("Listing created successfully:", newListing.id);
 
-    // Also create listing in Edge Config (simultaneously)
-    try {
-      await edgeConfigDB.create("listing", {
-        id: newListing.id,
-        title,
-        description,
-        price: parseFloat(price),
-        location,
-        category,
-        priceUnit,
-        images: images ? JSON.stringify(images) : JSON.stringify([]),
-        features: features ? JSON.stringify(features) : JSON.stringify([]),
-        ownerId: session.user.id,
-        createdAt: newListing.createdAt.toISOString(),
-        updatedAt: newListing.updatedAt.toISOString(),
-      })
-      console.log("Listing also created in Edge Config")
-    } catch (edgeConfigError) {
-      console.error("Failed to create listing in Edge Config:", edgeConfigError)
-      // We don't return an error here because the main operation (Prisma) succeeded
+    // Also create listing in Edge Config if configured
+    const useEdgeConfig = shouldUseEdgeConfig('listing');
+    if (useEdgeConfig) {
+      try {
+        await edgeConfigDB.create("listing", {
+          id: newListing.id,
+          title,
+          description,
+          price: parseFloat(price),
+          location,
+          category,
+          priceUnit,
+          images: images || [],
+          features: features || [],
+          ownerId: session.user.id,
+          createdAt: newListing.createdAt.toISOString(),
+          updatedAt: newListing.updatedAt.toISOString(),
+        })
+        console.log("Listing also created in Edge Config")
+      } catch (edgeConfigError) {
+        console.error("Failed to create listing in Edge Config:", edgeConfigError)
+        // We don't return an error here because the main operation (Prisma) succeeded
+      }
     }
 
     return NextResponse.json(newListing, { status: 201 })

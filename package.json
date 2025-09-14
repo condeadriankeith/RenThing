@@ -3,18 +3,21 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
+    "dev": "next dev",
     "build": "next build",
-    "dev": "npx next dev",
-    "lint": "next lint",
     "start": "next start",
-    "test": "jest",
+    "lint": "next lint",
+    "export:data": "node scripts/export-data.js",
+    "import:data": "node scripts/import-to-supabase.js",
+    "migrate:edge-config": "node scripts/migrate-to-edge-config.js",
     "project:info": "node scripts/project-structure-info.js",
     "postinstall": "node scripts/setup-ollama.js",
     "test:ollama": "node scripts/test-ollama-setup.js",
     "vercel-build": "node scripts/vercel-build.js && node scripts/vercel-db-setup.js",
     "test:db": "node scripts/test-db-connection.js",
     "test:login": "node scripts/test-login.js",
-    "test:listing": "node scripts/test-listing-creation.js"
+    "test:listing": "node scripts/test-listing-creation.js",
+    "test:edge-config": "node scripts/test-edge-config.js"
   },
   "prisma": {
     "seed": "ts-node prisma/seed.ts"
