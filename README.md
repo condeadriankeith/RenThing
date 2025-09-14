@@ -64,6 +64,7 @@ Note: SQLite may not work well in production on Vercel due to its file-based nat
 	```sh
 	pnpm install
 	```
+   If you have Ollama installed, the phi3:mini model will be automatically pulled during installation.
 3. Copy `.env.example` to `.env.local` and update values as needed.
 
 ### Running Locally
@@ -90,17 +91,22 @@ NEXT_PUBLIC_BASE_URL=http://localhost:3000
 For greater privacy and control, you can run a local AI model using Ollama:
 
 1. Install [Ollama](https://ollama.com/) on your machine
-2. Pull the Llama 3.1 8B model: `ollama pull llama3.1:8b`
+2. The phi3:mini model will be automatically pulled when you run `npm install`
 3. Set the following environment variables in your `.env.local` file:
 
 ```env
 # Ollama Configuration for local AI model
 OLLAMA_ENABLED=true
 OLLAMA_HOST=http://localhost:11434
-OLLAMA_MODEL=llama3.1:8b
+OLLAMA_MODEL=phi3:mini
 ```
 
 When Ollama is enabled, the AI assistant will use your local model. See [OLLAMA_INTEGRATION.md](docs/general/OLLAMA_INTEGRATION.md) for detailed setup instructions.
+
+You can test your Ollama setup by running:
+```sh
+npm run test:ollama
+```
 
 ## Supabase Migration
 

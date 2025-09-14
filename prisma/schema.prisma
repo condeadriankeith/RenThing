@@ -1,154 +1,114 @@
-// Add datasource configuration
-datasource db {
-  provider = "sqlite"
-  url      = env("DATABASE_URL")
-}
-
 generator client {
   provider = "prisma-client-js"
 }
 
-// BUSINESS LOGIC: Chat rooms represent PERMANENT transaction history
-// - Created when customer first messages owner about a listing
-// - Cannot be deleted as they serve as evidence of customer-owner interactions
-// - Each room is tied to a specific listing (transaction context)
-model ChatRoom {
-  id          String    @id @default(uuid())
-  listingId   String    // Links to specific listing being discussed
-  customerId  String    // The customer interested in renting
-  ownerId     String    // The owner of the listing
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @updatedAt
-  messages    Message[]
-  listing     Listing   @relation(fields: [listingId], references: [id])
-}
-
-// BUSINESS LOGIC: Messages are permanent transaction records
-// - Cannot be deleted as they document customer-owner communication
-// - Each message linked to both room and listing for complete traceability
-model Message {
-  id          String    @id @default(uuid())
-  content     String    // The actual message content
-  senderId    String    // Who sent the message
-  receiverId  String    // Who should receive the message
-  roomId      String    // Which chat room this belongs to
-  listingId   String    // Direct link to listing for transaction context
-  read        Boolean   @default(false)
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @updatedAt
-  room        ChatRoom  @relation(fields: [roomId], references: [id])
-  sender      User      @relation("SentMessages", fields: [senderId], references: [id])
-  receiver    User      @relation("ReceivedMessages", fields: [receiverId], references: [id])
+datasource db {
+  provider = "sqlite"
+  url      = "file:./dev.db"
 }
 
 model User {
-  id            String    @id @default(uuid())
-  email         String    @unique
+  id            String        @id @default(cuid())
   name          String?
+  email         String        @unique
   emailVerified DateTime?
   image         String?
+  password      String?
+  role          String        @default("user")
   avatar        String?
-  password      String
-  role          String    @default("USER")
-  createdAt     DateTime  @default(now())
-  updatedAt     DateTime  @updatedAt
+  bio           String?
+  location      String?
+  socialLinks   String?
+  responseTime  Int?
+  isVerified    Boolean       @default(false)
+  theme         String?
+  background    String?
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
   accounts      Account[]
-  sessions      Session[]
-  listings      Listing[]
+  achievements  Achievement[]
   bookings      Booking[]
+  listings      Listing[]
   reviews       Review[]
-  wishlist      Wishlist[]
-  sentMessages     Message[] @relation("SentMessages")
-  receivedMessages Message[] @relation("ReceivedMessages")
-  aiFeedback    AIFeedback[]
-  aiInteractions AIInteraction[]
-  abTestResults ABTestResult[] // Add reverse relation
-  activeLearningRecords ActiveLearningRecord[] // Add reverse relation
-  userBehaviorAnalytics UserBehaviorAnalytics[] // Add reverse relation
-  preferences UserPreferences? // Add reverse relation
-  
-  // New reverse relations for feature enhancements
-  userTiers     UserTier[]      // Reverse relation for UserTier
-  userBadges    UserBadge[]     // Reverse relation for UserBadge
-  vouchers      Voucher[]       // Reverse relation for Voucher
-  purchases     Purchase[]      // Reverse relation for Purchase
-  
-  // Reverse relations for personality traits and development
-  personalityTraits PersonalityTrait[] // Reverse relation for PersonalityTrait
-  personalityDevelopment PersonalityDevelopment[] // Reverse relation for PersonalityDevelopment
+  sessions      Session[]
+  wishlistItems Wishlist[]
 }
 
 model Listing {
-  id          String    @id @default(uuid())
-  title       String
-  description String
-  price       Float
-  location    String
-  images      String   // JSON array of image URLs
-  features    String   // JSON array of features
-  ownerId     String
-  owner       User      @relation(fields: [ownerId], references: [id])
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @updatedAt
-  bookings    Booking[]
-  reviews     Review[]
-  wishlist    Wishlist[]
-  chatRooms   ChatRoom[]
-}
-
-model Booking {
-  id          String    @id @default(uuid())
-  listingId   String
-  listing     Listing   @relation(fields: [listingId], references: [id])
-  userId      String
-  user        User      @relation(fields: [userId], references: [id])
-  startDate   DateTime
-  endDate     DateTime
-  totalPrice  Float
-  status      String    @default("pending")
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @updatedAt
-  transaction Transaction?
-}
-
-model Wishlist {
-  id        String    @id @default(uuid())
-  userId    String
-  listingId String
-  user      User      @relation(fields: [userId], references: [id])
-  listing   Listing   @relation(fields: [listingId], references: [id])
-  createdAt DateTime  @default(now())
-  
-  @@unique([userId, listingId])
-}
-
-model Transaction {
-  id          String    @id @default(uuid())
-  bookingId   String    @unique
-  booking     Booking   @relation(fields: [bookingId], references: [id])
-  userId      String
-  amount      Float
-  currency    String
-  paymentMethod String
-  status      String
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @updatedAt
+  id            String     @id @default(cuid())
+  title         String
+  description   String
+  price         Float
+  location      String
+  category      String
+  priceUnit     String
+  images        String?
+  features      String?
+  ownerId       String
+  createdAt     DateTime   @default(now())
+  updatedAt     DateTime   @updatedAt
+  bookings      Booking[]
+  owner         User       @relation(fields: [ownerId], references: [id])
+  reviews       Review[]
+  wishlistItems Wishlist[]
 }
 
 model Review {
-  id        String    @id @default(uuid())
-  listingId String
-  listing   Listing   @relation(fields: [listingId], references: [id])
-  userId    String
-  user      User      @relation(fields: [userId], references: [id])
+  id        String   @id @default(cuid())
   rating    Int
   comment   String?
-  createdAt DateTime  @default(now())
-  updatedAt DateTime  @updatedAt
+  userId    String
+  listingId String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  listing   Listing  @relation(fields: [listingId], references: [id])
+  user      User     @relation(fields: [userId], references: [id])
+
+  @@unique([userId, listingId])
+}
+
+model Booking {
+  id         String   @id @default(cuid())
+  startDate  DateTime
+  endDate    DateTime
+  totalPrice Float
+  status     String   @default("pending")
+  userId     String
+  listingId  String
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+  listing    Listing  @relation(fields: [listingId], references: [id])
+  user       User     @relation(fields: [userId], references: [id])
+}
+
+model Wishlist {
+  id        String   @id @default(cuid())
+  userId    String
+  listingId String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  listing   Listing  @relation(fields: [listingId], references: [id])
+  user      User     @relation(fields: [userId], references: [id])
+
+  @@unique([userId, listingId])
+}
+
+model Achievement {
+  id          String    @id @default(cuid())
+  userId      String
+  type        String
+  title       String
+  description String
+  icon        String?
+  earnedAt    DateTime  @default(now())
+  expiresAt   DateTime?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  user        User      @relation(fields: [userId], references: [id])
 }
 
 model Account {
-  id                 String  @id @default(uuid())
+  id                 String  @id @default(cuid())
   userId             String
   type               String
   provider           String
@@ -160,14 +120,15 @@ model Account {
   scope              String?
   id_token           String?
   session_state      String?
-
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  oauth_token_secret String?
+  oauth_token        String?
+  user               User    @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([provider, providerAccountId])
 }
 
 model Session {
-  id           String   @id @default(uuid())
+  id           String   @id @default(cuid())
   sessionToken String   @unique
   userId       String
   expires      DateTime
@@ -180,199 +141,4 @@ model VerificationToken {
   expires    DateTime
 
   @@unique([identifier, token])
-}
-
-// AI Feedback and Interaction Models for REN Self-Improvement
-model AIFeedback {
-  id        String   @id @default(uuid())
-  userId    String?
-  messageId String
-  rating    Int
-  comment   String?
-  createdAt DateTime @default(now())
-  
-  user      User? @relation(fields: [userId], references: [id])
-}
-
-model AIInteraction {
-  id           String   @id @default(uuid())
-  userId       String?
-  userInput    String
-  aiResponse   String
-  actionTaken  String?
-  createdAt    DateTime @default(now())
-  
-  user         User? @relation(fields: [userId], references: [id])
-}
-
-// A/B Testing Model for Response Strategies
-model ABTest {
-  id          String    @id @default(uuid())
-  testName    String    @unique
-  variants    String    // JSON array of test variants
-  durationDays Int
-  metrics     String    // JSON array of metrics to track
-  startDate   DateTime  @default(now())
-  endDate     DateTime?
-  status      String    @default("active") // active, completed, paused
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @updatedAt
-  results     ABTestResult[] // Add reverse relation
-}
-
-model ABTestResult {
-  id          String    @id @default(uuid())
-  testId      String
-  variantName String
-  metricName  String
-  value       Float
-  createdAt   DateTime  @default(now())
-  userId      String?   // Add foreign key field
-  
-  test        ABTest    @relation(fields: [testId], references: [id])
-  user        User?     @relation(fields: [userId], references: [id]) // Add proper relation
-}
-
-// Reinforcement Learning Model
-model ReinforcementLearningRecord {
-  id        String   @id @default(uuid())
-  updates   String   // JSON array of updates applied
-  timestamp DateTime @default(now())
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-}
-
-// Active Learning Model
-model ActiveLearningRecord {
-  id        String   @id @default(uuid())
-  userId    String?
-  results   String   // JSON results of active learning analysis
-  timestamp DateTime @default(now())
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-  
-  user      User? @relation(fields: [userId], references: [id])
-}
-
-// User Behavior Analytics Model
-model UserBehaviorAnalytics {
-  id           String   @id @default(uuid())
-  userId       String?
-  analyticsData String   // JSON analytics data
-  timestamp    DateTime @default(now())
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
-  
-  user         User? @relation(fields: [userId], references: [id])
-}
-
-// User Preferences Model for Explicit Preference Settings
-model UserPreferences {
-  id                     String   @id @default(uuid())
-  userId                 String   @unique
-  preferredCategories    String?  // JSON array of preferred categories
-  preferredPriceRangeMin Float?
-  preferredPriceRangeMax Float?
-  preferredLocations     String?  // JSON array of preferred locations
-  engagementLevel        String?  // low, medium, high
-  // Add time-based preference fields
-  preferredBookingDays   String?  // JSON array of preferred days (Monday, Tuesday, etc.)
-  preferredBookingHours  String?  // JSON array of preferred hours (0-23)
-  createdAt              DateTime @default(now())
-  updatedAt              DateTime @updatedAt
-  
-  user                   User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-}
-
-// New models for feature enhancements
-
-// User Tier System
-model UserTier {
-  id           String    @id @default(uuid())
-  userId       String    @unique
-  tier         String    // new, bronze, silver, gold
-  points       Int       @default(0)
-  totalListingsRented Int @default(0) // For renters
-  totalListingsOwned Int @default(0)  // For owners
-  totalSuccessfulRentals Int @default(0) // For renters
-  createdAt    DateTime  @default(now())
-  updatedAt    DateTime  @updatedAt
-  user         User      @relation(fields: [userId], references: [id])
-}
-
-// User Badges for In-App Purchases
-model UserBadge {
-  id           String    @id @default(uuid())
-  userId       String
-  badgeType    String    // verified, gold_owner, gold_renter
-  purchaseId   String?
-  expiresAt    DateTime?
-  createdAt    DateTime  @default(now())
-  user         User      @relation(fields: [userId], references: [id])
-}
-
-// Vouchers for In-App Purchases
-model Voucher {
-  id           String    @id @default(uuid())
-  userId       String
-  voucherType  String    // item, owner, seasonal
-  code         String    @unique
-  discount     Float
-  expiresAt    DateTime?
-  used         Boolean   @default(false)
-  usedAt       DateTime?
-  createdAt    DateTime  @default(now())
-  user         User      @relation(fields: [userId], references: [id])
-}
-
-// Purchase Records for In-App Purchases
-model Purchase {
-  id           String    @id @default(uuid())
-  userId       String
-  itemType     String    // badge, voucher
-  itemId       String?
-  amount       Float
-  currency     String    @default("PHP")
-  status       String    @default("completed")
-  createdAt    DateTime  @default(now())
-  user         User      @relation(fields: [userId], references: [id])
-}
-
-// Commission Rates for Tiered Commission Structure
-model CommissionRate {
-  id           String    @id @default(uuid())
-  durationType String    // daily, weekly, monthly
-  rate         Float     // percentage (e.g., 7.0 for 7%)
-  createdAt    DateTime  @default(now())
-  updatedAt    DateTime  @updatedAt
-}
-
-// Personality Traits Model for REN AI Character Development
-model PersonalityTrait {
-  id           String    @id @default(uuid())
-  userId       String?
-  traitName    String    // Name of the personality trait (e.g., "Malasakit", "Kapamilya")
-  traitValue   Float     // Value of the trait (0.0 to 1.0)
-  interactions Int       @default(0) // Number of interactions that contributed to this trait
-  lastUpdated  DateTime  @default(now())
-  createdAt    DateTime  @default(now())
-  updatedAt    DateTime  @updatedAt
-  
-  user         User? @relation(fields: [userId], references: [id])
-
-  @@unique([userId, traitName])
-}
-
-// Personality Development History for tracking trait evolution
-model PersonalityDevelopment {
-  id           String    @id @default(uuid())
-  userId       String?
-  traitName    String    // Name of the personality trait
-  oldValue     Float     // Previous value of the trait
-  newValue     Float     // New value of the trait
-  reason       String    // Reason for the change
-  interactionId String?  // Reference to the interaction that caused the change
-  createdAt    DateTime  @default(now())
-  
-  user         User? @relation(fields: [userId], references: [id])
 }

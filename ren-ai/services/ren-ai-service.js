@@ -2,7 +2,7 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.renAIService = exports.RenAIService = void 0;
 const client_1 = require("@prisma/client");
-const chat_service_1 = require("@/lib/chat-service");
+const chat_service_1 = require("./mock-chat-service");
 const prisma = new client_1.PrismaClient();
 class RenAIService {
     constructor() {

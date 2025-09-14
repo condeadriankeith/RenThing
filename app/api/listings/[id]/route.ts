@@ -6,11 +6,14 @@ import { prisma } from "@/lib/prisma"
 // GET /api/listings/[id] - Get single listing
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    // Await params as per Next.js dynamic API requirements
+    const { id } = await params;
+    
     const listing = await prisma.listing.findUnique({
-      where: { id: params.id },
+      where: { id: id },
       include: {
         owner: {
           select: {
@@ -54,8 +57,8 @@ export async function GET(
 
     const listingWithDetails = {
       ...listing,
-      images: JSON.parse(listing.images || "[]"),
-      features: JSON.parse(listing.features || "[]"),
+      images: typeof listing.images === 'string' ? JSON.parse(listing.images || "[]") : [],
+      features: typeof listing.features === 'string' ? JSON.parse(listing.features || "[]") : [],
       averageRating,
       reviewCount: listing.reviews.length,
     }
@@ -73,7 +76,7 @@ export async function GET(
 // PUT /api/listings/[id] - Update listing
 export async function PUT(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const session = await getServerSession(authOptions)
@@ -85,11 +88,14 @@ export async function PUT(
       )
     }
 
+    // Await params as per Next.js dynamic API requirements
+    const { id } = await params;
+    
     const body = await request.json()
     const { title, description, price, location, images, features } = body
 
     const existingListing = await prisma.listing.findUnique({
-      where: { id: params.id }
+      where: { id: id }
     })
 
     if (!existingListing) {
@@ -107,7 +113,7 @@ export async function PUT(
     }
 
     const updatedListing = await prisma.listing.update({
-      where: { id: params.id },
+      where: { id: id },
       data: {
         ...(title && { title }),
         ...(description && { description }),
@@ -140,7 +146,7 @@ export async function PUT(
 // DELETE /api/listings/[id] - Delete listing
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const session = await getServerSession(authOptions)
@@ -152,8 +158,11 @@ export async function DELETE(
       )
     }
 
+    // Await params as per Next.js dynamic API requirements
+    const { id } = await params;
+    
     const existingListing = await prisma.listing.findUnique({
-      where: { id: params.id }
+      where: { id: id }
     })
 
     if (!existingListing) {
@@ -171,7 +180,7 @@ export async function DELETE(
     }
 
     await prisma.listing.delete({
-      where: { id: params.id }
+      where: { id: id }
     })
 
     return NextResponse.json({ success: true })

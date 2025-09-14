@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server"
-import { prisma } from "@/lib/prisma"
+import { edgeConfigDB } from "@/lib/edge-config/edge-config-db"
 import { paymentService } from "@/lib/payment-service"
 import { emailService } from "@/lib/email-service"
 
@@ -7,7 +7,7 @@ export async function GET(request: NextRequest) {
   try {
     const checks = await Promise.allSettled([
       // Database health check
-      prisma.$queryRaw`SELECT 1`,
+      edgeConfigDB.findMany("health"),
       
       // Payment service health check
       paymentService.healthCheck(),

@@ -21,7 +21,7 @@ export async function POST(req: Request) {
     const model = process.env.OLLAMA_MODEL ?? "llama3.1:8b";
 
     if (!ollamaEnabled) {
-      // If Ollama intentionally disabled, provide a predictable fallback for greetings
+      // If Ollama is disabled, provide a predictable fallback for greetings
       if (/^(hi|hello|hey|good (morning|afternoon|evening))/i.test(lastText)) {
         return NextResponse.json({ reply: "Hi — I'm REN! How can I help today?" });
       }
@@ -82,8 +82,7 @@ Response guidelines:
       messageCount: fullMessages.length
     });
 
-    // Call Ollama with optimized settings for faster response
-    const timeout = 20000; // Reduced timeout for better UX
+    // Use Ollama
     const resp = await axios.post(
       `${host}/api/chat`,
       {
@@ -91,14 +90,14 @@ Response guidelines:
         messages: fullMessages,
         stream: false,
         options: {
-          temperature: 0.5, // Lower temperature for more focused responses
-          top_p: 0.8, // Slightly reduced for more deterministic responses
+          temperature: 0.7,
+          top_p: 0.9,
           repeat_penalty: 1.1,
-          num_predict: 200 // Significantly limit response length for faster responses
+          num_predict: 150
         }
       },
-      { 
-        timeout,
+      {
+        timeout: 15000,
         headers: {
           'Content-Type': 'application/json'
         }
@@ -150,13 +149,18 @@ Response guidelines:
   } catch (err: any) {
     console.error("AI generate error:", err?.message ?? err);
     
+    // Check if it's a timeout error
+    const isTimeout = err?.code === 'ECONNABORTED' || err?.message?.includes('timeout');
+    
     // Faster fallback responses
     if (/^(hi|hello|hey|good (morning|afternoon|evening))/i.test(lastText)) {
       return NextResponse.json({
-        reply: "Hi — I'm REN! I'm having trouble right now. Try again or use quick options.",
+        reply: `Hi — I'm REN! ${isTimeout ? "I'm taking a bit longer to respond right now. Try a simpler question." : "I'm having trouble right now. Try again or use quick options."}`,
       });
     }
 
-    return NextResponse.json({ error: "AI service unavailable" }, { status: 503 });
+    return NextResponse.json({ 
+      error: isTimeout ? "AI response timeout - please try a simpler question" : "AI service unavailable" 
+    }, { status: 503 });
   }
 }

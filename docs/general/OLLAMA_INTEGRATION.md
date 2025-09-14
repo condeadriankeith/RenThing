@@ -14,7 +14,7 @@ Ollama integration provides a way to run the AI assistant locally. This approach
 ## Prerequisites
 
 1. [Ollama](https://ollama.com/) installed on your machine
-2. The Llama 3.1 8B model pulled locally
+2. The phi3:mini model will be automatically pulled when you run `npm install`
 
 ## Setup Instructions
 
@@ -22,10 +22,12 @@ Ollama integration provides a way to run the AI assistant locally. This approach
 
 Follow the installation instructions on the [Ollama website](https://ollama.com/).
 
-### 2. Pull the Llama 3.1 8B Model
+### 2. Pull the phi3:mini Model
+
+The phi3:mini model will be automatically pulled when you run `npm install`. You can also manually pull it:
 
 ```bash
-ollama pull llama3.1:8b
+ollama pull phi3:mini
 ```
 
 ### 3. Configure Environment Variables
@@ -36,7 +38,7 @@ Add the following to your `.env.local` file:
 # Ollama Configuration for local AI model
 OLLAMA_ENABLED=true
 OLLAMA_HOST=http://localhost:11434
-OLLAMA_MODEL=llama3.1:8b
+OLLAMA_MODEL=phi3:mini
 ```
 
 ### 4. Start the Development Server
@@ -47,7 +49,7 @@ pnpm dev
 
 ## How It Works
 
-The AI service in RenThing uses your locally hosted Llama 3.1 8B model when Ollama is enabled.
+The AI service in RenThing uses your locally hosted phi3:mini model when Ollama is enabled.
 
 ## Configuration Options
 
@@ -55,7 +57,7 @@ The AI service in RenThing uses your locally hosted Llama 3.1 8B model when Olla
 |----------|-------------|---------------|
 | `OLLAMA_ENABLED` | Enable/disable Ollama integration | `false` |
 | `OLLAMA_HOST` | Ollama API endpoint | `http://localhost:11434` |
-| `OLLAMA_MODEL` | Model name to use | `llama3.1:8b` |
+| `OLLAMA_MODEL` | Model name to use | `phi3:mini` |
 
 ## Production Considerations
 
@@ -71,7 +73,7 @@ For production deployments, it's recommended to:
 If you get an error about the model not being found, ensure you've pulled it:
 
 ```bash
-ollama pull llama3.1:8b
+ollama pull phi3:mini
 ```
 
 ### Connection Issues

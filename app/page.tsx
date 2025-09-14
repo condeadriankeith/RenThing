@@ -31,7 +31,7 @@ export default function HomePage() {
       {/* Hero Section */}
       <main className="container mx-auto px-3 sm:px-4 lg:px-6 xl:px-8 py-12 sm:py-16 md:py-20 lg:py-24">
         <div className="max-w-4xl mx-auto text-center">
-          <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl xl:text-7xl font-black text-gray-900 dark:text-white mb-6 sm:mb-8 hero-text overflow-visible">
+          <h1 className="text-5xl sm:text-6xl md:text-7xl lg:text-8xl xl:text-9xl font-black text-gray-900 dark:text-white mb-6 sm:mb-8 hero-text overflow-visible">
             Rent <span className="aurora-text-mask">Anything</span>, Anytime
           </h1>
           <p className="text-base sm:text-lg md:text-xl text-gray-600 dark:text-gray-300 mb-6 sm:mb-8 max-w-2xl mx-auto px-4">
@@ -52,7 +52,7 @@ export default function HomePage() {
 
         {/* Search Bar */}
         <div className="max-w-3xl mx-auto mt-8 sm:mt-12 mb-12 sm:mb-16 bg-white dark:bg-gray-800 rounded-xl shadow-xl p-3 sm:p-4">
-          <form onSubmit={handleSearch} className="flex flex-col md:flex-row gap-2">
+          <form onSubmit={handleSearch} className="flex flex-col md:flex-row md:items-center gap-2">
             <div className="flex-1 relative">
               <input 
                 type="text" 
@@ -75,7 +75,7 @@ export default function HomePage() {
             </div>
             <Button 
               type="submit"
-              className="px-4 sm:px-6 py-2.5 sm:py-3 bg-blue-600 text-white font-bold rounded-lg hover:bg-blue-700 transition-colors min-w-[80px] sm:min-w-[100px] text-sm sm:text-base"
+              className="px-4 sm:px-6 py-2.5 sm:py-3 bg-blue-600 text-white font-bold rounded-lg hover:bg-blue-700 transition-colors min-w-[80px] sm:min-w-[100px] text-sm sm:text-base self-end md:self-auto"
             >
               Search
             </Button>

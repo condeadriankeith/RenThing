@@ -55,8 +55,10 @@ export default function ClientLayout({
 
   // Validate if a path exists in the project map
   const isValidPath = async (path: string): Promise<boolean> => {
+    console.log("Validating path:", path);
     // Check exact path matches
     if (findRouteByPath(path)) {
+      console.log("Path found in project map:", path);
       return true;
     }
     
@@ -103,17 +105,21 @@ export default function ClientLayout({
       return basePath === '/browse';
     }
     
+    console.log("Path not found in validation:", path);
     return false;
   }
 
   // Handle navigation actions from REN with path validation
   const handleRenNavigation = async (path: string) => {
+    console.log("REN attempting to navigate to:", path);
     // Validate the path before navigating
     const isValid = await isValidPath(path);
+    console.log("Path validation result:", isValid);
     if (isValid) {
-      router.push(path)
+      console.log("Navigating to:", path);
+      router.push(path);
     } else {
-      console.warn(`REN tried to navigate to invalid path: ${path}`)
+      console.warn(`REN tried to navigate to invalid path: ${path}`);
       // Optionally show an error message to the user
     }
   }

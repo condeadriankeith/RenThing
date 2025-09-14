@@ -56,7 +56,16 @@ export default function LoginPage() {
           ok: result.ok,
           url: result.url
         })
-        throw new Error(result.error)
+        
+        // Provide more specific error messages based on the error type
+        let errorMessage = "Login failed. Please check your credentials and try again."
+        if (result.error === "CredentialsSignin") {
+          errorMessage = "Invalid email or password. Please check your credentials and try again."
+        } else if (result.error.includes("Prisma")) {
+          errorMessage = "Database connection error. Please contact support."
+        }
+        
+        throw new Error(errorMessage)
       }
 
       if (result?.ok) {
@@ -70,15 +79,9 @@ export default function LoginPage() {
       const errorMessage = error instanceof Error ? error.message : "Login failed"
       console.error("Login error:", error) // Debug log
       
-      // Provide more specific error messages
-      let displayMessage = errorMessage
-      if (errorMessage.includes("CredentialsSignin")) {
-        displayMessage = "Invalid email or password. Please check your credentials and try again."
-      }
-      
       toast({
         title: "Login Failed",
-        description: displayMessage,
+        description: errorMessage,
         variant: "destructive",
       })
     } finally {

@@ -1,8 +1,0 @@
-{
-  "id": "20250904_remove_xendit_integration",
-  "name": "remove_xendit_integration",
-  "checksum": "07ef8060984202e920f1343d5a10000000000000000000000000000000000000",
-  "appliedAt": "2025-09-04T08:03:00.000Z",
-  "migrationScript": "ALTER TABLE \"Transaction\" DROP COLUMN \"xenditInvoiceId\";",
-  "rollbackScript": "ALTER TABLE \"Transaction\" ADD COLUMN \"xenditInvoiceId\" TEXT;"
-}

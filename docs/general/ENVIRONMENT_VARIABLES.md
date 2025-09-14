@@ -142,4 +142,26 @@ SENTRY_DSN="https://xxxxxxxx@xxxxxxx.ingest.sentry.io/xxxxxxx"
    - API Secret: `SHtjXMsHfCGM7ghUlvO_pJ_t95I`
 2. Images will be stored in folders based on usage (e.g., `renthing/listings`)
 
+### Ollama AI Service (Local AI Model)
+
+For local AI functionality, Ollama can be used to run models on your machine:
+
+- **OLLAMA_ENABLED**: Enable/disable Ollama integration
+  - Values: `true`, `false`
+  - Default: `false`
+- **OLLAMA_HOST**: Ollama API endpoint
+  - Default: `http://localhost:11434`
+- **OLLAMA_MODEL**: Model name to use
+  - Default: `phi3:mini`
+
+When `OLLAMA_ENABLED` is set to `true`, the phi3:mini model will be automatically pulled during `npm install`.
+
+Example configuration:
+```env
+# Ollama Configuration for local AI model
+OLLAMA_ENABLED=true
+OLLAMA_HOST=http://localhost:11434
+OLLAMA_MODEL=phi3:mini
+```
+
 ### Email Service

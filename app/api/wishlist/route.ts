@@ -1,9 +1,7 @@
 import { NextRequest, NextResponse } from "next/server"
 import { getServerSession } from "next-auth"
 import { authOptions } from "@/lib/auth"
-import { PrismaClient } from "@prisma/client"
-
-const prisma = new PrismaClient()
+import { prisma } from "@/lib/prisma"
 
 // GET /api/wishlist - Get user's wishlist
 export async function GET(request: NextRequest) {
@@ -49,8 +47,8 @@ export async function GET(request: NextRequest) {
         description: item.listing.description,
         price: item.listing.price,
         location: item.listing.location,
-        images: typeof item.listing.images === 'string' ? JSON.parse(item.listing.images || '[]') : item.listing.images,
-        features: typeof item.listing.features === 'string' ? JSON.parse(item.listing.features || '[]') : item.listing.features,
+        images: typeof item.listing.images === 'string' ? JSON.parse(item.listing.images || '[]') : [],
+        features: typeof item.listing.features === 'string' ? JSON.parse(item.listing.features || '[]') : [],
         owner: item.listing.owner,
         createdAt: item.listing.createdAt
       }
@@ -153,8 +151,8 @@ export async function POST(request: NextRequest) {
           description: wishlistItem.listing.description,
           price: wishlistItem.listing.price,
           location: wishlistItem.listing.location,
-          images: typeof wishlistItem.listing.images === 'string' ? JSON.parse(wishlistItem.listing.images || '[]') : wishlistItem.listing.images,
-          features: typeof wishlistItem.listing.features === 'string' ? JSON.parse(wishlistItem.listing.features || '[]') : wishlistItem.listing.features,
+          images: typeof wishlistItem.listing.images === 'string' ? JSON.parse(wishlistItem.listing.images || '[]') : [],
+          features: typeof wishlistItem.listing.features === 'string' ? JSON.parse(wishlistItem.listing.features || '[]') : [],
           owner: wishlistItem.listing.owner,
           createdAt: wishlistItem.listing.createdAt
         }

@@ -1,19 +1,18 @@
 import { NextRequest, NextResponse } from "next/server"
 import { getServerSession } from "next-auth"
 import { authOptions } from "@/lib/auth"
-import { PrismaClient } from "@prisma/client"
+import { prisma } from "@/lib/prisma"
 import { purchaseService } from "@/lib/purchase-service"
-
-const prisma = new PrismaClient()
 
 // GET /api/users/[id] - Get user profile
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const session = await getServerSession(authOptions)
-    const userId = params.id
+    // Await params as per Next.js dynamic API requirements
+    const { id: userId } = await params;
 
     if (!userId) {
       return NextResponse.json(
@@ -23,35 +22,20 @@ export async function GET(
     }
 
     // Fetch user with their listings and basic stats
-    const user = await prisma.user.findUnique({
+    const user: any = await prisma.user.findUnique({
       where: { id: userId },
-      select: {
-        id: true,
-        name: true,
-        email: true,
-        avatar: true,
-        bio: true,
-        location: true,
-        socialLinks: true,
-        responseTime: true,
-        isVerified: true,
-        theme: true,
-        background: true,
-        createdAt: true,
+      include: {
         listings: {
           include: {
             reviews: {
-              select: {
-                rating: true,
-                comment: true,
+              include: {
                 user: {
                   select: {
                     id: true,
                     name: true,
                     avatar: true
                   }
-                },
-                createdAt: true
+                }
               },
               orderBy: {
                 createdAt: 'desc'
@@ -67,8 +51,7 @@ export async function GET(
           where: {
             status: 'completed'
           },
-          select: {
-            id: true,
+          include: {
             listing: {
               select: {
                 title: true,
@@ -123,24 +106,24 @@ export async function GET(
     const totalCompletedBookings = user.bookings.length
     
     // Calculate average rating from all reviews on user's listings
-    const allReviews = user.listings.flatMap(listing => listing.reviews)
+    const allReviews = user.listings.flatMap((listing: any) => listing.reviews)
     const averageRating = allReviews.length > 0 
-      ? allReviews.reduce((sum, review) => sum + review.rating, 0) / allReviews.length 
+      ? allReviews.reduce((sum: number, review: any) => sum + review.rating, 0) / allReviews.length 
       : 0
     const totalReviews = allReviews.length
 
     // Format listings for response
-    const formattedListings = user.listings.map(listing => ({
+    const formattedListings = user.listings.map((listing: any) => ({
       id: listing.id,
       title: listing.title,
       description: listing.description,
       price: listing.price,
       location: listing.location,
-      images: JSON.parse(listing.images),
-      features: JSON.parse(listing.features),
+      images: typeof listing.images === 'string' ? JSON.parse(listing.images || "[]") : [],
+      features: typeof listing.features === 'string' ? JSON.parse(listing.features || "[]") : [],
       createdAt: listing.createdAt,
       averageRating: listing.reviews.length > 0 
-        ? listing.reviews.reduce((sum, review) => sum + review.rating, 0) / listing.reviews.length 
+        ? listing.reviews.reduce((sum: number, review: any) => sum + review.rating, 0) / listing.reviews.length 
         : 0,
       reviewCount: listing.reviews.length,
       reviews: listing.reviews
@@ -150,8 +133,8 @@ export async function GET(
     const isOwnProfile = session?.user?.id === userId
 
     // Get user badges and purchases if this is the user's own profile
-    let userBadges = [];
-    let userPurchases = [];
+    let userBadges: any[] = [];
+    let userPurchases: any[] = [];
     if (isOwnProfile) {
       try {
         userBadges = await purchaseService.getUserBadges(userId);

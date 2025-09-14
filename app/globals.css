@@ -271,6 +271,7 @@
   line-height: 1.1 !important;
   overflow: visible !important;
   padding-bottom: 0.1em;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
 /* Responsive line-height adjustments */
@@ -300,6 +301,8 @@
   animation: aurora-gradient 8s ease infinite;
   overflow: visible;
   padding-bottom: inherit;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+  -webkit-text-stroke: 1px rgba(0, 0, 0, 0.1);
 }
 
 .aurora-mask {

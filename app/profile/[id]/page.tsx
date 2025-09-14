@@ -32,7 +32,8 @@ import {
   Link as LinkIcon,
   CheckCircle,
   Award,
-  Zap
+  Zap,
+  Trash2
 } from "lucide-react"
 
 interface UserProfile {
@@ -117,6 +118,7 @@ export default function UserProfilePage() {
   const [profile, setProfile] = useState<UserProfile | null>(null)
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const [deletingListingId, setDeletingListingId] = useState<string | null>(null)
 
   const userId = params.id as string
   const isOwnProfile = session?.user?.id === userId
@@ -185,6 +187,44 @@ export default function UserProfilePage() {
       setProfile(prev => prev ? { ...prev, background: updatedProfile.background } : null)
     } catch (error) {
       console.error('Error updating background:', error)
+    }
+  }
+
+  const handleDeleteListing = async (listingId: string) => {
+    if (!isOwnProfile) return
+    
+    if (!confirm("Are you sure you want to delete this listing? This action cannot be undone.")) {
+      return
+    }
+    
+    try {
+      setDeletingListingId(listingId)
+      
+      const response = await fetch(`/api/listings/${listingId}`, {
+        method: 'DELETE',
+      })
+      
+      if (!response.ok) {
+        throw new Error('Failed to delete listing')
+      }
+      
+      // Remove the listing from the UI
+      setProfile(prev => {
+        if (!prev) return null
+        return {
+          ...prev,
+          listings: prev.listings.filter(listing => listing.id !== listingId),
+          stats: {
+            ...prev.stats,
+            totalListings: prev.stats.totalListings - 1
+          }
+        }
+      })
+    } catch (error) {
+      console.error('Error deleting listing:', error)
+      alert('Failed to delete listing. Please try again.')
+    } finally {
+      setDeletingListingId(null)
     }
   }
 
@@ -407,52 +447,152 @@ export default function UserProfilePage() {
               </Card>
             ) : (
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-                {profile.listings.map((listing) => (
-                  <Card key={listing.id} className="group hover:shadow-lg transition-shadow">
-                    <Link href={`/listing/${listing.id}`}>
-                      <div className="relative">
-                        <img
-                          src={listing.images[0] || "/placeholder.svg"}
-                          alt={listing.title}
-                          className="w-full h-48 object-cover rounded-t-lg"
-                        />
-                        <div className="absolute top-2 right-2 flex space-x-1">
-                          <WishlistButton 
-                            listingId={listing.id} 
-                            variant="ghost" 
-                            size="sm" 
-                          />
-                          <ShareButton
-                            listingId={listing.id}
-                            listingTitle={listing.title}
-                            listingPrice={listing.price}
-                            listingImage={listing.images[0]}
-                            variant="ghost"
-                            size="sm"
-                          />
-                        </div>
-                      </div>
-                      <div className="p-4">
-                        <h3 className="font-semibold text-lg mb-1 group-hover:text-blue-600 transition-colors">
-                          {listing.title}
-                        </h3>
-                        <p className="text-gray-600 dark:text-gray-400 text-sm mb-2 line-clamp-2">
-                          {listing.description}
-                        </p>
-                        <div className="flex items-center justify-between">
-                          <span className="font-bold text-lg">₱{listing.price.toFixed(2)}</span>
-                          <div className="flex items-center space-x-1">
-                            <Star className="h-4 w-4 fill-yellow-400 text-yellow-400" />
-                            <span className="text-sm">
-                              {listing.averageRating > 0 ? listing.averageRating.toFixed(1) : '—'}
-                              <span className="text-gray-500"> ({listing.reviewCount})</span>
-                            </span>
+                {profile.listings.map((listing) => {
+                  // Determine category based on title and features
+                  let category = "tools" // default
+                  const titleLower = listing.title.toLowerCase()
+                  
+                  // Extract features text properly
+                  let featuresText = ""
+                  if (Array.isArray(listing.features)) {
+                    featuresText = listing.features.join(" ").toLowerCase()
+                  }
+                  
+                  const searchText = titleLower + " " + featuresText
+                  
+                  if (searchText.includes("macbook") || searchText.includes("ipad") || searchText.includes("camera") || searchText.includes("drone") || searchText.includes("projector")) {
+                    category = "electronics"
+                  } else if (searchText.includes("tesla") || searchText.includes("bmw") || searchText.includes("bike") || searchText.includes("motorcycle") || searchText.includes("van") || searchText.includes("rv") || searchText.includes("atv") || searchText.includes("boat")) {
+                    category = "vehicles"
+                  } else if (searchText.includes("piano") || searchText.includes("guitar") || searchText.includes("drum") || searchText.includes("violin") || searchText.includes("keyboard")) {
+                    category = "services" // Musical instruments as services
+                  } else if (searchText.includes("golf") || searchText.includes("surf") || searchText.includes("ski") || searchText.includes("kayak") || searchText.includes("tennis") || searchText.includes("camping") || searchText.includes("paddleboard")) {
+                    category = "sports"
+                  } else if (searchText.includes("tent") || searchText.includes("wedding") || searchText.includes("party") || searchText.includes("bounce") || searchText.includes("dj") || searchText.includes("karaoke")) {
+                    category = "events"
+                  }
+
+                  return (
+                    <div key={listing.id} className="listing-card group">
+                      <Link href={`/listing/${listing.id}`}>
+                        <div className="relative overflow-hidden rounded-t-2xl">
+                          <div className="aspect-[4/3] overflow-hidden bg-gray-100 dark:bg-gray-700">
+                            <img
+                              src={listing.images[0] || "/placeholder.svg"}
+                              alt={listing.title}
+                              className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500 rounded-t-2xl"
+                            />
+                            {/* Overlay gradient */}
+                            <div className="absolute inset-0 bg-gradient-to-t from-black/30 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 rounded-t-2xl" />
+                          </div>
+                          
+                          {/* Top overlay buttons - Hide on small screens */}
+                          <div className="hidden sm:flex absolute top-3 right-3 space-x-2 opacity-0 group-hover:opacity-100 transition-all duration-200 transform translate-y-1 group-hover:translate-y-0">
+                            <WishlistButton 
+                              listingId={listing.id} 
+                              variant="ghost" 
+                              size="sm"
+                              className="bg-white/95 hover:bg-white shadow-lg h-9 w-9 backdrop-blur-sm border-0 rounded-full"
+                            />
+                            <ShareButton
+                              listingId={listing.id}
+                              listingTitle={listing.title}
+                              listingPrice={listing.price}
+                              listingImage={listing.images[0]}
+                              variant="ghost"
+                              size="sm"
+                              className="bg-white/95 hover:bg-white shadow-lg h-9 w-9 backdrop-blur-sm border-0 rounded-full"
+                            />
+                          </div>
+                          
+                          {/* Category badge - Smaller on mobile */}
+                          <div className="absolute bottom-3 left-3">
+                            <Badge className="bg-white/95 text-gray-800 hover:bg-white shadow-lg font-medium px-3 py-1.5 rounded-full border-0 backdrop-blur-sm text-xs">
+                              {category}
+                            </Badge>
+                          </div>
+                          
+                          {/* Availability indicator - Smaller on mobile */}
+                          <div className="absolute top-3 left-3">
+                            <div className="bg-green-500 text-white text-xs font-medium px-2.5 py-1 rounded-full shadow-lg">
+                              Available
+                            </div>
                           </div>
                         </div>
-                      </div>
-                    </Link>
-                  </Card>
-                ))}
+                        
+                        <div className="listing-content border border-gray-200 dark:border-gray-700 rounded-b-2xl p-4">
+                          {/* Title and description */}
+                          <div className="space-y-2">
+                            <h3 className="listing-title font-semibold text-lg mb-1 group-hover:text-blue-600 transition-colors">
+                              {listing.title}
+                            </h3>
+                            <p className="listing-description text-gray-600 dark:text-gray-400 text-sm mb-2 line-clamp-2">
+                              {listing.description}
+                            </p>
+                          </div>
+                          
+                          {/* Rating and location - Simplified on mobile */}
+                          <div className="flex items-center justify-between">
+                            <div className="flex items-center space-x-1">
+                              <Star className="h-4 w-4 fill-yellow-400 text-yellow-400" />
+                              <span className="text-sm font-medium text-gray-900 dark:text-white">
+                                {listing.averageRating > 0 ? listing.averageRating.toFixed(1) : '—'}
+                              </span>
+                              <span className="text-sm text-gray-500">({listing.reviewCount})</span>
+                            </div>
+                            <div className="flex items-center text-sm text-gray-500">
+                              <MapPin className="h-4 w-4 mr-1 flex-shrink-0" />
+                              <span className="truncate max-w-[80px]">{listing.location}</span>
+                            </div>
+                          </div>
+                          
+                          {/* Pricing section */}
+                          <div className="pt-3 border-t border-gray-100 dark:border-gray-700">
+                            <div className="flex items-center justify-between">
+                              <div className="flex items-baseline space-x-1">
+                                <span className="text-xl font-bold text-gray-900 dark:text-white">
+                                  ₱{listing.price.toLocaleString()}
+                                </span>
+                                <span className="text-sm text-gray-500">/day</span>
+                              </div>
+                              <div className="text-right">
+                                <div className="text-xs text-gray-500">Total reviews</div>
+                                <div className="text-sm font-medium text-gray-900 dark:text-white">{listing.reviewCount}</div>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      </Link>
+                      {isOwnProfile && (
+                        <div className="px-4 pb-4">
+                          <Button
+                            variant="destructive"
+                            size="sm"
+                            onClick={(e) => {
+                              e.preventDefault()
+                              e.stopPropagation()
+                              handleDeleteListing(listing.id)
+                            }}
+                            disabled={deletingListingId === listing.id}
+                            className="w-full rounded-xl"
+                          >
+                            {deletingListingId === listing.id ? (
+                              <>
+                                <SpinnerLoader className="h-4 w-4 mr-2" />
+                                Deleting...
+                              </>
+                            ) : (
+                              <>
+                                <Trash2 className="h-4 w-4 mr-2" />
+                                Delete
+                              </>
+                            )}
+                          </Button>
+                        </div>
+                      )}
+                    </div>
+                  )
+                })}
               </div>
             )}
           </TabsContent>

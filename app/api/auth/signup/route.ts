@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server"
 import bcrypt from "bcryptjs"
-import { prisma } from "@/lib/prisma"
+import { edgeConfigDB } from "@/lib/edge-config/edge-config-db"
 import { emailTriggers } from "@/lib/email-triggers"
 import rateLimit from "@/lib/rate-limit"
 import { logger } from "@/lib/logger"
@@ -49,9 +49,8 @@ export async function POST(request: Request) {
       );
     }
 
-    const existingUser = await prisma.user.findUnique({
-      where: { email },
-    });
+    const allUsers = await edgeConfigDB.findMany<{id: string, email: string}>("user");
+    const existingUser = allUsers.find(u => u.email === email);
 
     if (existingUser) {
       return NextResponse.json(
@@ -64,13 +63,12 @@ export async function POST(request: Request) {
 
     const userRole = ADMIN_EMAILS.includes(email) ? "ADMIN" : "USER";
 
-    const user = await prisma.user.create({
-      data: {
-        email,
-        name,
-        password: hashedPassword,
-        role: userRole,
-      },
+    const user = await edgeConfigDB.create("user", {
+      id: Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15),
+      email,
+      name,
+      password: hashedPassword,
+      role: userRole,
     });
 
     await emailTriggers.onUserWelcome(user.id);

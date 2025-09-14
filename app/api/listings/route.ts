@@ -2,13 +2,11 @@ import { NextRequest, NextResponse } from "next/server"
 import { getServerSession } from "next-auth"
 import { authOptions } from "@/lib/auth"
 import { prisma } from "@/lib/prisma"
+import { edgeConfigDB } from "@/lib/edge-config/edge-config-db"
 
 // GET /api/listings - Get all listings
 export async function GET(request: NextRequest) {
   try {
-    // Add more detailed error logging
-    console.log('Fetching listings from database...')
-    
     // Check if prisma is available
     if (!prisma) {
       console.error("Prisma client is not available for fetching listings")
@@ -70,62 +68,49 @@ export async function GET(request: NextRequest) {
 
     const skip = (page - 1) * limit
 
-    const where = {
-      ...(search && {
-        OR: [
-          { title: { contains: search } },
-          { description: { contains: search } },
-        ],
-      }),
-      ...(location && {
-        location: { contains: location },
-      }),
+    // Build where clause for Prisma
+    const where: any = {
       price: {
         gte: minPrice,
         lte: maxPrice,
       },
     }
 
+    if (search) {
+      where.OR = [
+        { title: { contains: search, mode: 'insensitive' } },
+        { description: { contains: search, mode: 'insensitive' } },
+      ]
+    }
+
+    if (location) {
+      where.location = { contains: location, mode: 'insensitive' }
+    }
+
     console.log('Query parameters:', { page, limit, search, minPrice, maxPrice, location })
 
-    const listingsData = await prisma.listing.findMany({
-      where,
-      skip,
-      take: limit,
-      include: {
-        owner: {
-          select: {
-            id: true,
-            name: true,
-            email: true,
-          },
-        },
-        reviews: {
-          select: {
-            rating: true,
-          },
-        },
-      },
-      orderBy: { createdAt: "desc" },
-    })
+    // Fetch listings with pagination
+    const [listingsData, total] = await Promise.all([
+      prisma.listing.findMany({
+        where,
+        skip,
+        take: limit,
+        orderBy: {
+          createdAt: 'desc'
+        }
+      }),
+      prisma.listing.count({ where })
+    ])
 
     console.log(`Found ${listingsData.length} listings`)
 
-    const total = await prisma.listing.count({ where })
-
-    const listings = listingsData.map((listing) => {
-      const { reviews, ...restOfListing } = listing
-      const averageRating =
-        reviews.length > 0
-          ? reviews.reduce((acc, r) => acc + r.rating, 0) / reviews.length
-          : 0
-
+    const listings = listingsData.map((listing: any) => {
       return {
-        ...restOfListing,
-        images: JSON.parse(listing.images || "[]"),
-        features: JSON.parse(listing.features || "[]"),
-        averageRating,
-        reviewCount: reviews.length,
+        ...listing,
+        images: typeof listing.images === "string" ? JSON.parse(listing.images || "[]") : listing.images || [],
+        features: typeof listing.features === "string" ? JSON.parse(listing.features || "[]") : listing.features || [],
+        averageRating: 0, // For now, we'll set this to 0 since we're not handling reviews in this implementation
+        reviewCount: 0,   // For now, we'll set this to 0 since we're not handling reviews in this implementation
       }
     })
 
@@ -173,32 +158,64 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json()
-    const { title, description, price, location, images, features } = body
+    const { title, description, price, location, images, features, category, priceUnit } = body
 
-    if (!title || !description || !price || !location) {
+    if (!title || !description || !price || !location || !category || !priceUnit) {
       return NextResponse.json(
         { error: "Missing required fields" },
         { status: 400 }
       )
     }
 
+    // Create listing in Prisma database
     const newListing = await prisma.listing.create({
       data: {
         title,
         description,
         price: parseFloat(price),
         location,
-        images: JSON.stringify(images || []),
-        features: JSON.stringify(features || []),
+        category,
+        priceUnit,
+        images: images ? JSON.stringify(images) : JSON.stringify([]),
+        features: features ? JSON.stringify(features) : JSON.stringify([]),
         ownerId: session.user.id,
-      },
+      }
     })
 
+    // Also create listing in Edge Config (simultaneously)
+    try {
+      await edgeConfigDB.create("listing", {
+        id: newListing.id,
+        title,
+        description,
+        price: parseFloat(price),
+        location,
+        category,
+        priceUnit,
+        images: images ? JSON.stringify(images) : JSON.stringify([]),
+        features: features ? JSON.stringify(features) : JSON.stringify([]),
+        ownerId: session.user.id,
+        createdAt: newListing.createdAt.toISOString(),
+        updatedAt: newListing.updatedAt.toISOString(),
+      })
+      console.log("Listing also created in Edge Config")
+    } catch (edgeConfigError) {
+      console.error("Failed to create listing in Edge Config:", edgeConfigError)
+      // We don't return an error here because the main operation (Prisma) succeeded
+    }
+
     return NextResponse.json(newListing, { status: 201 })
-  } catch (error) {
+  } catch (error: any) {
     console.error("Listings POST error:", error)
+    // Check if it's a foreign key constraint error
+    if (error.code === 'P2003') {
+      return NextResponse.json(
+        { error: "User not found", details: "The user associated with this listing does not exist" },
+        { status: 400 }
+      )
+    }
     return NextResponse.json(
-      { error: "Internal server error" },
+      { error: "Internal server error", details: error instanceof Error ? error.message : 'Unknown error' },
       { status: 500 }
     )
   }

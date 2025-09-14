@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server"
 import bcrypt from "bcryptjs"
 import jwt from "jsonwebtoken"
-import { prisma } from "@/lib/prisma"
+import { edgeConfigDB } from "@/lib/edge-config/edge-config-db"
 import { logger } from "@/lib/logger"
 
 // POST /api/auth/login - Mobile-compatible login endpoint
@@ -17,17 +17,8 @@ export async function POST(request: NextRequest) {
     }
 
     // Find user by email
-    const user = await prisma.user.findUnique({
-      where: { email },
-      select: {
-        id: true,
-        email: true,
-        name: true,
-        password: true,
-        role: true,
-        createdAt: true,
-      },
-    })
+    const allUsers = await edgeConfigDB.findMany<{id: string, email: string, name: string, password: string, role: string, createdAt: string}>("user")
+    const user = allUsers.find(u => u.email === email)
 
     if (!user || !user.password) {
       return NextResponse.json(
