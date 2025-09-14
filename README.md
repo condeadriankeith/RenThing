@@ -74,6 +74,10 @@ NEXTAUTH_SECRET=your_random_secret_string_at_least_32_characters
 
 Note: For the `NEXTAUTH_SECRET`, generate a random string of at least 32 characters.
 
+### Troubleshooting Deployment Issues
+
+If you encounter issues during deployment, check out our detailed [Vercel Deployment Guide](VERCEL_DEPLOYMENT_GUIDE.md) which includes specific instructions for configuring environment variables and troubleshooting common issues.
+
 ## Screenshots
 
 > _Add screenshots of your app here (e.g. homepage, booking flow, chat, etc.)_

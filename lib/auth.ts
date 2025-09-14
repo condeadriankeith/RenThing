@@ -6,6 +6,11 @@ import { prisma } from "./prisma"
 import { logger } from './logger';
 import { analytics } from './analytics';
 
+// Check if NEXTAUTH_SECRET is configured
+if (!process.env.NEXTAUTH_SECRET) {
+  console.error("NEXTAUTH_SECRET is not configured in environment variables");
+}
+
 declare module "next-auth" {
   interface Session extends DefaultSession {
     user: {

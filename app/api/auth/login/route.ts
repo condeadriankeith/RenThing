@@ -4,6 +4,11 @@ import jwt from "jsonwebtoken"
 import { prisma } from "@/lib/prisma"
 import { logger } from "@/lib/logger"
 
+// Check if NEXTAUTH_SECRET is configured
+if (!process.env.NEXTAUTH_SECRET) {
+  console.error("NEXTAUTH_SECRET is not configured in environment variables");
+}
+
 // POST /api/auth/login - Mobile-compatible login endpoint
 export async function POST(request: NextRequest) {
   try {
@@ -13,6 +18,16 @@ export async function POST(request: NextRequest) {
       return NextResponse.json(
         { error: "Email and password are required" },
         { status: 400 }
+      )
+    }
+
+    // Check if NEXTAUTH_SECRET is configured
+    const secret = process.env.NEXTAUTH_SECRET;
+    if (!secret) {
+      logger.error("NEXTAUTH_SECRET is not configured");
+      return NextResponse.json(
+        { error: "Server configuration error" },
+        { status: 500 }
       )
     }
 
@@ -45,7 +60,7 @@ export async function POST(request: NextRequest) {
         email: user.email,
         role: user.role 
       },
-      process.env.NEXTAUTH_SECRET || "fallback-secret-for-development-only-please-change-in-production",
+      secret,
       { expiresIn: '7d' }
     )
 

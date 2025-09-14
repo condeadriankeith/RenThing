@@ -3,6 +3,11 @@ import jwt from "jsonwebtoken"
 import { prisma } from "@/lib/prisma"
 import { logger } from "@/lib/logger"
 
+// Check if NEXTAUTH_SECRET is configured
+if (!process.env.NEXTAUTH_SECRET) {
+  console.error("NEXTAUTH_SECRET is not configured in environment variables");
+}
+
 // GET /api/auth/me - Get current user for mobile
 export async function GET(request: NextRequest) {
   try {
@@ -15,13 +20,20 @@ export async function GET(request: NextRequest) {
       )
     }
 
+    // Check if NEXTAUTH_SECRET is configured
+    const secret = process.env.NEXTAUTH_SECRET;
+    if (!secret) {
+      logger.error("NEXTAUTH_SECRET is not configured");
+      return NextResponse.json(
+        { error: "Server configuration error" },
+        { status: 500 }
+      )
+    }
+
     const token = authHeader.split(' ')[1]
 
     try {
-      const decoded = jwt.verify(
-        token,
-        process.env.NEXTAUTH_SECRET || "fallback-secret-for-development-only-please-change-in-production"
-      ) as { userId: string; email: string; role?: string }
+      const decoded = jwt.verify(token, secret) as { userId: string; email: string; role?: string }
 
       // Get fresh user data from database
       const user = await prisma.user.findUnique({
@@ -51,7 +63,7 @@ export async function GET(request: NextRequest) {
       )
     }
   } catch (error) {
-    logger.error("Mobile auth me error", error as Error, { context: "mobile-auth" })
+    logger.error("Mobile auth me error", error as Error);
     return NextResponse.json(
       { error: "Internal server error" },
       { status: 500 }
