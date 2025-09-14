@@ -10,7 +10,8 @@
     "test": "jest",
     "project:info": "node scripts/project-structure-info.js",
     "postinstall": "node scripts/setup-ollama.js",
-    "test:ollama": "node scripts/test-ollama-setup.js"
+    "test:ollama": "node scripts/test-ollama-setup.js",
+    "vercel-build": "node scripts/vercel-build.js && node scripts/vercel-db-setup.js"
   },
   "dependencies": {
     "@hookform/resolvers": "^3.10.0",

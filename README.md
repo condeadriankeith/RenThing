@@ -5,7 +5,7 @@
 </p>
 
 <p align="center">
-  <strong>Rent Anything, Anywhere</strong>
+  <strong>A peer-to-peer rental marketplace platform</strong>
 </p>
 
 ## Tech Stack
