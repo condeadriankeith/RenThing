@@ -1,69 +1,75 @@
-import { PrismaClient } from '@prisma/client'
-import bcrypt from 'bcryptjs'
+import { PrismaClient } from '@prisma/client';
+import bcrypt from 'bcryptjs';
 
-const prisma = new PrismaClient()
+const prisma = new PrismaClient();
 
 async function main() {
-  // Create a test user
-  const email = 'test@example.com'
-  const password = 'password123'
-  const hashedPassword = await bcrypt.hash(password, 10)
+  // Clear existing data
+  await prisma.booking.deleteMany();
+  await prisma.review.deleteMany();
+  await prisma.wishlist.deleteMany();
+  await prisma.listing.deleteMany();
+  await prisma.account.deleteMany();
+  await prisma.session.deleteMany();
+  await prisma.user.deleteMany();
 
-  const user = await prisma.user.upsert({
-    where: { email },
-    update: {},
-    create: {
-      email,
-      name: 'Test User',
-      password: hashedPassword,
+  // Create admin user
+  const adminPassword = await bcrypt.hash('admin123', 10);
+  const admin = await prisma.user.create({
+    data: {
+      email: 'admin@renthing.com',
+      name: 'Admin User',
+      password: adminPassword,
+      role: 'admin',
+      isVerified: true,
+    },
+  });
+
+  // Create vendor user
+  const vendorPassword = await bcrypt.hash('vendor123', 10);
+  const vendor = await prisma.user.create({
+    data: {
+      email: 'vendor@renthing.com',
+      name: 'Vendor User',
+      password: vendorPassword,
+      role: 'vendor',
+      isVerified: true,
+    },
+  });
+
+  // Create regular user
+  const userPassword = await bcrypt.hash('user123', 10);
+  const user = await prisma.user.create({
+    data: {
+      email: 'user@renthing.com',
+      name: 'Regular User',
+      password: userPassword,
       role: 'user',
     },
-  })
+  });
 
-  console.log(`Created/Updated user with email: ${user.email}`)
-
-  // Create admin accounts as requested
-  const admin1Email = 'adriankeithconde@gmail.com'
-  const admin1Password = 'admin123'
-  const admin1HashedPassword = await bcrypt.hash(admin1Password, 10)
-
-  const admin1 = await prisma.user.upsert({
-    where: { email: admin1Email },
-    update: {},
-    create: {
-      email: admin1Email,
-      name: 'Adrian Keith Conde',
-      password: admin1HashedPassword,
-      role: 'admin',
+  // Create a sample listing
+  const listing = await prisma.listing.create({
+    data: {
+      title: 'Mountain Bike',
+      description: 'Great condition mountain bike perfect for trails',
+      price: 25.99,
+      location: 'Manila, Philippines',
+      category: 'Sports & Outdoors',
+      priceUnit: 'per day',
+      ownerId: vendor.id,
     },
-  })
+  });
 
-  console.log(`Created/Updated admin account with email: ${admin1.email}`)
-
-  // Create second admin account
-  const admin2Email = 'roelslumauagjr@gmail.com'
-  const admin2Password = 'admin123'
-  const admin2HashedPassword = await bcrypt.hash(admin2Password, 10)
-
-  const admin2 = await prisma.user.upsert({
-    where: { email: admin2Email },
-    update: {},
-    create: {
-      email: admin2Email,
-      name: 'Roel Jr. Lumauag',
-      password: admin2HashedPassword,
-      role: 'admin',
-    },
-  })
-
-  console.log(`Created/Updated admin account with email: ${admin2.email}`)
+  console.log('Seed data created successfully!');
+  console.log({ admin: admin.email, vendor: vendor.email, user: user.email, listing: listing.title });
 }
 
 main()
   .catch((e) => {
-    console.error(e)
-    process.exit(1)
+    console.error(e);
+    process.exit(1);
   })
   .finally(async () => {
-    await prisma.$disconnect()
-  })
+    await prisma.$disconnect();
+  });

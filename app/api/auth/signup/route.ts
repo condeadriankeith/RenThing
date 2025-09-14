@@ -63,11 +63,11 @@ export async function POST(request: Request) {
     const hashedPassword = await bcrypt.hash(password, 10);
 
     // Determine user role based on email or userType
-    let userRole = "USER";
+    let userRole = "user";
     if (ADMIN_EMAILS.includes(email)) {
-      userRole = "ADMIN";
+      userRole = "admin";
     } else if (userType === "vendor") {
-      userRole = "VENDOR";
+      userRole = "vendor";
     }
 
     const user = await prisma.user.create({
@@ -79,7 +79,18 @@ export async function POST(request: Request) {
       },
     });
 
-    await emailTriggers.onUserWelcome(user.id);
+    // Only send welcome email if email service is configured
+    if (process.env.EMAIL_SERVER && process.env.EMAIL_FROM) {
+      try {
+        await emailTriggers.onUserWelcome(user.id);
+      } catch (emailError) {
+        console.warn("Failed to send welcome email:", emailError);
+        // Don't fail the signup if email sending fails
+      }
+    } else {
+      console.log("Email service not configured, skipping welcome email");
+    }
+
     analytics.track("user_signup", { userId: user.id, email: user.email });
 
     // Return user data without password

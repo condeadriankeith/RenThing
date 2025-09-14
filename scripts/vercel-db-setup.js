@@ -9,12 +9,12 @@ const path = require('path');
 
 function setupDatabase() {
   try {
-    console.log('Setting up database for Vercel deployment...');
+    console.log('Setting up database for deployment...');
     
     // Check if DATABASE_URL is set
     const databaseUrl = process.env.DATABASE_URL;
     if (!databaseUrl) {
-      console.log('No DATABASE_URL found, skipping database setup');
+      console.log('No DATABASE_URL found, using default SQLite configuration');
       return;
     }
     
@@ -30,7 +30,22 @@ function setupDatabase() {
       
       console.log('Database setup completed successfully!');
     } else if (databaseUrl.startsWith('file:')) {
-      console.log('SQLite database detected, no migrations needed');
+      console.log('SQLite database detected');
+      console.log('Note: SQLite is not recommended for production deployments');
+      
+      // For Vercel deployments with SQLite, we need to ensure the file exists
+      // but migrations are not needed as the schema is embedded
+      const filePath = databaseUrl.replace('file:', '');
+      console.log(`Checking SQLite file: ${filePath}`);
+      
+      // Create directory if it doesn't exist
+      const dir = path.dirname(filePath);
+      if (!fs.existsSync(dir)) {
+        fs.mkdirSync(dir, { recursive: true });
+        console.log(`Created directory: ${dir}`);
+      }
+      
+      console.log('SQLite setup completed!');
     } else {
       console.log('Unknown database type, skipping migrations');
     }

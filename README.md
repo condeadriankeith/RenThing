@@ -36,6 +36,8 @@ To deploy this application to Vercel, follow these steps:
    - Build the Next.js application
    - Run database migrations (if using PostgreSQL)
 
+For detailed deployment instructions, see our [Vercel Deployment Guide](VERCEL_DEPLOYMENT.md).
+
 ### PostgreSQL Database Setup for Vercel
 
 For production deployments on Vercel, it's recommended to use PostgreSQL instead of SQLite due to SQLite's file-based nature which doesn't work well in serverless environments.
@@ -76,7 +78,7 @@ Note: For the `NEXTAUTH_SECRET`, generate a random string of at least 32 charact
 
 ### Troubleshooting Deployment Issues
 
-If you encounter issues during deployment, check out our detailed [Vercel Deployment Guide](VERCEL_DEPLOYMENT_GUIDE.md) which includes specific instructions for configuring environment variables and troubleshooting common issues.
+If you encounter issues during deployment, check out our detailed [Vercel Deployment Guide](VERCEL_DEPLOYMENT.md) which includes specific instructions for configuring environment variables and troubleshooting common issues.
 
 ## Screenshots
 

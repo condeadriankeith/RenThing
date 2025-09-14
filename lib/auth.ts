@@ -6,6 +6,10 @@ import { prisma } from "./prisma"
 import { logger } from './logger';
 import { analytics } from './analytics';
 
+// Load environment variables
+import dotenv from 'dotenv';
+dotenv.config();
+
 // Check if NEXTAUTH_SECRET is configured
 if (!process.env.NEXTAUTH_SECRET) {
   console.error("NEXTAUTH_SECRET is not configured in environment variables");
