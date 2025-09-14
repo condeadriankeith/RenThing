@@ -87,15 +87,17 @@ export default function RegisterPage() {
       <Card className="w-full max-w-sm sm:max-w-md shadow-lg rounded-xl border-0">
         <CardHeader className="text-center">
           <div className="flex items-center justify-center space-x-2 mb-3 sm:mb-4">
-            <Image 
-              src="/RenThing_Logo.png" 
-              alt="RenThing" 
-              width={36} 
-              height={36} 
-              className="h-9 w-auto"
-              priority
-            />
-            <span className="text-2xl sm:text-3xl font-bold text-black dark:text-black">RenThing</span>
+            <div className="relative h-9 w-auto">
+              <Image 
+                src="/RenThing_Logo.png" 
+                alt="RenThing" 
+                width={36} 
+                height={36} 
+                className="h-9 w-auto"
+                priority
+              />
+            </div>
+            <span className="text-2xl sm:text-3xl font-bold text-black dark:text-white">RenThing</span>
           </div>
           <CardTitle className="text-xl sm:text-2xl">Create your account</CardTitle>
           <CardDescription className="text-sm sm:text-base">Join RenThing to start renting and booking</CardDescription>

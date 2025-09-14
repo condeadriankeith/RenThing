@@ -28,53 +28,135 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "AI disabled" }, { status: 503 });
     }
 
-    // Build a simple prompt (you can replace with the project's system prompt)
-    // Use just the last message content instead of formatting with roles
-    const prompt = lastText;
-    
-    // Log the prompt for debugging
-    console.log("Sending prompt to Ollama:", prompt);
+    // Create a comprehensive but concise system prompt to ensure REN responds as REN
+    const systemPrompt = `
+You are REN, the AI assistant for RenThing rental marketplace. Always respond as REN, never as Ollama or Llama.
 
-    // Call Ollama REST API with stream=false to get a single response
-    const timeout = 60000; // Increase timeout to 60 seconds
+REN's personality:
+- Friendly, helpful, and culturally aware with Filipino values
+- Malasakit (compassionate care), Kapamilya (family-oriented), Resourceful, Culturally sensitive, Tech-savvy
+- Use natural Filipino expressions when appropriate
+- Always identify as REN when asked "who are you"
+
+Available RenThing Pages and Navigation:
+- Homepage: "/"
+- Browse rentals: "/browse"
+- List an item: "/list-item"
+- My bookings: "/my-bookings"
+- Inbox: "/inbox"
+- Wishlist: "/wishlist"
+- Profile: "/profile"
+- Login: "/auth/login"
+- Register: "/auth/register"
+- Help center: "/help"
+- About: "/about"
+- Contact: "/contact"
+- Terms: "/terms"
+- Privacy: "/privacy"
+- Specific listing: "/listing/[id]"
+- Specific user profile: "/profile/[id]"
+
+Response guidelines:
+1. Be concise and helpful - keep responses under 3 sentences
+2. Stay in character as REN
+3. Focus on RenThing platform features
+4. Personalize based on conversation context
+5. Get straight to the point - avoid unnecessary elaboration
+6. Use bullet points or numbered lists for complex information
+7. When asked to navigate or show a page, respond with the appropriate action:
+   - For general pages: {"type": "navigate", "payload": {"path": "/page-path"}}
+   - For specific listings: {"type": "show_listing", "payload": {"listingId": "listing-id"}}
+   - For search queries: {"type": "search_query", "payload": {"query": "search terms"}}
+8. Always provide helpful text explaining what you're doing
+`;
+
+    // Build the complete prompt with system context
+    const fullMessages = [
+      { role: "system", content: systemPrompt.trim() },
+      ...messages
+    ];
+    
+    // Log for debugging
+    console.log("Sending to Ollama:", {
+      model,
+      messageCount: fullMessages.length
+    });
+
+    // Call Ollama with optimized settings for faster response
+    const timeout = 20000; // Reduced timeout for better UX
     const resp = await axios.post(
-      `${host}/api/generate`,
+      `${host}/api/chat`,
       {
         model,
-        prompt,
-        stream: false  // This is important - set to false to get a single response
+        messages: fullMessages,
+        stream: false,
+        options: {
+          temperature: 0.5, // Lower temperature for more focused responses
+          top_p: 0.8, // Slightly reduced for more deterministic responses
+          repeat_penalty: 1.1,
+          num_predict: 200 // Significantly limit response length for faster responses
+        }
       },
-      { timeout }
+      { 
+        timeout,
+        headers: {
+          'Content-Type': 'application/json'
+        }
+      }
     );
 
-    // Extract the response text from Ollama's response
+    // Extract response text
     let text: string | undefined;
-    if (resp.data?.response && typeof resp.data.response === "string") {
-      text = resp.data.response;
-    } else {
-      // Fallback to handling the response as a stringified JSON
+    let action: any = undefined;
+    
+    if (resp.data?.message?.content && typeof resp.data.message.content === "string") {
+      text = resp.data.message.content.trim();
+      
+      // Try to extract action from the response
       try {
-        const parsed = JSON.parse(JSON.stringify(resp.data));
-        text = parsed.response || JSON.stringify(parsed);
-      } catch (parseError) {
-        text = JSON.stringify(resp.data);
+        // Look for JSON action in the response
+        if (text) {
+          const actionMatch = text.match(/\{[^{}]*\}/g);
+          if (actionMatch) {
+            const potentialAction = JSON.parse(actionMatch[0]);
+            if (potentialAction.type && potentialAction.payload) {
+              action = potentialAction;
+              // Remove the JSON from the text response
+              text = text.replace(actionMatch[0], '').trim();
+            }
+          }
+        }
+      } catch (e) {
+        // If JSON parsing fails, continue with just the text
+        console.log("Failed to parse action from response:", e);
+      }
+    } else {
+      text = "I'm REN, your RenThing assistant. How can I help you today?";
+    }
+
+    // Ensure REN identifies correctly
+    if (text && /^(hi|hello|hey|good (morning|afternoon|evening))/i.test(lastText)) {
+      if (!text.toLowerCase().includes("ren") || text.toLowerCase().includes("llama") || text.toLowerCase().includes("ollama")) {
+        text = "Hi — I'm REN! " + text.replace(/(I'm|I am) (an AI|a model|an assistant|Ollama|Llama)/gi, "");
       }
     }
 
-    return NextResponse.json({ reply: text }, { status: 200 });
-  } catch (err: any) {
-    // Log full error server-side so you can inspect in logs
-    console.error("AI generate error:", err?.message ?? err, err?.response?.data ?? "");
+    const response: any = { reply: text };
+    if (action) {
+      response.action = action;
+    }
 
-    // Smart simple greeting fallback only for greeting-like messages
+    return NextResponse.json(response, { status: 200 });
+  } catch (err: any) {
+    console.error("AI generate error:", err?.message ?? err);
+    
+    // Faster fallback responses
     if (/^(hi|hello|hey|good (morning|afternoon|evening))/i.test(lastText)) {
       return NextResponse.json({
-        reply:
-          "Hi — I'm REN! I'm having trouble contacting my AI right now. You can try again, or use one of the quick options below.",
+        reply: "Hi — I'm REN! I'm having trouble right now. Try again or use quick options.",
       });
     }
 
-    // Explicit error code so frontend can present "AI offline" states
     return NextResponse.json({ error: "AI service unavailable" }, { status: 503 });
   }
 }

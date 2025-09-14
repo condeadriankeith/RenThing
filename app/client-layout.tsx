@@ -96,6 +96,13 @@ export default function ClientLayout({
              path.split('/').length <= 3; // Basic validation: /help/something
     }
     
+    // For browse with query parameters, validate the base path
+    if (path.startsWith('/browse')) {
+      // Extract the base path without query parameters
+      const basePath = path.split('?')[0];
+      return basePath === '/browse';
+    }
+    
     return false;
   }
 
@@ -122,6 +129,12 @@ export default function ClientLayout({
     } else if (action.type === 'show_listing') {
       // Navigate to the specific listing
       await handleRenNavigation(`/listing/${action.payload.listingId}`)
+    } else if (action.type === 'search_query') {
+      // Handle search queries
+      await handleRenNavigation(`/browse?query=${encodeURIComponent(action.payload.query)}`)
+    } else if (action.type === 'web_search') {
+      // Handle web search requests
+      console.log("REN requesting web search:", action.payload.query)
     }
     // Add more action types as needed
   }

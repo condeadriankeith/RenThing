@@ -26,15 +26,17 @@ export default function Header() {
       <div className="container mx-auto px-2 sm:px-4 py-3 flex items-center justify-between">
         <div className="flex-shrink-0">
           <Link href="/" className="flex items-center space-x-2">
-            <Image 
-              src="/RenThing_Logo.png" 
-              alt="RenThing" 
-              width={32} 
-              height={32} 
-              className="h-7 sm:h-8 w-auto"
-              priority
-            />
-            <h1 className="text-lg sm:text-xl md:text-2xl font-bold text-black dark:text-black">RenThing</h1>
+            <div className="relative h-7 sm:h-8 w-auto">
+              <Image 
+                src="/RenThing_Logo.png" 
+                alt="RenThing" 
+                width={32} 
+                height={32} 
+                className="h-7 sm:h-8 w-auto"
+                priority
+              />
+            </div>
+            <h1 className="text-lg sm:text-xl md:text-2xl font-bold text-black dark:text-white">RenThing</h1>
           </Link>
         </div>
 

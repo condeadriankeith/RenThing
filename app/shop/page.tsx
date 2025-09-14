@@ -180,19 +180,23 @@ export default function ShopPage() {
             </p>
           </div>
           <div className="hidden sm:block">
-            <ShoppingBag className="h-12 w-12 text-blue-500" />
+            <div className="relative h-12 w-12">
+              <ShoppingBag className="h-12 w-12 text-[#155dfc]" />
+            </div>
           </div>
         </div>
 
         {/* Badges Section */}
         <section className="mb-12">
           <div className="flex items-center mb-6">
-            <Crown className="h-6 w-6 text-yellow-500 mr-2" />
+            <ShieldCheck className="h-6 w-6 text-blue-500 mr-2" />
             <h2 className="text-2xl font-bold text-gray-900 dark:text-white">Badges</h2>
           </div>
           
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {badgeItems.map((item) => (
+            {badgeItems
+              .filter(item => item.id.includes('verified')) // Keep only verified badge
+              .map((item) => (
               <Card key={item.id} className="flex flex-col">
                 <CardHeader>
                   <div className="flex items-start justify-between">

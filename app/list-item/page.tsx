@@ -152,9 +152,10 @@ export default function ListItemPage() {
         throw new Error('Price must be greater than 0')
       }
 
-      if (images.length === 0) {
-        throw new Error('Please add at least one image')
-      }
+      // TEMPORARILY DISABLE PHOTO REQUIREMENT FOR TESTING
+      // if (images.length === 0) {
+      //   throw new Error('Please add at least one image')
+      // }
 
       const response = await fetch('/api/listings', {
         method: 'POST',
@@ -193,8 +194,6 @@ export default function ListItemPage() {
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
-
-
       <div className="container mx-auto px-2 sm:px-4 py-6 sm:py-8 max-w-2xl sm:max-w-4xl">
         <div className="mb-6 sm:mb-8">
           <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white mb-2">List Your Item</h1>
@@ -304,6 +303,10 @@ export default function ListItemPage() {
                     </label>
                   )}
                 </div>
+                {/* TEMPORARILY DISABLE PHOTO REQUIREMENT FOR TESTING */}
+                <p className="text-sm text-gray-500 italic">
+                  Note: Photo requirement is temporarily disabled for testing purposes.
+                </p>
               </div>
             </CardContent>
           </Card>

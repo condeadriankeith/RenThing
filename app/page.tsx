@@ -295,6 +295,7 @@ export default function HomePage() {
                     width={32} 
                     height={32} 
                     className="h-8 w-auto"
+                    style={{ filter: 'brightness(0) invert(1)' }}
                   />
                   <span className="text-xl font-bold text-white">RenThing</span>
                 </div>

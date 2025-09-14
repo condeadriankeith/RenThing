@@ -56,7 +56,7 @@ export function ChatWidget({ onAction }: ChatWidgetProps) {
     const welcomeMessage = [
       {
         id: "1",
-        content: "Hi there! I'm REN, your rental assistant. I can help you find items, explain how things work, or even search the web for tips. What can I do for you today?",
+        content: "Hi! I'm REN, your rental assistant. How can I help?",
         role: "assistant",
         timestamp: new Date(),
         suggestions: ["Find rentals", "List items", "Check bookings", "View wishlist"]
@@ -67,7 +67,7 @@ export function ChatWidget({ onAction }: ChatWidgetProps) {
 
   return (
     <>
-      {/* Floating button */}
+      {/* Floating button with subtle pulsing animation */}
       <motion.button
         ref={btnRef}
         className="ren-floating-button bg-gradient-to-br from-blue-500 to-purple-600 shadow-lg flex items-center justify-center cursor-pointer border-2 border-white"
@@ -76,9 +76,23 @@ export function ChatWidget({ onAction }: ChatWidgetProps) {
           setIsMinimized(false);
         }}
         initial={{ scale: 0 }}
-        animate={{ scale: 1 }}
+        animate={{ 
+          scale: 1,
+          transition: {
+            duration: 0.3,
+            type: "spring",
+            stiffness: 300,
+            damping: 20
+          }
+        }}
         whileHover={{ scale: 1.1 }}
         whileTap={{ scale: 0.9 }}
+        // Subtle pulsing animation to draw attention
+        transition={{
+          duration: 2,
+          repeat: Infinity,
+          repeatType: "reverse",
+        }}
       >
         <Avatar className="h-10 w-10 rounded-full">
           <AvatarFallback className="bg-gradient-to-br from-blue-500 to-purple-600 text-white">
@@ -87,7 +101,7 @@ export function ChatWidget({ onAction }: ChatWidgetProps) {
         </Avatar>
       </motion.button>
 
-      {/* Chat Modal */}
+      {/* Chat Modal with improved animation */}
       <AnimatePresence>
         {isChatOpen && !isMinimized && (
           <>
@@ -97,6 +111,7 @@ export function ChatWidget({ onAction }: ChatWidgetProps) {
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
+              transition={{ duration: 0.15 }}
               onClick={() => setIsMinimized(true)}
             />
             
@@ -111,19 +126,27 @@ export function ChatWidget({ onAction }: ChatWidgetProps) {
               initial={{ 
                 scale: 0,
                 width: 56,
-                height: 56
+                height: 56,
+                opacity: 0
               }}
               animate={{ 
                 scale: 1,
                 width: 320,
-                height: 500
+                height: 500,
+                opacity: 1
               }}
               exit={{ 
                 scale: 0,
                 width: 56,
-                height: 56
+                height: 56,
+                opacity: 0
               }}
-              transition={{ type: "spring", stiffness: 300, damping: 30 }}
+              transition={{ 
+                type: "spring", 
+                stiffness: 500, 
+                damping: 30,
+                duration: 0.2
+              }}
             >
               <div className="bg-white rounded-2xl shadow-xl h-full flex flex-col border border-gray-200 overflow-hidden">
                 <div className="flex justify-between items-center p-4 border-b border-gray-200 bg-gradient-to-r from-blue-500 to-purple-600 text-white">
@@ -168,12 +191,13 @@ export function ChatWidget({ onAction }: ChatWidgetProps) {
         {isChatOpen && isMinimized && (
           <motion.div
             className="fixed bottom-20 right-6 z-50"
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: 20 }}
+            initial={{ opacity: 0, y: 20, scale: 0.8 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: 20, scale: 0.8 }}
+            transition={{ type: "spring", stiffness: 300, damping: 25 }}
           >
             <Button
-              className="bg-gradient-to-br from-blue-500 to-purple-600 text-white rounded-full px-4 py-2 flex items-center"
+              className="bg-gradient-to-br from-blue-500 to-purple-600 text-white rounded-full px-4 py-2 flex items-center shadow-lg"
               onClick={() => setIsMinimized(false)}
             >
               <MessageCircle className="h-4 w-4 mr-2" />

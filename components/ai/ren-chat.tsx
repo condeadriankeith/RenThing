@@ -92,7 +92,7 @@ export function RenChat({ onAction, onMessagesChange, initialMessages, onClose, 
   const [messages, setMessages] = useState<Message[]>(initialMessages || [
     {
       id: "1",
-      content: "Hi! I'm REN, your assistant for RenThing. How can I help you today?",
+      content: "Hi! I'm REN, your rental assistant. How can I help you today?",
       role: "assistant",
       timestamp: new Date(),
       suggestions: ["Find rentals", "List items", "Check bookings", "View wishlist"]
@@ -144,6 +144,26 @@ export function RenChat({ onAction, onMessagesChange, initialMessages, onClose, 
     setIsLoading(true);
 
     try {
+      // Prepare context with conversation history and user info
+      const conversationHistory = messages.map(msg => ({
+        role: msg.role,
+        content: msg.content
+      }));
+      
+      const context = {
+        userId: session?.user?.id,
+        sessionId: session?.user?.id ? `session_${Date.now()}` : undefined,
+        conversationHistory: conversationHistory,
+        userPreferences: {
+          language: "en",
+          currency: "PHP"
+        },
+        userProfile: {
+          name: session?.user?.name || undefined
+        },
+        currentLocation: latitude && longitude ? `${latitude}, ${longitude}` : undefined
+      };
+
       // Try the new generate API first
       let aiResponse;
       try {
@@ -154,7 +174,6 @@ export function RenChat({ onAction, onMessagesChange, initialMessages, onClose, 
           },
           body: JSON.stringify({
             messages: [
-              { role: "system", content: "You are REN, a helpful assistant for a rental marketplace." },
               ...messages.map(msg => ({ role: msg.role, content: msg.content })),
               { role: "user", content: input }
             ]
@@ -166,7 +185,8 @@ export function RenChat({ onAction, onMessagesChange, initialMessages, onClose, 
           aiResponse = {
             response: {
               text: data.reply || "I'm here to help!",
-              suggestions: ["Find rentals", "List items", "Check bookings", "View wishlist"]
+              suggestions: ["Find rentals", "List items", "Check bookings", "View wishlist"],
+              action: data.action || undefined
             }
           };
         } else if (generateResponse.status === 503) {
@@ -184,21 +204,6 @@ export function RenChat({ onAction, onMessagesChange, initialMessages, onClose, 
         // Fallback to the old chat API
         console.log("Falling back to old chat API");
         
-        // Prepare context with conversation history
-        const conversationHistory = messages.map(msg => ({
-          role: msg.role,
-          content: msg.content
-        }));
-        
-        const context = {
-          userId: session?.user?.id,
-          conversationHistory: conversationHistory,
-          userPreferences: {
-            language: "en",
-            currency: "PHP"
-          }
-        };
-
         const response = await fetch('/api/ai/chat', {
           method: 'POST',
           headers: {
@@ -240,7 +245,8 @@ export function RenChat({ onAction, onMessagesChange, initialMessages, onClose, 
         id: (Date.now() + 1).toString(),
         content: "Sorry, I encountered an error. Please try again.",
         role: "assistant",
-        timestamp: new Date()
+        timestamp: new Date(),
+        suggestions: ["Find rentals", "List items", "Check bookings", "View wishlist"]
       };
       setMessages(prev => [...prev, errorMessage]);
     } finally {
@@ -250,6 +256,10 @@ export function RenChat({ onAction, onMessagesChange, initialMessages, onClose, 
 
   const handleSuggestionClick = (suggestion: string) => {
     setInput(suggestion);
+    // Auto-send suggestion for faster interaction
+    setTimeout(() => {
+      handleSend();
+    }, 100);
   };
 
   const handleListingSuggestionClick = (listingId: string) => {

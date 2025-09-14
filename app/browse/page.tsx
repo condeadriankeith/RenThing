@@ -55,17 +55,44 @@ export default function BrowsePage() {
     const fetchListings = async () => {
       setIsLoading(true)
       try {
-        // Fetch more listings with pagination
-        const response = await fetch("/api/listings?limit=50")
-        if (!response.ok) {
-          throw new Error("Failed to fetch listings")
+        // Try to fetch listings from the database API first
+        let databaseListings: any[] = []
+        try {
+          const response = await fetch("/api/listings?limit=50")
+          if (response.ok) {
+            const data = await response.json()
+            databaseListings = data.listings
+          }
+        } catch (dbError) {
+          console.log("Database fetch failed, trying CSV data", dbError)
         }
-        const data = await response.json()
-        const enrichedListings: Listing[] = data.listings.map((listing: any) => {
+
+        // If no database listings, try to fetch from CSV data
+        let csvListings: any[] = []
+        if (databaseListings.length === 0) {
+          try {
+            const csvResponse = await fetch("/api/listings/csv")
+            if (csvResponse.ok) {
+              const csvData = await csvResponse.json()
+              csvListings = csvData.listings || []
+            }
+          } catch (csvError) {
+            console.log("CSV fetch failed", csvError)
+          }
+        }
+
+        // Combine listings from both sources
+        const combinedListings = [...databaseListings, ...csvListings]
+
+        const enrichedListings: Listing[] = combinedListings.map((listing: any) => {
           // Determine category based on title and features
           let category = "tools" // default
           const titleLower = listing.title.toLowerCase()
-          const featuresLower = listing.features.map((f: string) => f.toLowerCase()).join(" ")
+          const featuresLower = Array.isArray(listing.features) 
+            ? listing.features.map((f: string) => f.toLowerCase()).join(" ")
+            : typeof listing.features === 'string' 
+              ? listing.features.toLowerCase()
+              : ""
           const searchText = titleLower + " " + featuresLower
           
           if (searchText.includes("macbook") || searchText.includes("ipad") || searchText.includes("camera") || searchText.includes("drone") || searchText.includes("projector")) {
@@ -80,14 +107,37 @@ export default function BrowsePage() {
             category = "events"
           }
           
+          // Parse images and features if they're strings
+          let images = []
+          if (Array.isArray(listing.images)) {
+            images = listing.images
+          } else if (typeof listing.images === 'string') {
+            try {
+              images = JSON.parse(listing.images)
+            } catch (e) {
+              images = [listing.images]
+            }
+          }
+          
+          let features = []
+          if (Array.isArray(listing.features)) {
+            features = listing.features
+          } else if (typeof listing.features === 'string') {
+            try {
+              features = JSON.parse(listing.features)
+            } catch (e) {
+              features = [listing.features]
+            }
+          }
+          
           return {
             id: listing.id,
             title: listing.title,
             description: listing.description,
             price: listing.price,
             location: listing.location,
-            images: listing.images,
-            features: listing.features,
+            images: images,
+            features: features,
             createdAt: listing.createdAt,
             category: category,
             available: true,

@@ -91,15 +91,17 @@ export default function LoginPage() {
       <Card className="w-full max-w-sm sm:max-w-md shadow-lg rounded-xl border-0">
         <CardHeader className="text-center">
           <div className="flex items-center justify-center space-x-2 mb-3 sm:mb-4">
-            <Image 
-              src="/RenThing_Logo.png" 
-              alt="RenThing" 
-              width={40}
-              height={40}
-              className="h-10 w-10"
-              priority
-            />
-            <span className="text-2xl sm:text-3xl font-bold text-black dark:text-black">RenThing</span>
+            <div className="relative h-10 w-10">
+              <Image 
+                src="/RenThing_Logo.png" 
+                alt="RenThing" 
+                width={40}
+                height={40}
+                className="h-10 w-10"
+                priority
+              />
+            </div>
+            <span className="text-2xl sm:text-3xl font-bold text-black dark:text-white">RenThing</span>
           </div>
           <CardTitle className="text-xl sm:text-2xl">Welcome back</CardTitle>
           <CardDescription className="text-sm sm:text-base">Sign in to your account to continue</CardDescription>
