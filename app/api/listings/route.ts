@@ -167,6 +167,21 @@ export async function POST(request: NextRequest) {
       )
     }
 
+    // Validate that the user exists in the database
+    const userExists = await prisma.user.findUnique({
+      where: { id: session.user.id }
+    });
+
+    if (!userExists) {
+      console.error("User not found in database:", session.user.id);
+      return NextResponse.json(
+        { error: "User not found", details: "The authenticated user does not exist in the database" },
+        { status: 400 }
+      )
+    }
+
+    console.log("Creating listing for user:", session.user.id);
+
     // Create listing in Prisma database
     const newListing = await prisma.listing.create({
       data: {
@@ -181,6 +196,8 @@ export async function POST(request: NextRequest) {
         ownerId: session.user.id,
       }
     })
+
+    console.log("Listing created successfully:", newListing.id);
 
     // Also create listing in Edge Config (simultaneously)
     try {
