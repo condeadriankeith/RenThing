@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server"
 import bcrypt from "bcryptjs"
-import { edgeConfigDB } from "@/lib/edge-config/edge-config-db"
+import { prisma } from "@/lib/prisma"
 import { emailTriggers } from "@/lib/email-triggers"
 import rateLimit from "@/lib/rate-limit"
 import { logger } from "@/lib/logger"
@@ -22,7 +22,7 @@ export async function POST(request: Request) {
     try {
       await signupLimiter.check(null, 5, ip);
     } catch {
-      logger.warn("Too many signup requests", { context: "signup", details: { ip } });
+      logger.warn("Too many signup requests", { ip });
       return NextResponse.json({ error: "Too many requests" }, { status: 429 });
     }
     const { email, name, password } = await request.json();
@@ -49,8 +49,9 @@ export async function POST(request: Request) {
       );
     }
 
-    const allUsers = await edgeConfigDB.findMany<{id: string, email: string}>("user");
-    const existingUser = allUsers.find(u => u.email === email);
+    const existingUser = await prisma.user.findUnique({
+      where: { email }
+    });
 
     if (existingUser) {
       return NextResponse.json(
@@ -63,20 +64,24 @@ export async function POST(request: Request) {
 
     const userRole = ADMIN_EMAILS.includes(email) ? "ADMIN" : "USER";
 
-    const user = await edgeConfigDB.create("user", {
-      id: Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15),
-      email,
-      name,
-      password: hashedPassword,
-      role: userRole,
+    const user = await prisma.user.create({
+      data: {
+        email,
+        name,
+        password: hashedPassword,
+        role: userRole,
+      },
     });
 
     await emailTriggers.onUserWelcome(user.id);
     analytics.track("user_signup", { userId: user.id, email: user.email });
 
-    return NextResponse.json(user, { status: 201 })
+    // Return user data without password
+    const { password: _, ...userWithoutPassword } = user;
+
+    return NextResponse.json(userWithoutPassword, { status: 201 })
   } catch (error) {
-    logger.error("Signup error", error as Error, { context: "signup" });
+    logger.error("Signup error", error as Error);
     return NextResponse.json(
       { error: "Internal server error" },
       { status: 500 }

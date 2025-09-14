@@ -1,10 +1,7 @@
 import { NextRequest, NextResponse } from "next/server"
 import bcrypt from "bcryptjs"
-import jwt from "jsonwebtoken"
 import { prisma } from "@/lib/prisma"
-import { logger } from "@/lib/logger"
 
-// POST /api/auth/login - Mobile-compatible login endpoint
 export async function POST(request: NextRequest) {
   try {
     const { email, password } = await request.json()
@@ -38,34 +35,22 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Generate JWT token
-    const token = jwt.sign(
-      { 
-        userId: user.id, 
-        email: user.email,
-        role: user.role 
-      },
-      process.env.NEXTAUTH_SECRET || "fallback-secret-for-development-only-please-change-in-production",
-      { expiresIn: '7d' }
-    )
-
     // Return user data without password
     const { password: _, ...userWithoutPassword } = user
 
-    logger.info("Mobile user login successful", {
-      userId: user.id, 
-      email: user.email, 
-      role: user.role
-    })
-
     return NextResponse.json({
-      token,
+      success: true,
       user: userWithoutPassword,
+      message: "Login successful"
     })
   } catch (error) {
-    logger.error("Mobile login error", error as Error)
+    console.error("Login test failed:", error);
     return NextResponse.json(
-      { error: "Internal server error" },
+      { 
+        success: false,
+        error: error instanceof Error ? error.message : "Unknown error",
+        message: "Login test failed" 
+      },
       { status: 500 }
     )
   }

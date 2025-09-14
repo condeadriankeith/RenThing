@@ -13,5 +13,8 @@
   ],
   "buildCommand": "npm run build",
   "installCommand": "npm install",
-  "outputDirectory": ".next"
+  "outputDirectory": ".next",
+  "scripts": {
+    "postbuild": "node scripts/vercel-db-setup.js"
+  }
 }

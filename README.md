@@ -1,3 +1,13 @@
+# RenThing
+
+<p align="center">
+  <img src="/public/RenThing_Logo.png" alt="RenThing Logo" width="200" />
+</p>
+
+<p align="center">
+  <strong>Rent Anything, Anywhere</strong>
+</p>
+
 ## Tech Stack
 
 - [Next.js](https://nextjs.org/) (React framework)
@@ -16,7 +26,7 @@ To deploy this application to Vercel, follow these steps:
 1. Push your code to a GitHub repository
 2. Create a new project on Vercel and import your repository
 3. Configure the environment variables in the Vercel dashboard:
-   - `DATABASE_URL`: For production, you might want to use a PostgreSQL database instead of SQLite
+   - `DATABASE_URL`: For production, use a PostgreSQL database (see below for setup)
    - `NEXTAUTH_URL`: Your deployed URL (e.g., https://your-app.vercel.app)
    - `NEXTAUTH_SECRET`: A random string for NextAuth
 4. Vercel should automatically detect the Next.js framework and configure the build settings
@@ -24,23 +34,45 @@ To deploy this application to Vercel, follow these steps:
    - Install dependencies using npm
    - Generate the Prisma client
    - Build the Next.js application
+   - Run database migrations (if using PostgreSQL)
+
+### PostgreSQL Database Setup for Vercel
+
+For production deployments on Vercel, it's recommended to use PostgreSQL instead of SQLite due to SQLite's file-based nature which doesn't work well in serverless environments.
+
+#### Option 1: Using Vercel Postgres (Recommended)
+
+1. In your Vercel project, go to the "Storage" tab
+2. Create a new PostgreSQL database
+3. Vercel will automatically set the `DATABASE_URL` environment variable
+4. No additional configuration is needed
+
+#### Option 2: Using External PostgreSQL Provider
+
+If you prefer to use an external PostgreSQL provider (like Supabase, Render, or AWS RDS):
+
+1. Create a PostgreSQL database with your provider
+2. Get the connection string (should look like `postgresql://username:password@host:port/database`)
+3. Add it as `DATABASE_URL` in your Vercel environment variables
 
 ### Environment Variables for Vercel
 
 Create the following environment variables in your Vercel project settings:
 
 ```env
-# Database (for production, consider using PostgreSQL instead of SQLite)
-DATABASE_URL=file:./dev.db
+# Database (use PostgreSQL for production)
+# If using Vercel Postgres, this will be automatically set
+# Otherwise, use your PostgreSQL connection string:
+# DATABASE_URL=postgresql://username:password@host:port/database
 
 # NextAuth configuration
 NEXTAUTH_URL=https://your-app.vercel.app
-NEXTAUTH_SECRET=your_random_secret_string
+NEXTAUTH_SECRET=your_random_secret_string_at_least_32_characters
 
 # Other variables as needed for your specific features
 ```
 
-Note: SQLite may not work well in production on Vercel due to its file-based nature. Consider using PostgreSQL or another database service for production deployments.
+Note: For the `NEXTAUTH_SECRET`, generate a random string of at least 32 characters.
 
 ## Screenshots
 
