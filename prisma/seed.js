@@ -100,7 +100,7 @@ async function main() {
       email: 'admin@renthing.com',
       password: await bcrypt.hash('admin123', 10),
       name: 'Admin User',
-      role: 'admin'
+      role: 'admin' // This will be stored as TEXT in the database
     }
   });
   console.log('✅ Created/updated admin user:', adminUser.email);
@@ -113,7 +113,7 @@ async function main() {
       email: 'vendor@renthing.com',
       password: await bcrypt.hash('vendor123', 10),
       name: 'Vendor User',
-      role: 'vendor'
+      role: 'vendor' // This will be stored as TEXT in the database
     }
   });
   console.log('✅ Created/updated vendor user:', vendorUser.email);
@@ -126,7 +126,7 @@ async function main() {
       email: 'user@renthing.com',
       password: await bcrypt.hash('user123', 10),
       name: 'Regular User',
-      role: 'user'
+      role: 'user' // This will be stored as TEXT in the database
     }
   });
   console.log('✅ Created/updated regular user:', regularUser.email);
