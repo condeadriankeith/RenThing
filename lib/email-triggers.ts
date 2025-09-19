@@ -22,7 +22,7 @@ import { emailService } from './email-service';
 //     const bookingDetails = await emailService.getBookingEmailDetails(bookingId);
 //     if (!bookingDetails) {
 //       throw new Error('Booking not found');
-//     }
+//   }
 
 //     await emailService.sendBookingCancellation(bookingDetails, reason);
 //     console.log(`Booking cancellation email sent for booking ${bookingId}`);
@@ -58,4 +58,8 @@ export async function triggerBookingCancellation(bookingId: string, reason?: str
 
 export async function triggerWelcomeEmail(userId: string) {
   console.log(`Welcome email triggered for user ${userId}`);
+}
+
+export async function onPaymentConfirmed(transactionId: string) {
+  console.log(`Payment confirmation email triggered for transaction ${transactionId}`);
 }

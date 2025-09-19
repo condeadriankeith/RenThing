@@ -1,10 +1,10 @@
-// Prisma Schema for RenThing with MySQL
+// Prisma Schema for RenThing with PostgreSQL for Supabase
 generator client {
   provider = "prisma-client-js"
 }
 
 datasource db {
-  provider = "mysql"
+  provider = "postgresql"
   url      = env("DATABASE_URL")
 }
 
@@ -31,8 +31,8 @@ model User {
   name          String?
   avatar        String?
   role          Role        @default(user)
-  createdAt     DateTime    @default(now()) @db.DateTime(6)
-  updatedAt     DateTime    @updatedAt @db.DateTime(6)
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
   
   // Relations
   listings      Listing[]   
@@ -60,8 +60,8 @@ model Listing {
   priceUnit     String
   ownerId       String
   images        String?
-  createdAt     DateTime    @default(now()) @db.DateTime(6)
-  updatedAt     DateTime    @updatedAt @db.DateTime(6)
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
   
   // Relations
   owner         User        @relation(fields: [ownerId], references: [id])
@@ -78,8 +78,8 @@ model Booking {
   startDate     DateTime
   endDate       DateTime
   status        BookingStatus @default(pending)
-  createdAt     DateTime      @default(now()) @db.DateTime(6)
-  updatedAt     DateTime      @updatedAt @db.DateTime(6)
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
   
   // Relations
   user          User          @relation(fields: [userId], references: [id])
@@ -95,8 +95,8 @@ model Review {
   listingId     String
   rating        Int
   comment       String?
-  createdAt     DateTime    @default(now()) @db.DateTime(6)
-  updatedAt     DateTime    @updatedAt @db.DateTime(6)
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
   
   // Relations
   user          User        @relation(fields: [userId], references: [id])
@@ -114,7 +114,7 @@ model Message {
   receiverId    String
   content       String
   read          Boolean     @default(false)
-  createdAt     DateTime    @default(now()) @db.DateTime(6)
+  createdAt     DateTime    @default(now())
   
   // Relations
   sender        User        @relation("sentMessages", fields: [senderId], references: [id])
@@ -129,8 +129,8 @@ model Transaction {
   currency      String      @default("PHP")
   paymentMethod String?
   status        String      @default("pending")
-  createdAt     DateTime    @default(now()) @db.DateTime(6)
-  updatedAt     DateTime    @updatedAt @db.DateTime(6)
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
   
   // Relations
   booking       Booking     @relation(fields: [bookingId], references: [id])
@@ -144,7 +144,7 @@ model Wishlist {
   id            String      @id @default(uuid())
   userId        String
   listingId     String
-  createdAt     DateTime    @default(now()) @db.DateTime(6)
+  createdAt     DateTime    @default(now())
   
   // Relations
   user          User        @relation(fields: [userId], references: [id])
@@ -160,10 +160,10 @@ model Achievement {
   name          String
   description   String
   icon          String?
-  earnedAt      DateTime    @default(now()) @db.DateTime(6)
-  expiresAt     DateTime?   @db.DateTime(6)
-  createdAt     DateTime    @default(now()) @db.DateTime(6)
-  updatedAt     DateTime    @updatedAt @db.DateTime(6)
+  earnedAt      DateTime    @default(now())
+  expiresAt     DateTime?
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
   
   // Relations
   user          User        @relation(fields: [userId], references: [id])
@@ -178,7 +178,7 @@ model Purchase {
   amount        Float
   currency      String      @default("PHP")
   status        String      @default("completed")
-  createdAt     DateTime    @default(now()) @db.DateTime(6)
+  createdAt     DateTime    @default(now())
   
   // Relations
   user          User        @relation(fields: [userId], references: [id])
@@ -192,8 +192,8 @@ model UserBadge {
   userId        String
   badgeType     String
   purchaseId    String?
-  expiresAt     DateTime?   @db.DateTime(6)
-  createdAt     DateTime    @default(now()) @db.DateTime(6)
+  expiresAt     DateTime?
+  createdAt     DateTime    @default(now())
   
   // Relations
   user          User        @relation(fields: [userId], references: [id])
@@ -208,9 +208,9 @@ model Voucher {
   code          String      @unique
   discount      Float
   used          Boolean     @default(false)
-  usedAt        DateTime?   @db.DateTime(6)
-  expiresAt     DateTime?   @db.DateTime(6)
-  createdAt     DateTime    @default(now()) @db.DateTime(6)
+  usedAt        DateTime?
+  expiresAt     DateTime?
+  createdAt     DateTime    @default(now())
   
   // Relations
   user          User        @relation(fields: [userId], references: [id])
@@ -222,7 +222,7 @@ model VoucherRedemption {
   id            String      @id @default(uuid())
   voucherId     String
   userId        String
-  redeemedAt    DateTime    @default(now()) @db.DateTime(6)
+  redeemedAt    DateTime    @default(now())
   
   // Relations
   voucher       Voucher     @relation(fields: [voucherId], references: [id])
