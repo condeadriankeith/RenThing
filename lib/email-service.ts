@@ -1,7 +1,7 @@
 import nodemailer from 'nodemailer'
-import { PrismaClient } from '@prisma/client'
+// import { PrismaClient } from '@prisma/client'
 
-const prisma = new PrismaClient()
+// const prisma = new PrismaClient()
 
 interface EmailConfig {
   host: string
@@ -448,40 +448,40 @@ export class EmailService {
 export const emailService = new EmailService()
 
 // Helper function to get booking details for emails
-export async function getBookingEmailDetails(bookingId: string) {
-  const booking = await prisma.booking.findUnique({
-    where: { id: bookingId },
-    include: {
-      listing: {
-        include: {
-          images: {
-            take: 1,
-            select: { url: true }
-          },
-          owner: {
-            select: { name: true, email: true }
-          }
-        }
-      },
-      user: {
-        select: { name: true, email: true }
-      }
-    }
-  })
+// export async function getBookingEmailDetails(bookingId: string) {
+//   const booking = await prisma.booking.findUnique({
+//     where: { id: bookingId },
+//     include: {
+//       listing: {
+//         include: {
+//           images: {
+//             take: 1,
+//             select: { url: true }
+//           },
+//           owner: {
+//             select: { name: true, email: true }
+//           }
+//         }
+//       },
+//       user: {
+//         select: { name: true, email: true }
+//       }
+//     }
+//   })
 
-  if (!booking || !booking.listing || !booking.user) return null
+//   if (!booking || !booking.listing || !booking.user) return null
 
-  return {
-    bookingId: booking.id,
-    listingTitle: booking.listing.title,
-    renterName: booking.user.name || 'User',
-    renterEmail: booking.user.email || '',
-    ownerName: booking.listing.owner.name || 'Owner',
-    ownerEmail: booking.listing.owner.email || '',
-    startDate: booking.startDate,
-    endDate: booking.endDate,
-    totalPrice: booking.totalPrice,
-    listingLocation: (booking.listing as any).location || '',
-    listingImages: booking.listing.images?.map((img: { url: string }) => img.url) || [],
-  }
-}
+//   return {
+//     bookingId: booking.id,
+//     listingTitle: booking.listing.title,
+//     renterName: booking.user.name || 'User',
+//     renterEmail: booking.user.email || '',
+//     ownerName: booking.listing.owner.name || 'Owner',
+//     ownerEmail: booking.listing.owner.email || '',
+//     startDate: booking.startDate,
+//     endDate: booking.endDate,
+//     totalPrice: booking.totalPrice,
+//     listingLocation: (booking.listing as any).location || '',
+//     listingImages: booking.listing.images?.map((img: { url: string }) => img.url) || [],
+//   }
+// }

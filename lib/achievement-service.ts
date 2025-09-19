@@ -1,4 +1,112 @@
-import { prisma } from '@/lib/prisma'
+// CSV and Prisma integrations removed as requested
+// import { PrismaClient } from '@prisma/client';
+
+// const prisma = new PrismaClient();
+
+// export async function getUserAchievements(userId: string) {
+//   try {
+//     const achievements = await prisma.achievement.findMany({
+//       where: { userId },
+//       orderBy: { earnedAt: 'desc' }
+//     });
+//     return achievements;
+//   } catch (error) {
+//     console.error('Error fetching user achievements:', error);
+//     throw error;
+//   }
+// }
+
+// export async function awardAchievement(userId: string, type: string, title: string, description: string, icon?: string) {
+//   try {
+//     const achievement = await prisma.achievement.create({
+//       data: {
+//         userId,
+//         type,
+//         title,
+//         description,
+//         icon
+//       }
+//     });
+//     return achievement;
+//   } catch (error) {
+//     console.error('Error awarding achievement:', error);
+//     throw error;
+//   }
+// }
+
+// export async function checkAndAwardAchievements(userId: string) {
+//   try {
+//     // Check for various achievements
+//     const user = await prisma.user.findUnique({
+//       where: { id: userId },
+//       include: {
+//         listings: true,
+//         bookings: true,
+//         reviews: true
+//       }
+//     });
+
+//     if (!user) return;
+
+//     // First listing achievement
+//     if (user.listings.length === 1) {
+//       await awardAchievement(
+//         userId,
+//         'first_listing',
+//         'First Listing',
+//         'Listed your first item for rent',
+//         'listing'
+//       );
+//     }
+
+//     // First booking achievement
+//     if (user.bookings.length === 1) {
+//       await awardAchievement(
+//         userId,
+//         'first_booking',
+//         'First Booking',
+//         'Made your first rental booking',
+//         'booking'
+//       );
+//     }
+
+//     // Super renter achievement (10+ bookings)
+//     if (user.bookings.length >= 10) {
+//       await awardAchievement(
+//         userId,
+//         'super_renter',
+//         'Super Renter',
+//         'Booked 10 or more items',
+//         'star'
+//       );
+//     }
+
+//     // Super owner achievement (10+ listings)
+//     if (user.listings.length >= 10) {
+//       await awardAchievement(
+//         userId,
+//         'super_owner',
+//         'Super Owner',
+//         'Listed 10 or more items',
+//         'crown'
+//       );
+//     }
+//   } catch (error) {
+//     console.error('Error checking and awarding achievements:', error);
+//   }
+// }
+
+export async function getUserAchievements(userId: string) {
+  return [];
+}
+
+export async function awardAchievement(userId: string, type: string, title: string, description: string, icon?: string) {
+  return null;
+}
+
+export async function checkAndAwardAchievements(userId: string) {
+  console.log(`Checking achievements for user ${userId}`);
+}
 
 export interface Achievement {
   id: string
@@ -25,21 +133,15 @@ class AchievementService {
    * Create a new achievement for a user
    */
   async createAchievement(data: CreateAchievementData): Promise<Achievement> {
-    try {
-      const achievement = await prisma.achievement.create({
-        data: {
-          userId: data.userId,
-          type: data.type,
-          title: data.title,
-          description: data.description,
-          icon: data.icon || null,
-          expiresAt: data.expiresAt
-        }
-      })
-      return achievement
-    } catch (error) {
-      console.error('Error creating achievement:', error)
-      throw new Error('Failed to create achievement')
+    // Mock implementation
+    return {
+      id: 'mock-id',
+      userId: data.userId,
+      type: data.type,
+      title: data.title,
+      description: data.description,
+      icon: data.icon || null,
+      earnedAt: new Date()
     }
   }
 
@@ -47,150 +149,40 @@ class AchievementService {
    * Get all achievements for a user
    */
   async getUserAchievements(userId: string): Promise<Achievement[]> {
-    try {
-      const achievements = await prisma.achievement.findMany({
-        where: {
-          userId,
-          OR: [
-            { expiresAt: null },
-            { expiresAt: { gte: new Date() } }
-          ]
-        },
-        orderBy: {
-          earnedAt: 'desc'
-        }
-      })
-      return achievements
-    } catch (error) {
-      console.error('Error fetching user achievements:', error)
-      throw new Error('Failed to fetch user achievements')
-    }
+    // Mock implementation
+    return []
   }
 
   /**
    * Check if user has a specific achievement
    */
   async hasAchievement(userId: string, achievementType: string): Promise<boolean> {
-    try {
-      const achievement = await prisma.achievement.findFirst({
-        where: {
-          userId,
-          type: achievementType,
-          OR: [
-            { expiresAt: null },
-            { expiresAt: { gte: new Date() } }
-          ]
-        }
-      })
-      return !!achievement
-    } catch (error) {
-      console.error('Error checking user achievement:', error)
-      throw new Error('Failed to check user achievement')
-    }
+    // Mock implementation
+    return false
   }
 
   /**
    * Award rental milestone achievements
    */
   async awardRentalMilestones(userId: string, totalRentals: number): Promise<void> {
-    try {
-      // Check and award first rental achievement
-      if (totalRentals >= 1 && !(await this.hasAchievement(userId, 'first-rental'))) {
-        await this.createAchievement({
-          userId,
-          type: 'milestone',
-          title: 'First Rental',
-          description: 'Completed your first rental on RenThing',
-          icon: 'calendar'
-        })
-      }
-
-      // Check and award 10 rentals achievement
-      if (totalRentals >= 10 && !(await this.hasAchievement(userId, '10-rentals'))) {
-        await this.createAchievement({
-          userId,
-          type: 'milestone',
-          title: '10 Rentals',
-          description: 'Completed 10 rentals on RenThing',
-          icon: 'shopping-bag'
-        })
-      }
-
-      // Check and award 50 rentals achievement
-      if (totalRentals >= 50 && !(await this.hasAchievement(userId, '50-rentals'))) {
-        await this.createAchievement({
-          userId,
-          type: 'milestone',
-          title: '50 Rentals',
-          description: 'Completed 50 rentals on RenThing',
-          icon: 'crown'
-        })
-      }
-    } catch (error) {
-      console.error('Error awarding rental milestones:', error)
-    }
+    // Mock implementation
+    console.log(`Checking rental milestones for user ${userId}`)
   }
 
   /**
    * Award community participation achievements
    */
   async awardCommunityAchievements(userId: string, reviewsCount: number, messagesCount: number): Promise<void> {
-    try {
-      // Check and award helpful reviewer achievement
-      if (reviewsCount >= 5 && !(await this.hasAchievement(userId, 'helpful-reviewer'))) {
-        await this.createAchievement({
-          userId,
-          type: 'community',
-          title: 'Helpful Reviewer',
-          description: 'Left 5 or more reviews for items you rented',
-          icon: 'star'
-        })
-      }
-
-      // Check and award active communicator achievement
-      if (messagesCount >= 50 && !(await this.hasAchievement(userId, 'active-communicator'))) {
-        await this.createAchievement({
-          userId,
-          type: 'community',
-          title: 'Active Communicator',
-          description: 'Sent 50 or more messages to other users',
-          icon: 'users'
-        })
-      }
-    } catch (error) {
-      console.error('Error awarding community achievements:', error)
-    }
+    // Mock implementation
+    console.log(`Checking community achievements for user ${userId}`)
   }
 
   /**
    * Award trust and verification achievements
    */
   async awardTrustAchievements(userId: string, isVerified: boolean, hasPaymentMethod: boolean): Promise<void> {
-    try {
-      // Check and award identity verified achievement
-      if (isVerified && !(await this.hasAchievement(userId, 'identity-verified'))) {
-        await this.createAchievement({
-          userId,
-          type: 'trust',
-          title: 'Identity Verified',
-          description: 'Successfully verified your identity',
-          icon: 'check-circle'
-        })
-      }
-
-      // Check and award payment verified achievement
-      if (hasPaymentMethod && !(await this.hasAchievement(userId, 'payment-verified'))) {
-        await this.createAchievement({
-          userId,
-          type: 'trust',
-          title: 'Payment Verified',
-          description: 'Added and verified a payment method',
-          icon: 'zap'
-        })
-      }
-    } catch (error) {
-      console.error('Error awarding trust achievements:', error)
-    }
+    // Mock implementation
+    console.log(`Checking trust achievements for user ${userId}`)
   }
 }
 

@@ -3,10 +3,10 @@
 // This script tests the database connection and verifies that the admin user exists
 
 // Load environment variables
-require('dotenv').config({ path: '.env' });
+require('dotenv').config({ path: '.env.local' });
 
 // Set PRISMA_SCHEMA environment variable to use local schema
-process.env.PRISMA_SCHEMA = './prisma/schema.local.prisma';
+process.env.PRISMA_SCHEMA = './prisma/schema.prisma';
 
 const { PrismaClient } = require('@prisma/client');
 const bcrypt = require('bcryptjs');

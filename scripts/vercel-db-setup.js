@@ -1,11 +1,9 @@
 #!/usr/bin/env node
 
-// This script handles database setup for Vercel deployments
-// It checks if we're using a PostgreSQL database and runs migrations if needed
+// This script handles database setup for Vercel deployments with Supabase
+// It checks if we're using a Supabase database and runs migrations if needed
 
 const { execSync } = require('child_process');
-const fs = require('fs');
-const path = require('path');
 
 function setupDatabase() {
   try {
@@ -14,13 +12,13 @@ function setupDatabase() {
     // Check if DATABASE_URL is set
     const databaseUrl = process.env.DATABASE_URL;
     if (!databaseUrl) {
-      console.log('No DATABASE_URL found, using default SQLite configuration');
+      console.log('No DATABASE_URL found, skipping database setup');
       return;
     }
     
     console.log(`Database URL: ${databaseUrl.substring(0, 50)}...`);
     
-    // Check if it's a PostgreSQL database
+    // Check if it's a Supabase/PostgreSQL database
     if (databaseUrl.startsWith('postgresql://') || databaseUrl.startsWith('postgres://')) {
       console.log('PostgreSQL database detected, running migrations...');
       
@@ -33,23 +31,6 @@ function setupDatabase() {
       execSync('npx prisma db seed', { stdio: 'inherit' });
       
       console.log('Database setup completed successfully!');
-    } else if (databaseUrl.startsWith('file:')) {
-      console.log('SQLite database detected');
-      console.log('Note: SQLite is not recommended for production deployments');
-      
-      // For Vercel deployments with SQLite, we need to ensure the file exists
-      // but migrations are not needed as the schema is embedded
-      const filePath = databaseUrl.replace('file:', '');
-      console.log(`Checking SQLite file: ${filePath}`);
-      
-      // Create directory if it doesn't exist
-      const dir = path.dirname(filePath);
-      if (!fs.existsSync(dir)) {
-        fs.mkdirSync(dir, { recursive: true });
-        console.log(`Created directory: ${dir}`);
-      }
-      
-      console.log('SQLite setup completed!');
     } else {
       console.log('Unknown database type, skipping migrations');
     }

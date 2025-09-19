@@ -1,47 +1,45 @@
-import { NextRequest, NextResponse } from 'next/server';
-import { getServerSession } from 'next-auth';
-import { authOptions } from '@/lib/auth';
-import { prisma } from '@/lib/prisma';
+import { NextRequest, NextResponse } from "next/server";
+import { getServerSession } from "next-auth";
+import { authOptions } from "@/lib/auth";
+import { logger } from "@/lib/logger";
 
 export async function GET(request: NextRequest) {
   try {
     const session = await getServerSession(authOptions);
     
-    if (!session?.user?.email) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    if (!session?.user) {
+      return NextResponse.json(
+        { error: "Not authenticated" },
+        { status: 401 }
+      );
     }
 
-    const bookings = await prisma.booking.findMany({
-      where: {
-        userEmail: session.user.email
-      },
-      include: {
-        listing: {
-          select: {
-            id: true,
-            title: true,
-            location: true,
-            image: true,
-            price: true,
-            owner: {
-              select: {
-                name: true,
-                email: true
-              }
-            }
-          }
-        }
-      },
-      orderBy: {
-        createdAt: 'desc'
-      }
-    });
+    // Fetch user's bookings
+    // const bookings = await prisma.booking.findMany({
+    //   where: { userId: session.user.id },
+    //   include: {
+    //     listing: {
+    //       select: {
+    //         id: true,
+    //         title: true,
+    //         description: true,
+    //         price: true,
+    //         location: true,
+    //         images: true,
+    //       }
+    //     }
+    //   },
+    //   orderBy: { createdAt: 'desc' }
+    // });
 
-    return NextResponse.json(bookings);
+    // For now, return mock bookings
+    const bookings: any[] = [];
+
+    return NextResponse.json({ bookings });
   } catch (error) {
-    console.error('Error fetching user bookings:', error);
+    logger.error("User bookings fetch error", { error });
     return NextResponse.json(
-      { error: 'Failed to fetch bookings' }, 
+      { error: "Internal server error" },
       { status: 500 }
     );
   }

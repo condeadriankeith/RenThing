@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server"
 import { getServerSession } from "next-auth"
 import { authOptions } from "@/lib/auth"
-import { prisma } from "@/lib/prisma"
+// import { prisma } from "@/lib/prisma"
 
 // GET /api/admin - Get admin dashboard data (e.g., user count, listing count, recent activities)
 export async function GET(request: NextRequest) {
@@ -16,34 +16,34 @@ export async function GET(request: NextRequest) {
       )
     }
 
-    const userCount = await prisma.user.count()
-    const listingCount = await prisma.listing.count()
-    const bookingCount = await prisma.booking.count()
-    const transactionCount = await prisma.transaction.count()
+    // const userCount = await prisma.user.count()
+    // const listingCount = await prisma.listing.count()
+    // const bookingCount = await prisma.booking.count()
+    // const transactionCount = await prisma.transaction.count()
 
-    // Fetch some recent activities (e.g., latest bookings, new users)
-    const recentBookings = await prisma.booking.findMany({
-      orderBy: { createdAt: 'desc' },
-      take: 5,
-      include: {
-        user: { select: { name: true } },
-        listing: { select: { title: true } },
-      },
-    })
+    // // Fetch some recent activities (e.g., latest bookings, new users)
+    // const recentBookings = await prisma.booking.findMany({
+    //   orderBy: { createdAt: 'desc' },
+    //   take: 5,
+    //   include: {
+    //     user: { select: { name: true } },
+    //     listing: { select: { title: true } },
+    //   },
+    // })
 
-    const newUsers = await prisma.user.findMany({
-      orderBy: { createdAt: 'desc' },
-      take: 5,
-      select: { id: true, name: true, email: true, createdAt: true },
-    })
+    // const newUsers = await prisma.user.findMany({
+    //   orderBy: { createdAt: 'desc' },
+    //   take: 5,
+    //   select: { id: true, name: true, email: true, createdAt: true },
+    // })
 
     return NextResponse.json({
-      userCount,
-      listingCount,
-      bookingCount,
-      transactionCount,
-      recentBookings,
-      newUsers,
+      userCount: 0,
+      listingCount: 0,
+      bookingCount: 0,
+      transactionCount: 0,
+      recentBookings: [],
+      newUsers: [],
     })
   } catch (error) {
     console.error("Admin GET error:", error)

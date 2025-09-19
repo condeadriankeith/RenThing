@@ -1,72 +1,59 @@
-import { NextRequest, NextResponse } from "next/server"
-import jwt from "jsonwebtoken"
-import { prisma } from "@/lib/prisma"
-import { logger } from "@/lib/logger"
+import { NextRequest, NextResponse } from "next/server";
+import { getServerSession } from "next-auth";
+import { authOptions } from "@/lib/auth";
 
-// Check if NEXTAUTH_SECRET is configured
-if (!process.env.NEXTAUTH_SECRET) {
-  console.error("NEXTAUTH_SECRET is not configured in environment variables");
-}
-
-// GET /api/auth/me - Get current user for mobile
 export async function GET(request: NextRequest) {
   try {
-    const authHeader = request.headers.get('authorization')
-    
-    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+    const session = await getServerSession(authOptions);
+
+    if (!session?.user) {
       return NextResponse.json(
-        { error: "Authorization token required" },
+        { error: "Not authenticated" },
         { status: 401 }
-      )
+      );
     }
 
-    // Check if NEXTAUTH_SECRET is configured
-    const secret = process.env.NEXTAUTH_SECRET;
-    if (!secret) {
-      logger.error("NEXTAUTH_SECRET is not configured");
-      return NextResponse.json(
-        { error: "Server configuration error" },
-        { status: 500 }
-      )
-    }
+    // Fetch user data from database
+    // const user = await prisma.user.findUnique({
+    //   where: { id: session.user.id },
+    //   select: {
+    //     id: true,
+    //     name: true,
+    //     email: true,
+    //     role: true,
+    //     avatar: true,
+    //     bio: true,
+    //     location: true,
+    //     socialLinks: true,
+    //     responseTime: true,
+    //     isVerified: true,
+    //     theme: true,
+    //     background: true,
+    //   },
+    // });
 
-    const token = authHeader.split(' ')[1]
+    // For now, return mock user data
+    const user = {
+      id: session.user.id,
+      name: session.user.name,
+      email: session.user.email,
+      role: session.user.role,
+      avatar: null,
+      bio: null,
+      location: null,
+      socialLinks: null,
+      responseTime: null,
+      isVerified: false,
+      theme: null,
+      background: null,
+    };
 
-    try {
-      const decoded = jwt.verify(token, secret) as { userId: string; email: string; role?: string }
-
-      // Get fresh user data from database
-      const user = await prisma.user.findUnique({
-        where: { id: decoded.userId },
-        select: {
-          id: true,
-          email: true,
-          name: true,
-          role: true,
-          createdAt: true,
-          updatedAt: true,
-        },
-      })
-
-      if (!user) {
-        return NextResponse.json(
-          { error: "User not found" },
-          { status: 404 }
-        )
-      }
-
-      return NextResponse.json(user)
-    } catch (jwtError) {
-      return NextResponse.json(
-        { error: "Invalid token" },
-        { status: 401 }
-      )
-    }
+    return NextResponse.json({ user });
   } catch (error) {
-    logger.error("Mobile auth me error", error as Error);
+    console.error("Auth me error:", error);
     return NextResponse.json(
       { error: "Internal server error" },
       { status: 500 }
-    )
+    );
   }
 }

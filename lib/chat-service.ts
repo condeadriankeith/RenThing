@@ -1,9 +1,8 @@
 import { Server as HTTPServer } from 'http'
 import { Server as SocketIOServer } from 'socket.io'
-import { PrismaClient } from '@prisma/client'
-import jwt from 'jsonwebtoken'
+import { PrismaClient } from '@prisma/client';
 
-const prisma = new PrismaClient()
+const prisma = new PrismaClient();
 
 /**
  * BUSINESS LOGIC DOCUMENTATION

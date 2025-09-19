@@ -76,27 +76,10 @@ export default function BrowsePage() {
             databaseListings = data.listings
           }
         } catch (dbError) {
-          console.log("Database fetch failed, trying CSV data", dbError)
+          console.log("Database fetch failed", dbError)
         }
 
-        // If no database listings, try to fetch from CSV data
-        let csvListings: any[] = []
-        if (databaseListings.length === 0) {
-          try {
-            const csvResponse = await fetch("/api/listings/csv")
-            if (csvResponse.ok) {
-              const csvData = await csvResponse.json()
-              csvListings = csvData.listings || []
-            }
-          } catch (csvError) {
-            console.log("CSV fetch failed", csvError)
-          }
-        }
-
-        // Combine listings from both sources
-        const combinedListings = [...databaseListings, ...csvListings]
-
-        const enrichedListings: Listing[] = combinedListings.map((listing: any) => {
+        const enrichedListings: Listing[] = databaseListings.map((listing: any) => {
           // Determine category based on title and features
           let category = "tools" // default
           const titleLower = listing.title.toLowerCase()

@@ -1,5 +1,10 @@
 #!/usr/bin/env node
 
+// This script is no longer needed as we're using Supabase directly
+console.log('✅ Database setup is handled by Supabase');
+console.log('📍 Using Supabase as the database provider');
+console.log('🔗 Connection configured through DATABASE_URL environment variable');
+
 const fs = require('fs');
 const path = require('path');
 

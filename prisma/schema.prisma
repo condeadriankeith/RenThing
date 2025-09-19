@@ -1,150 +1,232 @@
+// Prisma Schema for RenThing with MySQL
 generator client {
   provider = "prisma-client-js"
 }
 
 datasource db {
-  provider = "postgresql"
+  provider = "mysql"
   url      = env("DATABASE_URL")
 }
 
-// To use SQLite instead of PostgreSQL, change the provider:
-// datasource db {
-//   provider = "sqlite"
-//   url      = env("DATABASE_URL")
-// }
-
-model User {
-  id            String        @id @default(cuid())
-  name          String?
-  email         String        @unique
-  emailVerified DateTime?
-  image         String?
-  password      String?
-  role          String        @default("user")
-  avatar        String?
-  bio           String?
-  location      String?
-  socialLinks   String?
-  responseTime  Int?
-  isVerified    Boolean       @default(false)
-  theme         String?
-  background    String?
-  createdAt     DateTime      @default(now())
-  updatedAt     DateTime      @updatedAt
-  accounts      Account[]
-  achievements  Achievement[]
-  bookings      Booking[]
-  listings      Listing[]
-  reviews       Review[]
-  sessions      Session[]
-  wishlistItems Wishlist[]
+// User roles
+enum Role {
+  admin
+  vendor
+  user
 }
 
+// Booking statuses
+enum BookingStatus {
+  pending
+  confirmed
+  completed
+  cancelled
+}
+
+// User model
+model User {
+  id            String      @id @default(uuid())
+  email         String      @unique
+  password      String?
+  name          String?
+  avatar        String?
+  role          Role        @default(user)
+  createdAt     DateTime    @default(now()) @db.DateTime(6)
+  updatedAt     DateTime    @updatedAt @db.DateTime(6)
+  
+  // Relations
+  listings      Listing[]   
+  bookings      Booking[]   
+  reviews       Review[]    
+  messagesSent  Message[]   @relation("sentMessages")
+  messagesRec   Message[]   @relation("receivedMessages")
+  wishlists     Wishlist[]
+  achievements  Achievement[]
+  purchases     Purchase[]
+  userBadges    UserBadge[]
+  vouchers      Voucher[]
+  voucherRedemptions VoucherRedemption[]
+  transactions  Transaction[]
+}
+
+// Listing model
 model Listing {
-  id            String     @id @default(cuid())
+  id            String      @id @default(uuid())
   title         String
   description   String
   price         Float
   location      String
   category      String
   priceUnit     String
-  images        String?
-  features      String?
   ownerId       String
-  createdAt     DateTime   @default(now())
-  updatedAt     DateTime   @updatedAt
+  images        String?
+  createdAt     DateTime    @default(now()) @db.DateTime(6)
+  updatedAt     DateTime    @updatedAt @db.DateTime(6)
+  
+  // Relations
+  owner         User        @relation(fields: [ownerId], references: [id])
   bookings      Booking[]
-  owner         User       @relation(fields: [ownerId], references: [id])
   reviews       Review[]
   wishlistItems Wishlist[]
 }
 
-model Review {
-  id        String   @id @default(cuid())
-  rating    Int
-  comment   String?
-  userId    String
-  listingId String
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-  listing   Listing  @relation(fields: [listingId], references: [id])
-  user      User     @relation(fields: [userId], references: [id])
-
-  @@unique([userId, listingId])
-}
-
+// Booking model
 model Booking {
-  id         String   @id @default(cuid())
-  startDate  DateTime
-  endDate    DateTime
-  totalPrice Float
-  status     String   @default("pending")
-  userId     String
-  listingId  String
-  createdAt  DateTime @default(now())
-  updatedAt  DateTime @updatedAt
-  listing    Listing  @relation(fields: [listingId], references: [id])
-  user       User     @relation(fields: [userId], references: [id])
+  id            String        @id @default(uuid())
+  userId        String
+  listingId     String
+  startDate     DateTime
+  endDate       DateTime
+  status        BookingStatus @default(pending)
+  createdAt     DateTime      @default(now()) @db.DateTime(6)
+  updatedAt     DateTime      @updatedAt @db.DateTime(6)
+  
+  // Relations
+  user          User          @relation(fields: [userId], references: [id])
+  listing       Listing       @relation(fields: [listingId], references: [id])
+  review        Review?
+  transaction   Transaction?
 }
 
-model Wishlist {
-  id        String   @id @default(cuid())
-  userId    String
-  listingId String
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-  listing   Listing  @relation(fields: [listingId], references: [id])
-  user      User     @relation(fields: [userId], references: [id])
+// Review model
+model Review {
+  id            String      @id @default(uuid())
+  userId        String
+  listingId     String
+  rating        Int
+  comment       String?
+  createdAt     DateTime    @default(now()) @db.DateTime(6)
+  updatedAt     DateTime    @updatedAt @db.DateTime(6)
+  
+  // Relations
+  user          User        @relation(fields: [userId], references: [id])
+  listing       Listing     @relation(fields: [listingId], references: [id])
+  booking       Booking?    @relation(fields: [bookingId], references: [id])
+  
+  // Additional fields
+  bookingId     String?      @unique
+}
 
+// Message model
+model Message {
+  id            String      @id @default(uuid())
+  senderId      String
+  receiverId    String
+  content       String
+  read          Boolean     @default(false)
+  createdAt     DateTime    @default(now()) @db.DateTime(6)
+  
+  // Relations
+  sender        User        @relation("sentMessages", fields: [senderId], references: [id])
+  receiver      User        @relation("receivedMessages", fields: [receiverId], references: [id])
+}
+
+// Transaction model
+model Transaction {
+  id            String      @id @default(uuid())
+  bookingId     String      @unique
+  amount        Float
+  currency      String      @default("PHP")
+  paymentMethod String?
+  status        String      @default("pending")
+  createdAt     DateTime    @default(now()) @db.DateTime(6)
+  updatedAt     DateTime    @updatedAt @db.DateTime(6)
+  
+  // Relations
+  booking       Booking     @relation(fields: [bookingId], references: [id])
+  // Add relation back to User
+  userId        String
+  user          User        @relation(fields: [userId], references: [id])
+}
+
+// Wishlist model
+model Wishlist {
+  id            String      @id @default(uuid())
+  userId        String
+  listingId     String
+  createdAt     DateTime    @default(now()) @db.DateTime(6)
+  
+  // Relations
+  user          User        @relation(fields: [userId], references: [id])
+  listing       Listing     @relation(fields: [listingId], references: [id])
+  
   @@unique([userId, listingId])
 }
 
+// Achievement model
 model Achievement {
-  id          String    @id @default(cuid())
-  userId      String
-  type        String
-  title       String
-  description String
-  icon        String?
-  earnedAt    DateTime  @default(now())
-  expiresAt   DateTime?
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @updatedAt
-  user        User      @relation(fields: [userId], references: [id])
+  id            String      @id @default(uuid())
+  userId        String
+  name          String
+  description   String
+  icon          String?
+  earnedAt      DateTime    @default(now()) @db.DateTime(6)
+  expiresAt     DateTime?   @db.DateTime(6)
+  createdAt     DateTime    @default(now()) @db.DateTime(6)
+  updatedAt     DateTime    @updatedAt @db.DateTime(6)
+  
+  // Relations
+  user          User        @relation(fields: [userId], references: [id])
 }
 
-model Account {
-  id                 String  @id @default(cuid())
-  userId             String
-  type               String
-  provider           String
-  providerAccountId  String
-  refresh_token      String?
-  access_token       String?
-  expires_at         Int?
-  token_type         String?
-  scope              String?
-  id_token           String?
-  session_state      String?
-  oauth_token_secret String?
-  oauth_token        String?
-  user               User    @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-  @@unique([provider, providerAccountId])
+// Purchase model
+model Purchase {
+  id            String      @id @default(uuid())
+  userId        String
+  itemType      String
+  itemId        String?
+  amount        Float
+  currency      String      @default("PHP")
+  status        String      @default("completed")
+  createdAt     DateTime    @default(now()) @db.DateTime(6)
+  
+  // Relations
+  user          User        @relation(fields: [userId], references: [id])
+  // Add relation back to UserBadge
+  userBadges    UserBadge[]
 }
 
-model Session {
-  id           String   @id @default(cuid())
-  sessionToken String   @unique
-  userId       String
-  expires      DateTime
-  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+// UserBadge model
+model UserBadge {
+  id            String      @id @default(uuid())
+  userId        String
+  badgeType     String
+  purchaseId    String?
+  expiresAt     DateTime?   @db.DateTime(6)
+  createdAt     DateTime    @default(now()) @db.DateTime(6)
+  
+  // Relations
+  user          User        @relation(fields: [userId], references: [id])
+  purchase      Purchase?   @relation(fields: [purchaseId], references: [id])
 }
 
-model VerificationToken {
-  identifier String
-  token      String   @unique
-  expires    DateTime
+// Voucher model
+model Voucher {
+  id            String      @id @default(uuid())
+  userId        String
+  voucherType   String
+  code          String      @unique
+  discount      Float
+  used          Boolean     @default(false)
+  usedAt        DateTime?   @db.DateTime(6)
+  expiresAt     DateTime?   @db.DateTime(6)
+  createdAt     DateTime    @default(now()) @db.DateTime(6)
+  
+  // Relations
+  user          User        @relation(fields: [userId], references: [id])
+  redemptions   VoucherRedemption[]
+}
 
-  @@unique([identifier, token])
+// VoucherRedemption model
+model VoucherRedemption {
+  id            String      @id @default(uuid())
+  voucherId     String
+  userId        String
+  redeemedAt    DateTime    @default(now()) @db.DateTime(6)
+  
+  // Relations
+  voucher       Voucher     @relation(fields: [voucherId], references: [id])
+  user          User        @relation(fields: [userId], references: [id])
+  
+  @@unique([voucherId, userId])
 }
