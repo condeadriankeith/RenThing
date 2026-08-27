@@ -36,7 +36,7 @@ export async function POST(request: NextRequest) {
         throw new Error(validation.error)
       }
 
-      // Upload to Cloudinary
+      // Upload image (auto selects Vercel Blob if configured, otherwise Cloudinary)
       return imageService.uploadImage(buffer, folder)
     })
 
@@ -47,7 +47,7 @@ export async function POST(request: NextRequest) {
       images: results.map(result => ({
         publicId: result.publicId,
         url: result.secureUrl,
-        thumbnail: imageService.getThumbnailUrl(result.publicId),
+        thumbnail: result.provider === 'vercel-blob' ? result.secureUrl : imageService.getThumbnailUrl(result.publicId),
         width: result.width,
         height: result.height,
         format: result.format,
