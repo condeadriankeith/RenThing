@@ -1,7 +1,6 @@
 "use client"
 
 // Force dynamic rendering for this page
-export const dynamic = 'force-dynamic';
 export const runtime = 'edge';
 
 import { useState, useEffect } from "react"
@@ -16,10 +15,10 @@ import { Separator } from "@/components/ui/separator"
 import { MessageCircle, Search, Send, MoreVertical, ArrowLeft, X } from "lucide-react"
 import { useToast } from "@/hooks/use-toast"
 import { SpinnerLoader } from "@/components/ui/spinner-loader"
-import dynamic from "next/dynamic"
+import nextDynamic from "next/dynamic";
 
 // Dynamically import the Chat component to avoid SSR issues
-const Chat = dynamic(() => import("@/components/chat").then((mod) => ({ default: mod.Chat })), {
+const Chat = nextDynamic(() => import("@/components/chat").then((mod) => ({ default: mod.Chat })), {
   ssr: false,
   loading: () => <SpinnerLoader size="lg" />
 });
