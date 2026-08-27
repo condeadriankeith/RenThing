@@ -1,5 +1,10 @@
 # RenThing - Rental Marketplace Platform
 
+[![Live Demo](https://img.shields.io/badge/Live%20Demo-Vercel-black?style=for-the-badge&logo=vercel)](https://renthing.vercel.app/)
+
+> **🌐 Live Demo:** [https://renthing.vercel.app/](https://renthing.vercel.app/)
+
+
 RenThing is a comprehensive rental marketplace platform that enables users to list items for rent, browse available items, book rentals, chat with owners/renters, manage bookings and payments, and scrape rental listings from external websites.
 
 ## Features
