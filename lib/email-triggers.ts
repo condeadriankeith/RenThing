@@ -18,3 +18,12 @@ export async function triggerWelcomeEmail(userId: string) {
 export async function onPaymentConfirmed(transactionId: string) {
   console.log(`[EMAIL TRIGGERS DISABLED] Payment confirmation email triggered for transaction ${transactionId}`);
 }
+
+export const emailTriggers = {
+  triggerBookingConfirmation,
+  triggerBookingCancellation,
+  triggerWelcomeEmail,
+  onPaymentConfirmed
+};
+
+export default emailTriggers;
