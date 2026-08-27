@@ -2,12 +2,14 @@ import { v2 as cloudinary } from 'cloudinary'
 import { put, del } from '@vercel/blob'
 import { Readable } from 'stream'
 
-// Configure Cloudinary
-cloudinary.config({
-  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
-  api_key: process.env.CLOUDINARY_API_KEY,
-  api_secret: process.env.CLOUDINARY_API_SECRET,
-})
+// Configure Cloudinary if credentials are present
+if (process.env.CLOUDINARY_CLOUD_NAME) {
+  cloudinary.config({
+    cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+    api_key: process.env.CLOUDINARY_API_KEY,
+    api_secret: process.env.CLOUDINARY_API_SECRET,
+  })
+}
 
 export interface ImageUploadResult {
   publicId: string
@@ -55,11 +57,11 @@ class ImageService {
     })
 
     return {
-      publicId: blob.pathname,
+      publicId: blob.url,
       url: blob.url,
       secureUrl: blob.url,
       format: this.getFileExtension(blob.pathname),
-      width: 0, // Blob doesn't provide image dimensions
+      width: 0,
       height: 0,
       size: file.length,
       provider: 'vercel-blob'
@@ -120,8 +122,8 @@ class ImageService {
 
   // Delete image - handles both providers
   async deleteImage(publicId: string): Promise<ImageDeleteResult> {
-    // Check if this is a Vercel Blob URL/path (contains folder structure)
-    if (this.useBlob && publicId.includes('/')) {
+    // Check if this is a Vercel Blob URL/path
+    if (this.useBlob && (publicId.includes('vercel-storage.com') || publicId.includes('/'))) {
       try {
         await del(publicId, { token: process.env.BLOB_READ_WRITE_TOKEN })
         return { result: 'ok' }
@@ -160,20 +162,36 @@ class ImageService {
       format?: string
     } = {}
   ): string {
-    const transformation = [
-      ...(options.width || options.height ? [{ width: options.width, height: options.height, crop: options.crop || 'limit' }] : []),
-      ...(options.quality ? [{ quality: options.quality }] : []),
-      ...(options.format ? [{ fetch_format: options.format }] : [])
-    ]
+    // If it's already a full URL or Vercel Blob URL, return as is
+    if (publicId.startsWith('http://') || publicId.startsWith('https://')) {
+      return publicId
+    }
 
-    return cloudinary.url(publicId, {
-      secure: true,
-      transformation
-    })
+    if (this.useBlob && !process.env.CLOUDINARY_CLOUD_NAME) {
+      return publicId
+    }
+
+    try {
+      const transformation = [
+        ...(options.width || options.height ? [{ width: options.width, height: options.height, crop: options.crop || 'limit' }] : []),
+        ...(options.quality ? [{ quality: options.quality }] : []),
+        ...(options.format ? [{ fetch_format: options.format }] : [])
+      ]
+
+      return cloudinary.url(publicId, {
+        secure: true,
+        transformation
+      })
+    } catch {
+      return publicId
+    }
   }
 
   // Get thumbnail URL
   getThumbnailUrl(publicId: string, size: number = 300): string {
+    if (publicId.startsWith('http://') || publicId.startsWith('https://')) {
+      return publicId
+    }
     return this.getOptimizedUrl(publicId, {
       width: size,
       height: size,
