@@ -2,129 +2,79 @@
 
 [![Live Demo](https://img.shields.io/badge/Live%20Demo-Vercel-black?style=for-the-badge&logo=vercel)](https://renthing.vercel.app/)
 
-> **🌐 Live Demo:** [https://renthing.vercel.app/](https://renthing.vercel.app/)
+> **Live Platform:** [https://renthing.vercel.app/](https://renthing.vercel.app/)
 
+RenThing is a peer-to-peer rental marketplace platform that enables users to list items for rent, browse inventory, manage bookings, process transactions, and communicate directly with owners and renters.
 
-RenThing is a comprehensive rental marketplace platform that enables users to list items for rent, browse available items, book rentals, chat with owners/renters, manage bookings and payments, and scrape rental listings from external websites.
+---
 
 ## Features
 
-- List items for rent
-- Browse and book available items
-- Chat with owners/renters
-- Manage bookings and payments
-- Scrape rental listings from external websites
-- Optional AI assistant (REN AI) with local model support via Ollama
+- **Item Listings**: Create, edit, and categorize items available for rent with pricing and availability calendars.
+- **Search and Discovery**: Filter listings by category, location, price range, and availability.
+- **In-App Messaging**: Real-time messaging between renters and item owners.
+- **Booking and Payment Management**: Comprehensive lifecycle tracking from reservation to return.
+- **Data Scraping**: Integrated ingestion pipelines for external rental catalogs.
+- **AI Assistant Support**: Optional local conversational model integration via Ollama.
+
+---
 
 ## Technology Stack
 
-- **Frontend**: Next.js with TypeScript, Tailwind CSS, and Framer Motion
-- **Backend**: Custom Express.js server integrated with Next.js API routes
-- **Database**: Prisma ORM with Supabase (PostgreSQL)
-- **AI Integration**: Optional local AI models via Ollama (e.g., DeepSeek-v3, Llama 3.1 8B)
+- **Frontend**: Next.js (TypeScript), Tailwind CSS, Framer Motion
+- **Backend**: Express.js services integrated with Next.js API endpoints
+- **Database**: PostgreSQL (Supabase) managed via Prisma ORM
+- **Authentication**: NextAuth.js
+- **Deployment**: Vercel
 
-## Prerequisites
-
-- Node.js v18+
-- pnpm (or npm/yarn)
-- Prisma CLI
-- Git
-- Ollama (for local AI)
+---
 
 ## Setup Instructions
 
-1. Clone the repository:
-   ```bash
-   git clone https://github.com/yourusername/renthing.git
-   cd renthing
-   ```
+### Prerequisites
+- Node.js v18+
+- pnpm (or npm / yarn)
+- PostgreSQL / Supabase account
 
-2. Install dependencies:
-   ```bash
-   pnpm install
-   ```
+### Installation
 
-3. Set up environment variables:
-   Copy `.env.example` to `.env.local` and fill in your configuration:
-   ```bash
-   cp .env.example .env.local
-   ```
+```bash
+# 1. Clone the repository
+git clone https://github.com/condeadriankeith/RenThing.git
+cd RenThing
 
-4. Set up your Supabase database:
-   - Create a Supabase project at https://supabase.com
-   - Get your database connection string and API keys
-   - Update `.env.local` with your Supabase credentials
+# 2. Install dependencies
+pnpm install
 
-5. Run database migrations:
-   ```bash
-   npx prisma migrate dev
-   ```
+# 3. Configure environment variables
+cp .env.example .env.local
 
-6. Seed the database:
-   ```bash
-   npx prisma db seed
-   ```
+# 4. Apply database migrations
+npx prisma migrate dev
 
-7. Start the development server:
-   ```bash
-   pnpm dev
-   ```
+# 5. Seed database (optional)
+npx prisma db seed
 
-## Supabase Migration
+# 6. Start development server
+pnpm dev
+```
 
-This project uses Supabase as the primary database.
+---
 
-### Migration Process
+## Production Deployment
 
-1. **Setup Supabase Project**: Create a new project at https://supabase.com
+This project is configured for deployment on Vercel with a Supabase PostgreSQL backend.
 
-2. **Configure Environment Variables**: Update `.env.local` with your Supabase credentials:
-   ```bash
-   DATABASE_URL=your_supabase_connection_string
-   NEXT_PUBLIC_SUPABASE_URL=your_supabase_project_url
-   NEXT_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key
-   SUPABASE_SERVICE_ROLE_KEY=your_supabase_service_role_key
-   ```
+Ensure the following environment variables are defined in production:
+- `DATABASE_URL`: Supabase connection pool string
+- `NEXTAUTH_SECRET`: Session encryption secret
+- `NEXTAUTH_URL`: Canonical deployment URL
+- `NEXT_PUBLIC_SUPABASE_URL`: Supabase project URL
+- `NEXT_PUBLIC_SUPABASE_ANON_KEY`: Supabase client anonymous key
+- `SUPABASE_SERVICE_ROLE_KEY`: Supabase administrative key
 
-3. **Run Migrations**: Apply the database schema:
-   ```bash
-   npx prisma migrate dev
-   ```
-
-4. **Seed Data**: Populate the database with initial data:
-   ```bash
-   npx prisma db seed
-   ```
-
-## Deployment
-
-### Vercel Deployment
-
-1. Push your code to GitHub
-2. Create a new project on Vercel
-3. Import your GitHub repository
-4. Configure the environment variables in Vercel project settings:
-   - `DATABASE_URL` (your Supabase connection string)
-   - `NEXTAUTH_SECRET` (a strong secret key)
-   - `NEXTAUTH_URL` (your deployed application URL)
-   - `NEXT_PUBLIC_SUPABASE_URL` (your Supabase project URL)
-   - `NEXT_PUBLIC_SUPABASE_ANON_KEY` (your Supabase anon key)
-   - `SUPABASE_SERVICE_ROLE_KEY` (your Supabase service role key)
-5. Deploy the project
-
-## Available Scripts
-
-- `pnpm dev` - Start the development server
-- `pnpm build` - Build the application for production
-- `pnpm start` - Start the production server
-- `pnpm lint` - Run ESLint
-- `pnpm export:data` - Export data from the database
-- `pnpm import:data` - Import data to Supabase
-
-## Environment Variables
-
-See `.env.example` for all required and optional environment variables.
+---
 
 ## License
 
-MIT
+MIT License
